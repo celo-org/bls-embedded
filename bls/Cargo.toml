@@ -1,0 +1,9 @@
+[package]
+name = "bls_embedded"
+version = "0.1.0"
+authors = ["Michael Straka <mstraka@celo.org>"]
+edition = "2018"
+
+[dependencies]
+bls12_381 = { path = "../bls12_381" }
+libc = "0.2"
