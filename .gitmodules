@@ -1,3 +1,0 @@
-[submodule "bls12_381"]
-	path = bls12_381
-	url = https://github.com/celo-org/bls12_381.git
