@@ -1,6 +1,9 @@
 extern crate libc;
+extern crate rand;
+extern crate blake2s_simd;
 
 pub mod bls;
+pub mod hash;
 
 use libc::c_int;
 
@@ -31,10 +34,13 @@ pub extern "C" fn serialize_private_key(
 
 #[no_mangle]
 pub extern "C" fn private_key_to_public_key(
-    _in_private_key: *const PrivateKey,
-    _out_public_key: *mut *mut PublicKey,
+    in_private_key: *const PrivateKey,
+    out_public_key: *mut *mut PublicKey,
 ) -> bool {
-    unimplemented!();
+   let priv_key = unsafe { &*in_private_key };
+   let mut pub_key = priv_key.to_public();
+   unsafe { *out_public_key = &mut pub_key; }
+   true
 }
 
 #[no_mangle]

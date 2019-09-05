@@ -1,0 +1,18 @@
+error[E0658]: use of unstable library feature 'maybe_uninit' (see issue #53491)
+ --> <anon>:3:9
+  |
+3 |     use std::mem::MaybeUninit;
+  |         ^^^^^^^^^^^^^^^^^^^^^
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain E0658`.
+error[E0554]: #![feature] may not be used on the stable release channel
+ --> <anon>:1:1
+  |
+1 | #![feature(untagged_unions)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain E0554`.

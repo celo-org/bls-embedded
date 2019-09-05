@@ -7,3 +7,5 @@ edition = "2018"
 [dependencies]
 bls12_381 = { path = "../bls12_381" }
 libc = "0.2"
+rand = "0.7"
+blake2s_simd = "0.5.7"
