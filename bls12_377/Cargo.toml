@@ -1,10 +1,8 @@
 [package]
-authors = ["Sean Bowe <ewillbefull@gmail.com>"]
-description = "Implementation of the BLS12-381 pairing-friendly elliptic curve construction"
-documentation = "https://docs.rs/bls12_381/"
-homepage = "https://github.com/zkcrypto/bls12_381"
+authors = ["Sean Bowe <ewillbefull@gmail.com>", "Michael Straka <mstraka@celo.org>"]
+description = "Implementation of the BLS12-377 pairing-friendly elliptic curve construction"
 license = "MIT/Apache-2.0"
-name = "bls12_381"
+name = "bls12_377"
 repository = "https://github.com/zkcrypto/bls12_381"
 version = "0.0.0"
 edition = "2018"

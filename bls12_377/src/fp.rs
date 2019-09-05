@@ -1,5 +1,5 @@
-//! This module provides an implementation of the BLS12-381 base field `GF(p)`
-//! where `p = 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab`
+//! This module provides an implementation of the BLS12-377 base field `GF(p)`
+//! where `p != 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab`
 
 use core::fmt;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -64,38 +64,37 @@ impl ConditionallySelectable for Fp {
     }
 }
 
-/// p = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+/// p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177
 const MODULUS: [u64; 6] = [
-    0xb9feffffffffaaab,
-    0x1eabfffeb153ffff,
-    0x6730d2a0f6b0f624,
-    0x64774b84f38512bf,
-    0x4b1ba7b6434bacd7,
-    0x1a0111ea397fe69a,
+        0x8508c00000000001,
+        0x170b5d4430000000,
+        0x1ef3622fba094800,
+        0x1a22d9f300f5138f,
+        0xc63b05c06ca1493b,
+        0x1ae3a4617c510ea,
 ];
 
 /// INV = -(p^{-1} mod 2^64) mod 2^64
-const INV: u64 = 0x89f3fffcfffcfffd;
+const INV: u64 = 9586122913090633727u64;
 
 /// R = 2^384 mod p
 const R: Fp = Fp([
-    0x760900000002fffd,
-    0xebf4000bc40c0002,
-    0x5f48985753c758ba,
-    0x77ce585370525745,
-    0x5c071a97a256ec6d,
-    0x15f65ec3fa80e493,
+    202099033278250856u64,
+    5854854902718660529u64,
+    11492539364873682930u64,
+    8885205928937022213u64,
+    5545221690922665192u64,
+    39800542322357402u64,
 ]);
 
 /// R2 = 2^(384*2) mod p
 const R2: Fp = Fp([
-    0xf4df1f341c341746,
-    0xa76e6a609d104f1,
-    0x8de5476c4c95b6d5,
-    0x67eb88a9939d83c0,
-    0x9a793e85b519952d,
-    0x11988fe592cae3aa,
-]);
+    0xb786686c9400cd22,
+    0x329fcaab00431b1,
+    0x22a5f11162d6b46d,
+    0xbfdf7d03827dc3ac,
+    0x837e92f041790bf9,
+    0x6dfccb1e914b88,]);
 
 impl<'a> Neg for &'a Fp {
     type Output = Fp;
@@ -220,19 +219,19 @@ impl Fp {
         // This can be determined by checking to see if the element is
         // larger than (p - 1) // 2. If we subtract by ((p - 1) // 2) + 1
         // and there is no underflow, then the element must be larger than
-        // (p - 1) // 2.
+        // (p - 1) // 2
 
         // First, because self is in Montgomery form we need to reduce it
         let tmp = Fp::montgomery_reduce(
             self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5], 0, 0, 0, 0, 0, 0,
         );
 
-        let (_, borrow) = sbb(tmp.0[0], 0xdcff7fffffffd556, 0);
-        let (_, borrow) = sbb(tmp.0[1], 0x0f55ffff58a9ffff, borrow);
-        let (_, borrow) = sbb(tmp.0[2], 0xb39869507b587b12, borrow);
-        let (_, borrow) = sbb(tmp.0[3], 0xb23ba5c279c2895f, borrow);
-        let (_, borrow) = sbb(tmp.0[4], 0x258dd3db21a5d66b, borrow);
-        let (_, borrow) = sbb(tmp.0[5], 0x0d0088f51cbff34d, borrow);
+        let (_, borrow) = sbb(tmp.0[0], 0x4284600000000001, 0);
+        let (_, borrow) = sbb(tmp.0[1], 0x0B85AEA218000000, borrow);
+        let (_, borrow) = sbb(tmp.0[2], 0x8F79B117DD04A400, borrow);
+        let (_, borrow) = sbb(tmp.0[3], 0x8D116CF9807A89C7, borrow);
+        let (_, borrow) = sbb(tmp.0[4], 0x631D82E03650A49D, borrow);
+        let (_, borrow) = sbb(tmp.0[5], 0xD71D230BE28875, borrow);
 
         // If the element was smaller, the subtraction will underflow
         // producing a borrow value of 0xffff...ffff, otherwise it will
@@ -266,6 +265,7 @@ impl Fp {
         res
     }
 
+    //TODO: Change this from 381. Problem is p = 1 (mod 4)
     #[inline]
     pub fn sqrt(&self) -> CtOption<Self> {
         // We use Shank's method, as p = 3 (mod 4). This means
@@ -290,14 +290,14 @@ impl Fp {
     /// element, returning None in the case that this element
     /// is zero.
     pub fn invert(&self) -> CtOption<Self> {
-        // Exponentiate by p - 2
+        // Exponentiate by p - 2 
         let t = self.pow_vartime(&[
-            0xb9feffffffffaaa9,
-            0x1eabfffeb153ffff,
-            0x6730d2a0f6b0f624,
-            0x64774b84f38512bf,
-            0x4b1ba7b6434bacd7,
-            0x1a0111ea397fe69a,
+            0x8508BFFFFFFFFFFF,
+            0x170B5D4430000000,
+            0x1EF3622FBA094800,
+            0x1A22D9F300F5138F,
+            0xC63B05C06CA1493B,
+            0x1AE3A4617C510EA,
         ]);
 
         CtOption::new(t, !self.is_zero())

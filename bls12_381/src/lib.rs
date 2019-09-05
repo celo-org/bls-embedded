@@ -21,9 +21,6 @@
 // involve various binary operators, and so this lint is triggered unnecessarily.
 #![allow(clippy::suspicious_arithmetic_impl)]
 
-#[cfg(feature = "pairings")]
-extern crate alloc;
-
 #[cfg(test)]
 #[macro_use]
 extern crate std;

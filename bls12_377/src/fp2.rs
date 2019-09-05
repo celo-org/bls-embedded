@@ -7,6 +7,16 @@ use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 use crate::fp::Fp;
 
+//TODO: Is this actually -5?
+const NONRESIDUE: Fp = Fp::from_raw_unchecked([
+    0xfc0b8000000002fa,
+    0x97d39cf6e000018b,
+    0x2072420fbfa05044,
+    0xcbbcbd50d97c3802,
+    0xbaf1ec35813f9eb,
+    0x9974a2c0945ad2,
+]);
+
 #[derive(Copy, Clone)]
 pub struct Fp2 {
     pub c0: Fp,
@@ -150,7 +160,7 @@ impl Fp2 {
         // (a - b) + (a + b)u
 
         Fp2 {
-            c0: self.c0 - self.c1,
+            c0: self.c0 + (NONRESIDUE * self.c1),
             c1: self.c0 + self.c1,
         }
     }
@@ -182,9 +192,10 @@ impl Fp2 {
         // c0' = (c0 + c1) * (c0 - c1)
         // c1' = 2 * c0 * c1
 
+        let v0 = Fp::mul(&self.c0, &self.c1);
         let a = (&self.c0).add(&self.c1);
-        let b = (&self.c0).sub(&self.c1);
-        let c = (&self.c0).add(&self.c0);
+        let b = Fp::add(&self.c0, &(Fp::mul(&NONRESIDUE, &self.c1)));
+        let c = Fp::mul(&Fp::add(&NONRESIDUE, &Fp::one()), &v0);
 
         Fp2 {
             c0: (&a).mul(&b),
@@ -192,6 +203,7 @@ impl Fp2 {
         }
     }
 
+    //TODO: Pick up here
     pub const fn mul(&self, rhs: &Fp2) -> Fp2 {
         // Karatsuba multiplication:
         //
