@@ -1,5 +1,5 @@
-//! This module provides an implementation of the BLS12-377 base field `GF(p)`
-//! where `p != 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab`
+//! This module provides an implementation of the BLS12-377 base field `GF(p)` where `p != 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab`
+//! TODO: Put actual modulus here
 
 use core::fmt;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -17,8 +17,14 @@ pub struct Fp([u64; 6]);
 
 impl fmt::Debug for Fp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:x}", self.0[0])?;
+        write!(f, "{:x}", self.0[1])?;
+        write!(f, "{:x}", self.0[2])?;
+        write!(f, "{:x}", self.0[3])?;
+        write!(f, "{:x}", self.0[4])?;
+        write!(f, "{:x}", self.0[5])?;
         let tmp = self.to_bytes();
-        write!(f, "0x")?;
+        write!(f, "     0x")?;
         for &b in tmp.iter() {
             write!(f, "{:02x}", b)?;
         }
@@ -34,12 +40,18 @@ impl Default for Fp {
 
 impl ConstantTimeEq for Fp {
     fn ct_eq(&self, other: &Self) -> Choice {
-        self.0[0].ct_eq(&other.0[0])
-            & self.0[1].ct_eq(&other.0[1])
-            & self.0[2].ct_eq(&other.0[2])
-            & self.0[3].ct_eq(&other.0[3])
-            & self.0[4].ct_eq(&other.0[4])
-            & self.0[5].ct_eq(&other.0[5])
+         let a = Fp::montgomery_reduce(
+              self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5], 0, 0, 0, 0, 0, 0,
+         );
+         let b = Fp::montgomery_reduce(
+              self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5], 0, 0, 0, 0, 0, 0,
+         );
+        a.0[0].ct_eq(&b.0[0])
+            & a.0[1].ct_eq(&b.0[1])
+            & a.0[2].ct_eq(&b.0[2])
+            & a.0[3].ct_eq(&b.0[3])
+            & a.0[4].ct_eq(&b.0[4])
+            & a.0[5].ct_eq(&b.0[5])
     }
 }
 
@@ -65,7 +77,7 @@ impl ConditionallySelectable for Fp {
 }
 
 /// p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177
-const MODULUS: [u64; 6] = [
+pub const MODULUS: [u64; 6] = [
         0x8508c00000000001,
         0x170b5d4430000000,
         0x1ef3622fba094800,
@@ -94,7 +106,8 @@ const R2: Fp = Fp([
     0x22a5f11162d6b46d,
     0xbfdf7d03827dc3ac,
     0x837e92f041790bf9,
-    0x6dfccb1e914b88,]);
+    0x6dfccb1e914b88,
+]);
 
 impl<'a> Neg for &'a Fp {
     type Output = Fp;
@@ -652,12 +665,12 @@ fn test_addition() {
         0x15fdcaa4e4bb2091,
     ]);
     let c = Fp([
-        0x393442ccb58bb327,
-        0x1092685f3bd547e3,
-        0x3382252cab6ac4c9,
-        0xf94694cb76887f55,
-        0x4b215e9093a5e071,
-        0xd56e30f34f5f853,
+        0x6E2A82CCB58B5DD1,
+        0x18330B19BD2947E2,
+        0x7BBF959DE81272ED,
+        0x439B065D69187E85,
+        0xD00200866A50440E,
+        0x25A9BAB356B0CE02,
     ]);
 
     assert_eq!(a + b, c);
@@ -681,13 +694,14 @@ fn test_subtraction() {
         0xd319a080efb245fe,
         0x15fdcaa4e4bb2091,
     ]);
+    // ([3896f3e63b43a293, e371e0433612dd3a, 3cf70b45b48c28b1, 57c938c8a602f7f7, b644cb05642e4a87, fd0a99f5bcc4aeb4]))
     let c = Fp([
-        0x6d8d33e63b434d3d,
-        0xeb1282fdb766dd39,
-        0x85347bb6f133d6d5,
-        0xa21daa5a9892f727,
-        0x3b256cfb3ad8ae23,
-        0x155d7199de7f8464,
+        0x3896f3e63b43a293,
+        0xe371e0433612dd3a,
+        0x3cf70b45b48c28b1,
+        0x57c938c8a602f7f7,
+        0xb644cb05642e4a87,
+        0xfd0a99f5bcc4aeb4,
     ]);
 
     assert_eq!(a - b, c);
@@ -704,12 +718,12 @@ fn test_negation() {
         0x115a2a5489babe5b,
     ]);
     let b = Fp([
-        0x669e44a687982a79,
-        0xa0d98a5037b5ed71,
-        0xad5822f2861a854,
-        0x96c52bf1ebf75781,
-        0x87f841f05c0c658c,
-        0x8a6e795afc5283e,
+        0x31a804a687987fcf, 
+        0x9938e795b661ed72, 
+        0xc29811bdebb9fa30, 
+        0x4c70ba5ff9675850, 
+        0x3179ffa856201f0, 
+        0xf0540ff18e0a528f,
     ]);
 
     assert_eq!(-a, b);

@@ -5,7 +5,7 @@ use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
-use crate::fp::Fp;
+use crate::fp::{Fp, MODULUS};
 
 //TODO: Is this actually -5?
 const NONRESIDUE: Fp = Fp::from_raw_unchecked([
@@ -16,6 +16,19 @@ const NONRESIDUE: Fp = Fp::from_raw_unchecked([
     0xbaf1ec35813f9eb,
     0x9974a2c0945ad2,
 ]);
+
+// from Zexe Bls-377 fp2 implementation
+const QUADRATIC_NONRESIDUE: Fp2 = Fp2 {
+    c0: Fp::zero(),
+    c1: Fp::from_raw_unchecked([
+            202099033278250856u64,
+            5854854902718660529u64,
+            11492539364873682930u64,
+            8885205928937022213u64,
+            5545221690922665192u64,
+            39800542322357402u64,
+    ]),
+};
 
 #[derive(Copy, Clone)]
 pub struct Fp2 {
@@ -203,7 +216,6 @@ impl Fp2 {
         }
     }
 
-    //TODO: Pick up here
     pub const fn mul(&self, rhs: &Fp2) -> Fp2 {
         // Karatsuba multiplication:
         //
@@ -222,11 +234,11 @@ impl Fp2 {
         // c1 = (a0 + a1) * (b0 + b1) - v0 + v1
 
         let v0 = (&self.c0).mul(&rhs.c0);
-        let v1 = (&(&self.c1).neg()).mul(&rhs.c1);
-        let c0 = (&v0).add(&v1);
+        let v1 = (&self.c1).mul(&rhs.c1);
+        let c0 = (&v0).add(&(&NONRESIDUE).mul(&v1));
         let c1 = (&(&self.c0).add(&self.c1)).mul(&(&rhs.c0).add(&rhs.c1));
         let c1 = (&c1).sub(&v0);
-        let c1 = (&c1).add(&v1);
+        let c1 = (&c1).sub(&v1);
 
         Fp2 { c0, c1 }
     }
@@ -252,82 +264,67 @@ impl Fp2 {
         }
     }
 
+    //TODO: Precompute e, f
+    //TODO: Make constant time
+    //TODO: Fix branching conditions
+    // Algorithm 10, https://eprint.iacr.org/2012/685.pdf
     pub fn sqrt(&self) -> CtOption<Self> {
-        use crate::CtOptionExt;
-
-        // Algorithm 9, https://eprint.iacr.org/2012/685.pdf
-        // with constant time modifications.
-
-        CtOption::new(Fp2::zero(), self.is_zero()).or_else(|| {
-            // a1 = self^((p - 3) / 4)
-            let a1 = self.pow_vartime(&[
-                0xee7fbfffffffeaaa,
-                0x7aaffffac54ffff,
-                0xd9cc34a83dac3d89,
-                0xd91dd2e13ce144af,
-                0x92c6e9ed90d2eb35,
-                0x680447a8e5ff9a6,
-            ]);
-
-            // alpha = a1^2 * self = self^((p - 3) / 2 + 1) = self^((p - 1) / 2)
-            let alpha = a1.square() * self;
-
-            // x0 = self^((p + 1) / 4)
-            let x0 = a1 * self;
-
-            // In the event that alpha = -1, the element is order p - 1 and so
-            // we're just trying to get the square of an element of the subfield
-            // Fp. This is given by x0 * u, since u = sqrt(-1). Since the element
-            // x0 = a + bu has b = 0, the solution is therefore au.
-            CtOption::new(
-                Fp2 {
-                    c0: -x0.c1,
-                    c1: x0.c0,
-                },
-                alpha.ct_eq(&(&Fp2::one()).neg()),
-            )
-            // Otherwise, the correct solution is (1 + alpha)^((q - 1) // 2) * x0
-            .or_else(|| {
-                CtOption::new(
-                    (alpha + Fp2::one()).pow_vartime(&[
-                        0xdcff7fffffffd555,
-                        0xf55ffff58a9ffff,
-                        0xb39869507b587b12,
-                        0xb23ba5c279c2895f,
-                        0x258dd3db21a5d66b,
-                        0xd0088f51cbff34d,
-                    ]) * x0,
-                    Choice::from(1),
-                )
-            })
-            // Only return the result if it's really the square root (and so
-            // self is actually quadratic nonresidue)
-            .and_then(|sqrt| CtOption::new(sqrt, sqrt.square().ct_eq(self)))
-        })
-    }
+        use crate::CtOptionExt; 
+        // Take a quadratic nonresidue c^((q - 1) // 2)
+        let d = QUADRATIC_NONRESIDUE.pow_vartime(&[
+            0xdcff7fffffffd555,
+            0xf55ffff58a9ffff,
+            0xb39869507b587b12,
+            0xb23ba5c279c2895f,
+            0x258dd3db21a5d66b,
+            0xd0088f51cbff34d,
+        ]);
+        let dc = d * QUADRATIC_NONRESIDUE;
+        let e = dc.invert().unwrap();
+        let f = dc.square();
+        // b = self^((q - 1) // 4)
+        let b = self.pow_vartime(&[
+            0x2142300000000000,
+            0x05C2D7510C000000,
+            0xC7BCD88BEE825200,
+            0xC688B67CC03D44E3,
+            0xB18EC1701B28524E,
+            0x6B8E9185F1443A,
+        ]);
+        // a0 = b^(2q + 2)
+        let b2 = b.square();
+        let b2q = b2.pow_vartime(&MODULUS);
+        let a0 = b2 * b2q;
+        //if a0 == -1 return false
+        let bq = b.pow_vartime(&MODULUS);
+        let bqb = bq * b;
+        if bqb == Fp2::one() {
+            let qr = b2 * self;
+            let x0 = Fp::sqrt(&qr.c0).unwrap();
+            CtOption::new(Fp2::from(x0) * bq, 1.ct_eq(&1))
+        } else {
+            let qr = b2 * self * f;
+            let x0 = Fp::sqrt(&qr.c0).unwrap();
+            CtOption::new(Fp2::from(x0) * bq * e, 1.ct_eq(&1))
+        }
+    } 
 
     /// Computes the multiplicative inverse of this field
     /// element, returning None in the case that this element
     /// is zero.
     pub fn invert(&self) -> CtOption<Self> {
         // We wish to find the multiplicative inverse of a nonzero
-        // element a + bu in Fp2. We leverage an identity
-        //
-        // (a + bu)(a - bu) = a^2 + b^2
-        //
-        // which holds because u^2 = -1. This can be rewritten as
-        //
-        // (a + bu)(a - bu)/(a^2 + b^2) = 1
-        //
-        // because a^2 + b^2 = 0 has no nonzero solutions for (a, b).
-        // This gives that (a - bu)/(a^2 + b^2) is the inverse
-        // of (a + bu). Importantly, this can be computing using
-        // only a single inversion in Fp.
-
-        (self.c0.square() + self.c1.square()).invert().map(|t| Fp2 {
-            c0: self.c0 * t,
-            c1: self.c1 * -t,
-        })
+        // element a + bu in Fp2. Taken from Zexe codebase: algorithm 5.19
+        // of Guide to Pairing Based Cryptography
+        
+        let v0 = self.c0.square();
+        let v1 = self.c1.square();
+        let v0 = v0 - NONRESIDUE * v1;
+        let v1 = v0.invert().unwrap();
+        CtOption::new(Fp2 {
+            c0: self.c0 * v1,
+            c1: self.c1 * v1,
+        }, 1.ct_eq(&1))
     }
 
     /// Although this is labeled "vartime", it is only
