@@ -39,12 +39,13 @@ impl Default for Fp {
 }
 
 impl ConstantTimeEq for Fp {
+    //TODO: Should we actually reduce before checking equality?
     fn ct_eq(&self, other: &Self) -> Choice {
          let a = Fp::montgomery_reduce(
               self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5], 0, 0, 0, 0, 0, 0,
          );
          let b = Fp::montgomery_reduce(
-              self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5], 0, 0, 0, 0, 0, 0,
+              other.0[0], other.0[1], other.0[2], other.0[3], other.0[4], other.0[5], 0, 0, 0, 0, 0, 0,
          );
         a.0[0].ct_eq(&b.0[0])
             & a.0[1].ct_eq(&b.0[1])
@@ -584,9 +585,11 @@ fn test_equality() {
         eq
     }
 
-    assert!(is_equal(&Fp([1, 2, 3, 4, 5, 6]), &Fp([1, 2, 3, 4, 5, 6])));
+    assert_eq!(&Fp([1, 2, 3, 4, 5, 6]), &Fp([1, 2, 3, 4, 5, 6]));
 
-    assert!(!is_equal(&Fp([7, 2, 3, 4, 5, 6]), &Fp([1, 2, 3, 4, 5, 6])));
+    let a = Fp([7, 2, 3, 4, 5, 6]);
+    let b = Fp([1, 2, 3, 4, 5, 6]);
+    assert_ne!(&a, &b);
     assert!(!is_equal(&Fp([1, 7, 3, 4, 5, 6]), &Fp([1, 2, 3, 4, 5, 6])));
     assert!(!is_equal(&Fp([1, 2, 7, 4, 5, 6]), &Fp([1, 2, 3, 4, 5, 6])));
     assert!(!is_equal(&Fp([1, 2, 3, 7, 5, 6]), &Fp([1, 2, 3, 4, 5, 6])));
@@ -605,12 +608,12 @@ fn test_squaring() {
         0x10606628ad4a4d90,
     ]);
     let b = Fp([
-        0x33d9c42a3cb3e235,
-        0xdad11a094c4cd455,
-        0xa2f144bd729aaeba,
-        0xd4150932be9ffeac,
-        0xe27bc7c47d44ee50,
-        0x14b6a78d3ec7a560,
+        0xc27f4faf338e6e7, 
+        0xb9363389626f355, 
+        0x2677a23d5ff9b701, 
+        0xaa7da7ecaa317421, 
+        0xd813d973bd2c6c51, 
+        0x1363906dc99b15d,
     ]);
 
     assert_eq!(a.square(), b);
