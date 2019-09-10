@@ -638,12 +638,12 @@ fn test_multiplication() {
         0x652e89326e57dc0,
     ]);
     let c = Fp([
-        0xf96ef3d711ab5355,
-        0xe8d459ea00f148dd,
-        0x53f7354a5f00fa78,
-        0x9e34a4f3125c5f83,
-        0x3fbe0c47ca74c19e,
-        0x1b06a8bbd4adfe4,
+        0x797a886e0e8e8d85, 
+        0x518df0f1d1732800, 
+        0xb7098a12c4a10c5, 
+        0x6338f6a9ec896084, 
+        0xec6b4921810a39fc, 
+        0x1751097d914d4be
     ]);
 
     assert_eq!(a * b, c);
@@ -824,12 +824,12 @@ fn test_inversion() {
         0x3b35b3894b0f7da,
     ]);
     let b = Fp([
-        0x69ecd7040952148f,
-        0x985ccc2022190f55,
-        0xe19bba36a9ad2f41,
-        0x19bb16c95219dbd8,
-        0x14dcacfdfb478693,
-        0x115ff58afff9a8e1,
+        0x46e62daa07fc3fba,
+        0x7a3ba1598ea4f941, 
+        0x675f586198cad5e3, 
+        0xd3c06c64199ca906, 
+        0x61617cc7f1012816, 
+        0xefb2f069ef448e,
     ]);
 
     assert_eq!(a.invert().unwrap(), b);
