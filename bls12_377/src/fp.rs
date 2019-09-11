@@ -17,14 +17,14 @@ pub struct Fp([u64; 6]);
 
 impl fmt::Debug for Fp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:x}", self.0[0])?;
+    /*    write!(f, "{:x}", self.0[0])?;
         write!(f, "{:x}", self.0[1])?;
         write!(f, "{:x}", self.0[2])?;
         write!(f, "{:x}", self.0[3])?;
         write!(f, "{:x}", self.0[4])?;
-        write!(f, "{:x}", self.0[5])?;
+        write!(f, "{:x}", self.0[5])?;*/
         let tmp = self.to_bytes();
-        write!(f, "     0x")?;
+        write!(f, "0x")?;
         for &b in tmp.iter() {
             write!(f, "{:02x}", b)?;
         }
@@ -39,20 +39,19 @@ impl Default for Fp {
 }
 
 impl ConstantTimeEq for Fp {
-    //TODO: Should we actually reduce before checking equality?
     fn ct_eq(&self, other: &Self) -> Choice {
-         let a = Fp::montgomery_reduce(
+   /*      let a = Fp::montgomery_reduce(
               self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5], 0, 0, 0, 0, 0, 0,
          );
          let b = Fp::montgomery_reduce(
               other.0[0], other.0[1], other.0[2], other.0[3], other.0[4], other.0[5], 0, 0, 0, 0, 0, 0,
-         );
-        a.0[0].ct_eq(&b.0[0])
-            & a.0[1].ct_eq(&b.0[1])
-            & a.0[2].ct_eq(&b.0[2])
-            & a.0[3].ct_eq(&b.0[3])
-            & a.0[4].ct_eq(&b.0[4])
-            & a.0[5].ct_eq(&b.0[5])
+         );*/
+        self.0[0].ct_eq(&other.0[0])
+            & self.0[1].ct_eq(&other.0[1])
+            & self.0[2].ct_eq(&other.0[2])
+            & self.0[3].ct_eq(&other.0[3])
+            & self.0[4].ct_eq(&other.0[4])
+            & self.0[5].ct_eq(&other.0[5])
     }
 }
 
@@ -679,6 +678,7 @@ fn test_addition() {
     assert_eq!(a + b, c);
 }
 
+//TODO: Use result smaller than modulus
 #[test]
 fn test_subtraction() {
     let a = Fp([
@@ -706,6 +706,7 @@ fn test_subtraction() {
         0xb644cb05642e4a87,
         0xfd0a99f5bcc4aeb4,
     ]);
+    let c = c.subtract_p();
 
     assert_eq!(a - b, c);
 }
@@ -764,12 +765,7 @@ fn test_from_bytes() {
 
     assert_eq!(
         -Fp::one(),
-        Fp::from_bytes(&[
-            26, 1, 17, 234, 57, 127, 230, 154, 75, 27, 167, 182, 67, 75, 172, 215, 100, 119, 75,
-            132, 243, 133, 18, 191, 103, 48, 210, 160, 246, 176, 246, 36, 30, 171, 255, 254, 177,
-            83, 255, 255, 185, 254, 255, 255, 255, 255, 170, 170
-        ])
-        .unwrap()
+    Fp::from_bytes(&[1, 174, 58, 70, 23, 197, 16, 234, 198, 59, 5, 192, 108, 161, 73, 59, 26, 34, 217, 243, 0, 245, 19, 143, 30, 243, 98, 47, 186, 9, 72, 0, 23, 11, 93, 68, 48, 0, 0, 0, 133, 8, 192, 0, 0, 0, 0, 0]).unwrap()
     );
 
     assert!(
