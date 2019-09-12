@@ -40,12 +40,6 @@ impl Default for Fp {
 
 impl ConstantTimeEq for Fp {
     fn ct_eq(&self, other: &Self) -> Choice {
-   /*      let a = Fp::montgomery_reduce(
-              self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5], 0, 0, 0, 0, 0, 0,
-         );
-         let b = Fp::montgomery_reduce(
-              other.0[0], other.0[1], other.0[2], other.0[3], other.0[4], other.0[5], 0, 0, 0, 0, 0, 0,
-         );*/
         self.0[0].ct_eq(&other.0[0])
             & self.0[1].ct_eq(&other.0[1])
             & self.0[2].ct_eq(&other.0[2])
@@ -89,6 +83,8 @@ pub const MODULUS: [u64; 6] = [
 /// INV = -(p^{-1} mod 2^64) mod 2^64
 const INV: u64 = 9586122913090633727u64;
 
+const TWO_ADICITY: u32 = 46u32;
+
 /// R = 2^384 mod p
 const R: Fp = Fp([
     202099033278250856u64,
@@ -108,6 +104,25 @@ const R2: Fp = Fp([
     0x837e92f041790bf9,
     0x6dfccb1e914b88,
 ]);
+
+/// zexe codebase implies this is c^t, where p - 1 = 2^s*t and t odd
+const ROOT_OF_UNITY: Fp = Fp([
+    2022196864061697551u64,
+    17419102863309525423u64,
+    8564289679875062096u64,
+    17152078065055548215u64,
+    17966377291017729567u64,
+    68610905582439508u64,
+]);
+
+const T_MINUS_ONE_DIV_TWO: [u64; 6] = [
+    0xba88600000010a11,
+    0xc45f741290002e16,
+    0xb3e601ea271e3de6,
+    0xb80d94292763445,
+    0x748c2f8a21d58c76,
+    0x35c,
+];
 
 impl<'a> Neg for &'a Fp {
     type Output = Fp;
@@ -172,6 +187,10 @@ impl Fp {
 
     pub fn is_zero(&self) -> Choice {
         self.ct_eq(&Fp::zero())
+    }
+
+    pub fn is_one(&self) -> Choice {
+        self.ct_eq(&Fp::one())
     }
 
     /// Attempts to convert a little-endian byte representation of
@@ -278,24 +297,52 @@ impl Fp {
         res
     }
 
-    //TODO: Change this from 381. Problem is p = 1 (mod 4)
+    //TODO: Clearly indicate this is non-constant
+    //TODO: Handle zero, quadratic nonresidue cases
     #[inline]
     pub fn sqrt(&self) -> CtOption<Self> {
-        // We use Shank's method, as p = 3 (mod 4). This means
-        // we only need to exponentiate by (p+1)/4. This only
-        // works for elements that are actually quadratic residue,
-        // so we check that we got the correct result at the end.
 
-        let sqrt = self.pow_vartime(&[
-            0xee7fbfffffffeaab,
-            0x7aaffffac54ffff,
-            0xd9cc34a83dac3d89,
-            0xd91dd2e13ce144af,
-            0x92c6e9ed90d2eb35,
-            0x680447a8e5ff9a6,
-        ]);
+        let mut z = ROOT_OF_UNITY;
+        let mut w = self.pow_vartime(&T_MINUS_ONE_DIV_TWO);
+        let mut x = w * self;
+        let mut b = x * &w;
 
-        CtOption::new(sqrt, sqrt.square().ct_eq(self))
+        let mut v = TWO_ADICITY as usize;
+
+        // t = self^t
+        {
+            let mut check = b;
+            for _ in 0..(v-1) {
+                check = check.square();
+            }
+            if b != Fp::one() {
+                panic!("Input is not a square root, but passed the QR test")
+            }
+        }
+
+        while b != Fp::one() {
+            let mut k = 0usize;
+
+            let mut b2k = b;
+            while b2k != Fp::one() {
+                // invariant: b2k = b^(2^k) after entering this loop
+                b2k = b2k.square();
+                k += 1;
+            }
+
+            let j = v - k - 1;
+            w = z;
+            for _ in 0..j {
+                w = w.square();
+            }
+
+            z = w.square();
+            b *= &z;
+            x *= &w;
+            v = k;
+        }
+
+        CtOption::new(x, 1.ct_eq(&1))
     }
 
     #[inline]
@@ -793,18 +840,19 @@ fn test_sqrt() {
         0x8ec9733bbf78ab2f,
         0x9d645513d83de7e,
     ]);
+    // [b7365bc1527cc225, 80c4410c13dad980, 405a608866ec9af9, bae77f06775d9e86, 631d7a2378887188, 24475d61e565d7]
 
     assert_eq!(
         // sqrt(4) = -2
-        -a.sqrt().unwrap(),
+        a.sqrt().unwrap(),
         // 2
         Fp::from_raw_unchecked([
-            0x321300000006554f,
-            0xb93c0018d6c40005,
-            0x57605e0db0ddbb51,
-            0x8b256521ed1f9bcb,
-            0x6cf28d7901622c03,
-            0x11ebab9dbb81e28c
+            0xb7365bc1527cc225,
+            0x80c4410c13dad980, 
+            0x405a608866ec9af9, 
+            0xbae77f06775d9e86, 
+            0x631d7a2378887188, 
+            0x24475d61e565d7,
         ])
     );
 }
