@@ -17,12 +17,12 @@ pub struct Fp([u64; 6]);
 
 impl fmt::Debug for Fp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    /*    write!(f, "{:x}", self.0[0])?;
-        write!(f, "{:x}", self.0[1])?;
-        write!(f, "{:x}", self.0[2])?;
-        write!(f, "{:x}", self.0[3])?;
-        write!(f, "{:x}", self.0[4])?;
-        write!(f, "{:x}", self.0[5])?;*/
+       /* write!(f, "{}\n", self.0[0])?;
+        write!(f, "{}\n", self.0[1])?;
+        write!(f, "{}\n", self.0[2])?;
+        write!(f, "{}\n", self.0[3])?;
+        write!(f, "{}\n", self.0[4])?;
+        write!(f, "{}\n", self.0[5])?;*/
         let tmp = self.to_bytes();
         write!(f, "0x")?;
         for &b in tmp.iter() {
@@ -306,7 +306,6 @@ impl Fp {
         let mut w = self.pow_vartime(&T_MINUS_ONE_DIV_TWO);
         let mut x = w * self;
         let mut b = x * &w;
-
         let mut v = TWO_ADICITY as usize;
 
         // t = self^t
@@ -315,7 +314,7 @@ impl Fp {
             for _ in 0..(v-1) {
                 check = check.square();
             }
-            if b != Fp::one() {
+            if check != Fp::one() {
                 panic!("Input is not a square root, but passed the QR test")
             }
         }
@@ -840,7 +839,6 @@ fn test_sqrt() {
         0x8ec9733bbf78ab2f,
         0x9d645513d83de7e,
     ]);
-    // [b7365bc1527cc225, 80c4410c13dad980, 405a608866ec9af9, bae77f06775d9e86, 631d7a2378887188, 24475d61e565d7]
 
     assert_eq!(
         // sqrt(4) = -2
