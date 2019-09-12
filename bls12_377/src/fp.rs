@@ -786,7 +786,7 @@ fn test_debug() {
             "{:?}",
             Fp([0x5360bb5978678032, 0x7dd275ae799e128e, 0x5c5b5071ce4f4dcf, 0xcdb21f93078dbb3e, 0xc32365c5e73f474a, 0x115a2a5489babe5b])
         ),
-        "0x104bf052ad3bc99bcb176c24a06a6c3aad4eaf2308fc4d282e106c84a757d061052630515305e59bdddf8111bfdeb704"
+        "0x01649f72ed7210935e96e9afd102e59eb0043d3eccd7606e797520db60fc0d2c5f8ec5dde3c6df9ddc6db87323948bdc"
     );
 }
 
@@ -893,7 +893,7 @@ fn test_lexicographic_largest() {
         ])
         .lexicographically_largest()
     ));
-    assert!(bool::from(
+    assert!(!bool::from(
         Fp::from_raw_unchecked([
             0x1804000000015554,
             0x855000053ab00001,
