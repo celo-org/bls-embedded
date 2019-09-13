@@ -612,22 +612,23 @@ fn test_subtraction() {
             0x11b94d5076c7b7b1,
         ]),
     };
+    // [acca46bbbf1baed7, 480f20ef291c5d7f, def7454fcf103902, 686905e4bc737b0d, 96a8bdbdc1fdddc8, fedd734b4d56673c])), c1: Fp384(BigInteger384([3fccdc799519675a, 2ad10799f8a9ad2c, 817700e60c6df4eb, 1b8f9181f9b4b98e, efa7104284c6042f, f0ff6382aef243f4]
     let c = Fp2 {
         c0: Fp::from_raw_unchecked([
-            0xe1c086bbbf1b5981,
-            0x4fafc3a9aa705d7e,
-            0x2734b5c10bb7e726,
-            0xb2bd7776af037a3e,
-            0x1b895fb398a84164,
-            0x17304aef6f113cec,
+            0xacca46bbbf1baed7, 
+            0x480f20ef291c5d7f, 
+            0xdef7454fcf103902, 
+            0x686905e4bc737b0d, 
+            0x96a8bdbdc1fdddc8, 
+            0xfedd734b4d56673c,
         ]),
         c1: Fp::from_raw_unchecked([
-            0x74c31c7995191204,
-            0x3271aa5479fdad2b,
-            0xc9b471574915a30f,
-            0x65e40313ec44b8be,
-            0x7487b2385b7067cb,
-            0x9523b26d0ad19a4,
+            0x3fccdc799519675a, 
+            0x2ad10799f8a9ad2c, 
+            0x817700e60c6df4eb, 
+            0x1b8f9181f9b4b98e, 
+            0xefa7104284c6042f, 
+            0xf0ff6382aef243f4,
         ]),
     };
 

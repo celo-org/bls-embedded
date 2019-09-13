@@ -17,7 +17,7 @@ pub struct Fp([u64; 6]);
 
 impl fmt::Debug for Fp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-       /* write!(f, "{}\n", self.0[0])?;
+        /*write!(f, "{}\n", self.0[0])?;
         write!(f, "{}\n", self.0[1])?;
         write!(f, "{}\n", self.0[2])?;
         write!(f, "{}\n", self.0[3])?;
@@ -40,12 +40,14 @@ impl Default for Fp {
 
 impl ConstantTimeEq for Fp {
     fn ct_eq(&self, other: &Self) -> Choice {
-        self.0[0].ct_eq(&other.0[0])
-            & self.0[1].ct_eq(&other.0[1])
-            & self.0[2].ct_eq(&other.0[2])
-            & self.0[3].ct_eq(&other.0[3])
-            & self.0[4].ct_eq(&other.0[4])
-            & self.0[5].ct_eq(&other.0[5])
+        let self_red = self.to_bytes();
+        let other_red = other.to_bytes();
+        self_red[0].ct_eq(&other_red[0])
+            & self_red[1].ct_eq(&other_red[1])
+            & self_red[2].ct_eq(&other_red[2])
+            & self_red[3].ct_eq(&other_red[3])
+            & self_red[4].ct_eq(&other_red[4])
+            & self_red[5].ct_eq(&other_red[5])
     }
 }
 
