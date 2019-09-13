@@ -192,6 +192,7 @@ impl Fp2 {
             | (self.c1.is_zero() & self.c0.lexicographically_largest())
     }
 
+    //TODO: Fix for 377
     pub const fn square(&self) -> Fp2 {
         // Complex squaring:
         //
@@ -431,22 +432,23 @@ fn test_squaring() {
             0x10a768d0df4eabc,
         ]),
     };
+    //9180cfbd5231eb92, 80ba5cc15826ee06, 6e4810398ff8110a, 17b1565c3b5de972, adfa03c911c9f3d, 45616e22b1a459])), c1: Fp384(BigInteger384([de372dea33981b66, 235f7eb8baf88c85, 3837e2636f0d07bc, ba39294a74709e4b, 274cb0edb1fdd1e2, 11abe141195cea6
     let b = Fp2 {
         c0: Fp::from_raw_unchecked([
-            0xa1e09175a4d2c1fe,
-            0x8b33acfc204eff12,
-            0xe24415a11b456e42,
-            0x61d996b1b6ee1936,
-            0x1164dbe8667c853c,
-            0x788557acc7d9c79,
+            0x9180cfbd5231eb92, 
+            0x80ba5cc15826ee06, 
+            0x6e4810398ff8110a, 
+            0x17b1565c3b5de972, 
+            0xadfa03c911c9f3d, 
+            0x45616e22b1a459,
         ]),
         c1: Fp::from_raw_unchecked([
-            0xda6a87cc6f48fa36,
-            0xfc7b488277c1903,
-            0x9445ac4adc448187,
-            0x2616d5bc9099209,
-            0xdbed46772db58d48,
-            0x11b94d5076c7b7b1,
+            0xde372dea33981b66, 
+            0x235f7eb8baf88c85, 
+            0x3837e2636f0d07bc, 
+            0xba39294a74709e4b, 
+            0x274cb0edb1fdd1e2, 
+            0x11abe141195cea6,
         ]),
     };
 
@@ -491,22 +493,23 @@ fn test_multiplication() {
             0x11b94d5076c7b7b1,
         ]),
     };
+    //[a2332499367dd291, 41882f1e421e6c04, bc6a01cea4131ffb, d5ccc0ffed5730d8, 28c08d93d3196725, 113a0b1f3ec936b])), c1: Fp384(BigInteger384([c00e498bee3a3b12, 3ac6975d105a3631, 99d635ebdedee2ca, bc815bde58a6ecc8, 26382035f22c7652, 54f5a96fa8aef8]
     let c = Fp2 {
         c0: Fp::from_raw_unchecked([
-            0xf597483e27b4e0f7,
-            0x610fbadf811dae5f,
-            0x8432af917714327a,
-            0x6a9a9603cf88f09e,
-            0xf05a7bf8bad0eb01,
-            0x9549131c003ffae,
+            0xa2332499367dd291, 
+            0x41882f1e421e6c04, 
+            0xbc6a01cea4131ffb, 
+            0xd5ccc0ffed5730d8, 
+            0x28c08d93d3196725, 
+            0x113a0b1f3ec936b,
         ]),
         c1: Fp::from_raw_unchecked([
-            0x963b02d0f93d37cd,
-            0xc95ce1cdb30a73d4,
-            0x308725fa3126f9b8,
-            0x56da3c167fab0d50,
-            0x6b5086b5f4b6d6af,
-            0x9c39f062f18e9f2,
+            0xc00e498bee3a3b12, 
+            0x3ac6975d105a3631, 
+            0x99d635ebdedee2ca, 
+            0xbc815bde58a6ecc8, 
+            0x26382035f22c7652, 
+            0x54f5a96fa8aef8,
         ]),
     };
 
@@ -657,20 +660,20 @@ fn test_negation() {
     };
     let b = Fp2 {
         c0: Fp::from_raw_unchecked([
-            0xf05ce7ce9c1139d7,
-            0x62748f5797e8a36d,
-            0xc4e8d9dfc66496df,
-            0xb45788e181189209,
-            0x694913d08772930d,
-            0x1549836a3770f3cf,
+            0xbb66a7ce9c118f2d, 
+            0x5ad3ec9d1694a36e, 
+            0x7cab696e89bce8bb, 
+            0x6a03174f8e8892d9, 
+            0xe46871dab0c82f71, 
+            0xfcf6abc615b61e1f,
         ]),
         c1: Fp::from_raw_unchecked([
-            0x24d05bb9fb9d491c,
-            0xfb1ea120c12e39d0,
-            0x7067879fc807c7b1,
-            0x60a9269a31bbdab6,
-            0x45c256bcfd71649b,
-            0x18f69b5d2b8afbde,
+            0xefda1bb9fb9d9e72, 
+            0xf37dfe663fda39d0, 
+            0x282a172e8b60198d, 
+            0x1654b5083f2bdb86, 
+            0xc0e1b4c726c700ff, 
+            0xa3c3b909d0262e,
         ]),
     };
 
