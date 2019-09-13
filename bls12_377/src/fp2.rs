@@ -192,7 +192,6 @@ impl Fp2 {
             | (self.c1.is_zero() & self.c0.lexicographically_largest())
     }
 
-    //TODO: Fix for 377
     pub const fn square(&self) -> Fp2 {
         // Complex squaring:
         //
@@ -200,20 +199,15 @@ impl Fp2 {
         // c0' = (c0 + c1) * (c0 + \beta*c1) - v0 - \beta * v0
         // c1' = 2 * v0
         //
-        // In BLS12-381's F_{p^2}, our \beta is -1 so we
-        // can modify this formula:
-        //
-        // c0' = (c0 + c1) * (c0 - c1)
-        // c1' = 2 * c0 * c1
-
-        let v0 = Fp::mul(&self.c0, &self.c1);
-        let a = (&self.c0).add(&self.c1);
-        let b = Fp::add(&self.c0, &(Fp::mul(&NONRESIDUE, &self.c1)));
-        let c = Fp::mul(&Fp::add(&NONRESIDUE, &Fp::one()), &v0);
+        let mut v0 = (&self.c0).sub(&self.c1);
+        let v3 = (&self.c0).sub(&(&self.c1).mul(&NONRESIDUE));
+        let v2 = (&self.c0).mul(&self.c1);
+        v0 = (&v0).mul(&v3);
+        v0 = (&v0).add(&v2);
 
         Fp2 {
-            c0: (&a).mul(&b),
-            c1: (&c).mul(&self.c1),
+            c0: (&v0).add(&((&v2).mul(&NONRESIDUE))),
+            c1: (&v2).add(&v2),
         }
     }
 
