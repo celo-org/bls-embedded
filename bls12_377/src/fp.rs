@@ -7,7 +7,7 @@ use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use byteorder::{BigEndian, ByteOrder};
 use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
-use crate::util::{adc, mac, sbb};
+use crate::util::{adc, mac, sbb, LegendreSymbol};
 
 // The internal representation of this type is six 64-bit unsigned
 // integers in little-endian order. `Fp` values are always in
@@ -38,7 +38,7 @@ impl Default for Fp {
     }
 }
 
-impl ConstantTimeEq for Fp {
+/*impl ConstantTimeEq for Fp {
     fn ct_eq(&self, other: &Self) -> Choice {
         let self_red = self.to_bytes();
         let other_red = other.to_bytes();
@@ -48,6 +48,17 @@ impl ConstantTimeEq for Fp {
             & self_red[3].ct_eq(&other_red[3])
             & self_red[4].ct_eq(&other_red[4])
             & self_red[5].ct_eq(&other_red[5])
+    }
+}*/
+
+impl ConstantTimeEq for Fp {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.0[0].ct_eq(&other.0[0])
+            & self.0[1].ct_eq(&other.0[1])
+            & self.0[2].ct_eq(&other.0[2])
+            & self.0[3].ct_eq(&other.0[3])
+            & self.0[4].ct_eq(&other.0[4])
+            & self.0[5].ct_eq(&other.0[5])
     }
 }
 
@@ -124,6 +135,15 @@ const T_MINUS_ONE_DIV_TWO: [u64; 6] = [
     0xb80d94292763445,
     0x748c2f8a21d58c76,
     0x35c,
+];
+
+const MODULUS_MINUS_ONE_DIV_TWO: [u64; 6] = [
+    0x4284600000000000,
+    0xb85aea218000000,
+    0x8f79b117dd04a400,
+    0x8d116cf9807a89c7,
+    0x631d82e03650a49d,
+    0xd71d230be28875,
 ];
 
 impl<'a> Neg for &'a Fp {
@@ -297,6 +317,19 @@ impl Fp {
             }
         }
         res
+    }
+
+    pub fn legendre(&self) -> LegendreSymbol {
+        let s = self.pow_vartime(&MODULUS_MINUS_ONE_DIV_TWO);
+        println!("{:x?}", s);
+        println!("{:x?}", Self::zero());
+        if s == Self::zero() {
+            LegendreSymbol::Zero
+        } else if s == Self::one() {
+            LegendreSymbol::QuadraticResidue
+        } else {
+            LegendreSymbol::QuadraticNonResidue
+        }
     }
 
     //TODO: Clearly indicate this is non-constant
@@ -621,6 +654,19 @@ fn test_conditional_selection() {
     );
 }
 
+#[test]
+fn test_legendre() {
+    let a = Fp::from_raw_unchecked([
+        0xf8397a163b69bed0, 
+        0xf175823c7236735c, 
+        0x5569469835f84b92, 
+        0x714deebc8c061c3c, 
+        0x7adcc0994eb519c8, 
+        0x230d716ceafd4b,
+    ]);
+    assert_eq!(a.legendre(), LegendreSymbol::QuadraticResidue);
+}
+    
 #[test]
 fn test_equality() {
     fn is_equal(a: &Fp, b: &Fp) -> bool {
