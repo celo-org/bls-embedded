@@ -144,12 +144,30 @@ impl_binops_additive!(G1Projective, G1Affine);
 impl_binops_additive_specify_output!(G1Affine, G1Projective, G1Projective);
 
 const B: Fp = Fp::from_raw_unchecked([
-    0xaa270000000cfff3,
-    0x53cc0032fc34000a,
-    0x478fe97a6b0a807f,
-    0xb1d37ebee6ba24d7,
-    0x8ec9733bbf78ab2f,
-    0x9d645513d83de7e,
+    0x2cdffffffffff68,
+    0x51409f837fffffb1,
+    0x9f7db3a98a7d3ff2,
+    0x7b4e97b76e7c6305,
+    0x4cf495bf803c84e8,
+    0x8d6661e2fdf49a,
+]);
+
+const GEN_X: Fp = Fp::from_raw_unchecked([
+    0x260f33b9772451f4,
+    0xc54dd773169d5658,
+    0x5c1551c469a510dd,
+    0x761662e4425e1698,
+    0xc97d78cc6f065272,
+    0xa41206b361fd4d,
+]);
+
+const GEN_Y: Fp = Fp::from_raw_unchecked([
+    0x8193961fb8cb81f3,
+    0x638d4c5f44adb8,
+    0xfafaf3dad4daf54a,
+    0xc27849e2d655cd18,
+    0x2ec3ddb401d52814,
+    0x7da93326303c71,
 ]);
 
 impl G1Affine {
@@ -166,22 +184,8 @@ impl G1Affine {
     /// for how this generator is chosen.
     pub fn generator() -> G1Affine {
         G1Affine {
-            x: Fp::from_raw_unchecked([
-                0x5cb38790fd530c16,
-                0x7817fc679976fff5,
-                0x154f95c7143ba1c1,
-                0xf0ae6acdf3d0e747,
-                0xedce6ecc21dbf440,
-                0x120177419e0bfb75,
-            ]),
-            y: Fp::from_raw_unchecked([
-                0xbaac93d50ce72271,
-                0x8c22631a7918fd8e,
-                0xdd595f13570725ce,
-                0x51ac582950405194,
-                0xe1c8c3fad0059c0,
-                0xbbc3efc5008a26a,
-            ]),
+            x: GEN_X, 
+            y: GEN_Y,
             infinity: Choice::from(0u8),
         }
     }
@@ -372,8 +376,7 @@ impl G1Affine {
     /// unless an "unchecked" API was used.
     pub fn is_torsion_free(&self) -> Choice {
         const FQ_MODULUS_BYTES: [u8; 32] = [
-            1, 0, 0, 0, 255, 255, 255, 255, 254, 91, 254, 255, 2, 164, 189, 83, 5, 216, 161, 9, 8,
-            216, 57, 51, 72, 125, 157, 41, 83, 167, 237, 115,
+            1, 0, 0, 0, 0, 192, 8, 133, 0, 0, 0, 48, 68, 93, 11, 23, 0, 72, 9, 186, 47, 98, 243, 30, 143, 19, 245, 0, 243, 217, 34, 26
         ];
 
         // Clear the r-torsion from the point and check if it is the identity
@@ -525,6 +528,7 @@ impl G1Projective {
 
     /// Returns a fixed generator of the group. See [`notes::design`](notes/design/index.html#fixed-generators)
     /// for how this generator is chosen.
+    //TODO: Change to generator for bls-377
     pub fn generator() -> G1Projective {
         G1Projective {
             x: Fp::from_raw_unchecked([

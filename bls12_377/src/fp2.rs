@@ -279,10 +279,10 @@ impl Fp2 {
     pub fn sqrt(&self) -> CtOption<Self> {
         //TODO: Handle case where c0 is zero
         
-      //  match self.legendre() {
-       //     LegendreSymbol::Zero => CtOption::new(*self, 1.ct_eq(&1)),
-        //    LegendreSymbol::QuadraticNonResidue => CtOption::new(*self, 1.ct_eq(&0)),
-        //    LegendreSymbol::QuadraticResidue => {
+        match self.legendre() {
+            LegendreSymbol::Zero => CtOption::new(*self, 1.ct_eq(&1)),
+            LegendreSymbol::QuadraticNonResidue => CtOption::new(*self, 1.ct_eq(&0)),
+            LegendreSymbol::QuadraticResidue => {
                let two_inv = Fp::one()
                    .add(Fp::one())
                    .invert()
@@ -298,45 +298,8 @@ impl Fp2 {
                let c0 = delta.sqrt().unwrap();
                let c0_inv = c0.invert().unwrap();
                CtOption::new(Self { c0: c0, c1: self.c1 * two_inv *c0_inv }, 1.ct_eq(&1))
-       //     },
-  //      }
-        
-       /* let d = QUADRATIC_NONRESIDUE.pow_vartime(&[
-            0xdcff7fffffffd555,
-            0xf55ffff58a9ffff,
-            0xb39869507b587b12,
-            0xb23ba5c279c2895f,
-            0x258dd3db21a5d66b,
-            0xd0088f51cbff34d,
-        ]);
-        let dc = d * QUADRATIC_NONRESIDUE;
-        let e = dc.invert().unwrap();
-        let f = dc.square();
-        // b = self^((q - 1) // 4)
-        let b = self.pow_vartime(&[
-            0x2142300000000000,
-            0x05C2D7510C000000,
-            0xC7BCD88BEE825200,
-            0xC688B67CC03D44E3,
-            0xB18EC1701B28524E,
-            0x6B8E9185F1443A,
-        ]);
-        // a0 = b^(2q + 2)
-        let b2 = b.square();
-        let b2q = b2.pow_vartime(&MODULUS);
-        let a0 = b2 * b2q;
-        //if a0 == -1 return false
-        let bq = b.pow_vartime(&MODULUS);
-        let bqb = bq * b;
-        if bqb == Fp2::one() {
-            let qr = b2 * self;
-            let x0 = Fp::sqrt(&qr.c0).unwrap();
-            CtOption::new(Fp2::from(x0) * bq, 1.ct_eq(&1))
-        } else {
-            let qr = b2 * self * f;
-            let x0 = Fp::sqrt(&qr.c0).unwrap();
-            CtOption::new(Fp2::from(x0) * bq * e, 1.ct_eq(&1))
-        }*/
+            },
+        }
     } 
 
     /// Computes the multiplicative inverse of this field
@@ -614,7 +577,6 @@ fn test_addition() {
             0x11b94d5076c7b7b1,
         ]),
     };
-    //[e679e9a708c132d1, 305fc05f09ba5ba3, 6598ac3291888587, f7d67f622865865d, 2cfc6a0db5b455ca, a91a9b4b6c77e59])), c1: Fp384(BigInteger384([ea906c1273ab5bc4, 1c49b621e7a1df32, 6c1b951c50e467f9, ec0cb85389ddb683, 1b0b91b006ee8c48, 111589976cf79183]
     let c = Fp2 {
         c0: Fp::from_raw_unchecked([
             0xe679e9a708c132d1, 
