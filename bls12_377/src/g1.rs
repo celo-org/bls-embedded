@@ -528,25 +528,10 @@ impl G1Projective {
 
     /// Returns a fixed generator of the group. See [`notes::design`](notes/design/index.html#fixed-generators)
     /// for how this generator is chosen.
-    //TODO: Change to generator for bls-377
     pub fn generator() -> G1Projective {
         G1Projective {
-            x: Fp::from_raw_unchecked([
-                0x5cb38790fd530c16,
-                0x7817fc679976fff5,
-                0x154f95c7143ba1c1,
-                0xf0ae6acdf3d0e747,
-                0xedce6ecc21dbf440,
-                0x120177419e0bfb75,
-            ]),
-            y: Fp::from_raw_unchecked([
-                0xbaac93d50ce72271,
-                0x8c22631a7918fd8e,
-                0xdd595f13570725ce,
-                0x51ac582950405194,
-                0xe1c8c3fad0059c0,
-                0xbbc3efc5008a26a,
-            ]),
+            x: GEN_X,  
+            y: GEN_Y, 
             z: Fp::one(),
         }
     }
@@ -960,24 +945,25 @@ fn test_doubling() {
         assert!(!bool::from(tmp.is_identity()));
         assert!(bool::from(tmp.is_on_curve()));
 
+        //x: Fp384(BigInteger384([ec1ba6429f83899c, 978aca3d5f2c68cb, c38d9da5818da611, bf6b39be8b3a0de2, f7d589e86078b25d, 77872eca01b382])), y: Fp384(BigInteger384([f31bad49ae8c4e02, 7dc31d11a05bc189, e84bfecedc921aac, 56b68746622fd067, 8919fda07737450a, 150814f057f23c7]
         assert_eq!(
             G1Affine::from(tmp),
             G1Affine {
                 x: Fp::from_raw_unchecked([
-                    0x53e978ce58a9ba3c,
-                    0x3ea0583c4f3d65f9,
-                    0x4d20bb47f0012960,
-                    0xa54c664ae5b2b5d9,
-                    0x26b552a39d7eb21f,
-                    0x8895d26e68785
+                    0xec1ba6429f83899c, 
+                    0x978aca3d5f2c68cb, 
+                    0xc38d9da5818da611, 
+                    0xbf6b39be8b3a0de2, 
+                    0xf7d589e86078b25d, 
+                    0x77872eca01b382,
                 ]),
                 y: Fp::from_raw_unchecked([
-                    0x70110b3298293940,
-                    0xda33c5393f1f6afc,
-                    0xb86edfd16a5aa785,
-                    0xaec6d1c9e7b1c895,
-                    0x25cfc2b522d11720,
-                    0x6361c83f8d09b15
+                    0xf31bad49ae8c4e02, 
+                    0x7dc31d11a05bc189, 
+                    0xe84bfecedc921aac, 
+                    0x56b68746622fd067, 
+                    0x8919fda07737450a, 
+                    0x150814f057f23c7,
                 ]),
                 infinity: Choice::from(0u8)
             }
