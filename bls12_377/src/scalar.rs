@@ -62,12 +62,13 @@ impl ConditionallySelectable for Scalar {
 }
 
 /// Constant representing the modulus
-/// q = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+/// TODO: Put actual modulus value
+/// q =! 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
 const MODULUS: Scalar = Scalar([
-    0xffffffff00000001,
-    0x53bda402fffe5bfe,
-    0x3339d80809a1d805,
-    0x73eda753299d7d48,
+    725501752471715841u64,
+    6461107452199829505u64,
+    6968279316240510977u64,
+    1345280370688173398u64,
 ]);
 
 impl<'a> Neg for &'a Scalar {
@@ -119,33 +120,33 @@ impl_binops_additive!(Scalar, Scalar);
 impl_binops_multiplicative!(Scalar, Scalar);
 
 /// INV = -(q^{-1} mod 2^64) mod 2^64
-const INV: u64 = 0xfffffffeffffffff;
+const INV: u64 = 725501752471715839u64;
 
 /// R = 2^256 mod q
 const R: Scalar = Scalar([
-    0x00000001fffffffe,
-    0x5884b7fa00034802,
-    0x998c4fefecbc4ff5,
-    0x1824b159acc5056f,
+    9015221291577245683u64,
+    8239323489949974514u64,
+    1646089257421115374u64,
+    958099254763297437u64,
 ]);
 
 /// R^2 = 2^512 mod q
 const R2: Scalar = Scalar([
-    0xc999e990f3f29c6d,
-    0x2b6cedcb87925c23,
-    0x05d314967254398f,
-    0x0748d9d99f59ff11,
+    2726216793283724667u64,
+    14712177743343147295u64,
+    12091039717619697043u64,
+    81024008013859129u64,
 ]);
 
 /// R^3 = 2^768 mod q
 const R3: Scalar = Scalar([
-    0xc62c1807439b73af,
-    0x1b3e0d188cf06990,
-    0x73d13c71c7b5f418,
-    0x6e2a5bb9c8db33e9,
+    0xC62C1807439B73AF,
+    0x1B3E0D188CF06990,
+    0x73D13C71C7B5F418,
+    0x6E2A5BB9C8DB33E9,
 ]);
 
-const S: u32 = 32;
+const S: u32 = 47;
 
 /// GENERATOR^t where t * 2^s + 1 = q
 /// with t odd. In other words, this
@@ -155,10 +156,10 @@ const S: u32 = 32;
 /// of the q - 1 order multiplicative
 /// subgroup.
 const ROOT_OF_UNITY: Scalar = Scalar([
-    0xb9b58d8c5f0e466a,
-    0x5b1b4c801819d7ec,
-    0x0af53ae352a31e64,
-    0x5bf3adda19e9b27b,
+    0x3c3d3ca739381fb2,
+    0x9a14cda3ec99772b,
+    0xd7aacc7c59724826,
+    0xd1ba211c5cc349c,
 ]);
 
 impl Default for Scalar {
@@ -682,16 +683,16 @@ fn test_to_bytes() {
     assert_eq!(
         R2.to_bytes(),
         [
-            254, 255, 255, 255, 1, 0, 0, 0, 2, 72, 3, 0, 250, 183, 132, 88, 245, 79, 188, 236, 239,
-            79, 140, 153, 111, 5, 197, 172, 89, 177, 36, 24
+            243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
+            44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13
         ]
     );
 
     assert_eq!(
         (-&Scalar::one()).to_bytes(),
         [
-            0, 0, 0, 0, 255, 255, 255, 255, 254, 91, 254, 255, 2, 164, 189, 83, 5, 216, 161, 9, 8,
-            216, 57, 51, 72, 125, 157, 41, 83, 167, 237, 115
+        0, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
+        96, 86, 165, 44, 154, 94, 101, 171, 18
         ]
     );
 }
@@ -718,8 +719,8 @@ fn test_from_bytes() {
 
     assert_eq!(
         Scalar::from_bytes(&[
-            254, 255, 255, 255, 1, 0, 0, 0, 2, 72, 3, 0, 250, 183, 132, 88, 245, 79, 188, 236, 239,
-            79, 140, 153, 111, 5, 197, 172, 89, 177, 36, 24
+            243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
+            44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13
         ])
         .unwrap(),
         R2
@@ -728,8 +729,8 @@ fn test_from_bytes() {
     // -1 should work
     assert!(
         Scalar::from_bytes(&[
-            0, 0, 0, 0, 255, 255, 255, 255, 254, 91, 254, 255, 2, 164, 189, 83, 5, 216, 161, 9, 8,
-            216, 57, 51, 72, 125, 157, 41, 83, 167, 237, 115
+            0, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
+            96, 86, 165, 44, 154, 94, 101, 171, 18
         ])
         .is_some()
         .unwrap_u8()
@@ -739,8 +740,8 @@ fn test_from_bytes() {
     // modulus is invalid
     assert!(
         Scalar::from_bytes(&[
-            1, 0, 0, 0, 255, 255, 255, 255, 254, 91, 254, 255, 2, 164, 189, 83, 5, 216, 161, 9, 8,
-            216, 57, 51, 72, 125, 157, 41, 83, 167, 237, 115
+            1, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
+            96, 86, 165, 44, 154, 94, 101, 171, 18
         ])
         .is_none()
         .unwrap_u8()
@@ -750,8 +751,17 @@ fn test_from_bytes() {
     // Anything larger than the modulus is invalid
     assert!(
         Scalar::from_bytes(&[
-            2, 0, 0, 0, 255, 255, 255, 255, 254, 91, 254, 255, 2, 164, 189, 83, 5, 216, 161, 9, 8,
-            216, 57, 51, 72, 125, 157, 41, 83, 167, 237, 115
+            2, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
+            96, 86, 165, 44, 154, 94, 101, 171, 18
+        ])
+        .is_none()
+        .unwrap_u8()
+            == 1
+    );
+    assert!(
+        Scalar::from_bytes(&[
+            1, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 177, 55, 92, 30, 77, 180, 
+            96, 86, 165, 44, 154, 94, 101, 171, 18
         ])
         .is_none()
         .unwrap_u8()
@@ -760,16 +770,7 @@ fn test_from_bytes() {
     assert!(
         Scalar::from_bytes(&[
             1, 0, 0, 0, 255, 255, 255, 255, 254, 91, 254, 255, 2, 164, 189, 83, 5, 216, 161, 9, 8,
-            216, 58, 51, 72, 125, 157, 41, 83, 167, 237, 115
-        ])
-        .is_none()
-        .unwrap_u8()
-            == 1
-    );
-    assert!(
-        Scalar::from_bytes(&[
-            1, 0, 0, 0, 255, 255, 255, 255, 254, 91, 254, 255, 2, 164, 189, 83, 5, 216, 161, 9, 8,
-            216, 57, 51, 72, 125, 157, 41, 83, 167, 237, 116
+            216, 57, 51, 72, 125, 157, 41, 83, 167, 237, 117
         ])
         .is_none()
         .unwrap_u8()
@@ -860,24 +861,25 @@ fn test_zero() {
 
 #[cfg(test)]
 const LARGEST: Scalar = Scalar([
-    0xffffffff00000000,
-    0x53bda402fffe5bfe,
-    0x3339d80809a1d805,
-    0x73eda753299d7d48,
+    725501752471715840u64,
+    6461107452199829505u64,
+    6968279316240510977u64,
+    1345280370688173398u64,
 ]);
 
 #[test]
 fn test_addition() {
     let mut tmp = LARGEST;
     tmp += &LARGEST;
+    println!("{:x?}", tmp);
 
     assert_eq!(
         tmp,
         Scalar([
-            0xfffffffeffffffff,
-            0x53bda402fffe5bfe,
-            0x3339d80809a1d805,
-            0x73eda753299d7d48
+            0xa117fffffffffff, 
+            0x59aa76fed0000001, 
+            0x60b44d1e5c37b001, 
+            0x12ab655e9a2ca556,
         ])
     );
 
@@ -1048,12 +1050,16 @@ fn test_sqrt() {
 
 #[test]
 fn test_from_raw() {
+    //D4BDA322BBB9A9D1
+    //6D81575512C0FEE7
+    //257F50F6FFFFFF27
+    //D1C7FFFFFFFFFF2
     assert_eq!(
         Scalar::from_raw([
-            0x1fffffffd,
-            0x5884b7fa00034802,
-            0x998c4fefecbc4ff5,
-            0x1824b159acc5056f
+            0xD1C7FFFFFFFFFF2,
+            0x257F50F6FFFFFF27,
+            0x6D81575512C0FEE7,
+            0xD4BDA322BBB9A9D1,
         ]),
         Scalar::from_raw([0xffffffffffffffff; 4])
     );
