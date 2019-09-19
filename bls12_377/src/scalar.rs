@@ -124,26 +124,26 @@ const INV: u64 = 725501752471715839u64;
 
 /// R = 2^256 mod q
 const R: Scalar = Scalar([
-    9015221291577245683u64,
-    8239323489949974514u64,
-    1646089257421115374u64,
-    958099254763297437u64,
+    0x7D1C7FFFFFFFFFF3,
+    0x7257F50F6FFFFFF2,
+    0x16D81575512C0FEE,
+    0xD4BDA322BBB9A9D,
 ]);
 
 /// R^2 = 2^512 mod q
 const R2: Scalar = Scalar([
-    2726216793283724667u64,
-    14712177743343147295u64,
-    12091039717619697043u64,
-    81024008013859129u64,
+    0x25D577BAB861857B,
+    0xCC2C27B58860591F,
+    0xA7CC008FE5DC8593,
+    0x11FDAE7EFF1C939,
 ]);
 
 /// R^3 = 2^768 mod q
 const R3: Scalar = Scalar([
-    0xC62C1807439B73AF,
-    0x1B3E0D188CF06990,
-    0x73D13C71C7B5F418,
-    0x6E2A5BB9C8DB33E9,
+    0x6A4295C90F65454C, 
+    0x624D23FFAE271699,
+    0xB1E55EF6F1C9D713,
+    0x601DFA555C48DDA,
 ]);
 
 const S: u32 = 47;
@@ -388,105 +388,6 @@ impl Scalar {
             }
         }
         res
-    }
-
-    /// Computes the multiplicative inverse of this element,
-    /// failing if the element is zero.
-    pub fn invert(&self) -> CtOption<Self> {
-        #[inline(always)]
-        fn square_assign_multi(n: &mut Scalar, num_times: usize) {
-            for _ in 0..num_times {
-                *n = n.square();
-            }
-        }
-        // found using https://github.com/kwantam/addchain
-        let mut t0 = self.square();
-        let mut t1 = t0 * self;
-        let mut t16 = t0.square();
-        let mut t6 = t16.square();
-        let mut t5 = t6 * t0;
-        t0 = t6 * t16;
-        let mut t12 = t5 * t16;
-        let mut t2 = t6.square();
-        let mut t7 = t5 * t6;
-        let mut t15 = t0 * t5;
-        let mut t17 = t12.square();
-        t1 *= t17;
-        let mut t3 = t7 * t2;
-        let t8 = t1 * t17;
-        let t4 = t8 * t2;
-        let t9 = t8 * t7;
-        t7 = t4 * t5;
-        let t11 = t4 * t17;
-        t5 = t9 * t17;
-        let t14 = t7 * t15;
-        let t13 = t11 * t12;
-        t12 = t11 * t17;
-        t15 *= &t12;
-        t16 *= &t15;
-        t3 *= &t16;
-        t17 *= &t3;
-        t0 *= &t17;
-        t6 *= &t0;
-        t2 *= &t6;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t17;
-        square_assign_multi(&mut t0, 9);
-        t0 *= &t16;
-        square_assign_multi(&mut t0, 9);
-        t0 *= &t15;
-        square_assign_multi(&mut t0, 9);
-        t0 *= &t15;
-        square_assign_multi(&mut t0, 7);
-        t0 *= &t14;
-        square_assign_multi(&mut t0, 7);
-        t0 *= &t13;
-        square_assign_multi(&mut t0, 10);
-        t0 *= &t12;
-        square_assign_multi(&mut t0, 9);
-        t0 *= &t11;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t8;
-        square_assign_multi(&mut t0, 8);
-        t0 *= self;
-        square_assign_multi(&mut t0, 14);
-        t0 *= &t9;
-        square_assign_multi(&mut t0, 10);
-        t0 *= &t8;
-        square_assign_multi(&mut t0, 15);
-        t0 *= &t7;
-        square_assign_multi(&mut t0, 10);
-        t0 *= &t6;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t5;
-        square_assign_multi(&mut t0, 16);
-        t0 *= &t3;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t2;
-        square_assign_multi(&mut t0, 7);
-        t0 *= &t4;
-        square_assign_multi(&mut t0, 9);
-        t0 *= &t2;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t3;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t2;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t2;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t2;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t3;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t2;
-        square_assign_multi(&mut t0, 8);
-        t0 *= &t2;
-        square_assign_multi(&mut t0, 5);
-        t0 *= &t1;
-        square_assign_multi(&mut t0, 5);
-        t0 *= &t1;
-
-        CtOption::new(t0, !self.ct_eq(&Self::zero()))
     }
 
     #[inline(always)]
@@ -975,52 +876,6 @@ fn test_squaring() {
     }
 }
 
-#[test]
-fn test_inversion() {
-    assert_eq!(Scalar::zero().invert().is_none().unwrap_u8(), 1);
-    assert_eq!(Scalar::one().invert().unwrap(), Scalar::one());
-    assert_eq!((-&Scalar::one()).invert().unwrap(), -&Scalar::one());
-
-    let mut tmp = R2;
-
-    for _ in 0..100 {
-        let mut tmp2 = tmp.invert().unwrap();
-        tmp2.mul_assign(&tmp);
-
-        assert_eq!(tmp2, Scalar::one());
-
-        tmp.add_assign(&R2);
-    }
-}
-
-#[test]
-fn test_invert_is_pow() {
-    let q_minus_2 = [
-        0xfffffffeffffffff,
-        0x53bda402fffe5bfe,
-        0x3339d80809a1d805,
-        0x73eda753299d7d48,
-    ];
-
-    let mut r1 = R;
-    let mut r2 = R;
-    let mut r3 = R;
-
-    for _ in 0..100 {
-        r1 = r1.invert().unwrap();
-        r2 = r2.pow_vartime(&q_minus_2);
-        r3 = r3.pow(&q_minus_2);
-
-        assert_eq!(r1, r2);
-        assert_eq!(r2, r3);
-        // Add R so we check something different next time around
-        r1.add_assign(&R);
-        r2 = r1;
-        r3 = r1;
-    }
-}
-
-#[test]
 fn test_sqrt() {
     {
         assert_eq!(Scalar::zero().sqrt().unwrap(), Scalar::zero());
@@ -1050,10 +905,6 @@ fn test_sqrt() {
 
 #[test]
 fn test_from_raw() {
-    //D4BDA322BBB9A9D1
-    //6D81575512C0FEE7
-    //257F50F6FFFFFF27
-    //D1C7FFFFFFFFFF2
     assert_eq!(
         Scalar::from_raw([
             0xD1C7FFFFFFFFFF2,

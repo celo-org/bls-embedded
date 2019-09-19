@@ -59,20 +59,6 @@ pub use g1::{G1Affine, G1Projective};
 #[cfg(feature = "groups")]
 pub use g2::{G2Affine, G2Projective};
 
-#[cfg(feature = "groups")]
-mod fp12;
-#[cfg(feature = "groups")]
-mod fp6;
-
-// The BLS parameter x for BLS12-381 is -0xd201000000010000
-const BLS_X: u64 = 0xd201000000010000;
-const BLS_X_IS_NEGATIVE: bool = true;
-
-#[cfg(feature = "groups")]
-mod pairings;
-
-pub use pairings::{pairing, Gt, MillerLoopResult};
-
 // TODO: This should be upstreamed to subtle.
 // See https://github.com/dalek-cryptography/subtle/pull/48
 trait CtOptionExt<T> {
