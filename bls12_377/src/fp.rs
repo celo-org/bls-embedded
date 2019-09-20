@@ -1,5 +1,4 @@
-//! This module provides an implementation of the BLS12-377 base field `GF(p)` where `p != 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab`
-//! TODO: Put actual modulus here
+//! This module provides an implementation of the BLS12-377 base field `GF(p)` where `p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177`
 
 use core::fmt;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -17,12 +16,6 @@ pub struct Fp([u64; 6]);
 
 impl fmt::Debug for Fp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        /*write!(f, "{}\n", self.0[0])?;
-        write!(f, "{}\n", self.0[1])?;
-        write!(f, "{}\n", self.0[2])?;
-        write!(f, "{}\n", self.0[3])?;
-        write!(f, "{}\n", self.0[4])?;
-        write!(f, "{}\n", self.0[5])?;*/
         let tmp = self.to_bytes();
         write!(f, "0x")?;
         for &b in tmp.iter() {
@@ -118,7 +111,7 @@ const R2: Fp = Fp([
     0x6dfccb1e914b88,
 ]);
 
-/// zexe codebase implies this is c^t, where p - 1 = 2^s*t and t odd
+/// from zexe codebase: c^t, where p - 1 = 2^s*t and t odd
 const ROOT_OF_UNITY: Fp = Fp([
     2022196864061697551u64,
     17419102863309525423u64,
@@ -333,50 +326,57 @@ impl Fp {
     }
 
     //TODO: Clearly indicate this is non-constant
-    //TODO: Handle zero, quadratic nonresidue cases
     #[inline]
-    pub fn sqrt(&self) -> CtOption<Self> {
+    pub fn sqrt(&self) -> Option<Self> {
+        match self.legendre() {
+            Zero => Some(*self),
+            QuadraticNonResidue => None,
+            QuadraticResidue => {
+                let mut z = ROOT_OF_UNITY;
+                let mut w = self.pow_vartime(&T_MINUS_ONE_DIV_TWO);
+                let mut x = w * self;
+                let mut b = x * &w;
+                let mut v = TWO_ADICITY as usize;
 
-        let mut z = ROOT_OF_UNITY;
-        let mut w = self.pow_vartime(&T_MINUS_ONE_DIV_TWO);
-        let mut x = w * self;
-        let mut b = x * &w;
-        let mut v = TWO_ADICITY as usize;
+                // t = self^t
+                {
+                    let mut check = b;
+                    for _ in 0..(v-1) {
+                        check = check.square();
+                    }
+                    if check != Fp::one() {
+                        panic!("Input is not a square root, but passed the QR test")
+                    }
+                }
 
-        // t = self^t
-        {
-            let mut check = b;
-            for _ in 0..(v-1) {
-                check = check.square();
-            }
-            if check != Fp::one() {
-                panic!("Input is not a square root, but passed the QR test")
+                while b != Fp::one() {
+                    let mut k = 0usize;
+
+                    let mut b2k = b;
+                    while b2k != Fp::one() {
+                        // invariant: b2k = b^(2^k) after entering this loop
+                        b2k = b2k.square();
+                        k += 1;
+                    }
+
+                    let j = v - k - 1;
+                    w = z;
+                    for _ in 0..j {
+                        w = w.square();
+                    }
+
+                    z = w.square();
+                    b *= &z;
+                    x *= &w;
+                    v = k;
+                }
+                if x.square() == *self {
+                    Some(x)
+                } else {
+                    None
+                }
             }
         }
-
-        while b != Fp::one() {
-            let mut k = 0usize;
-
-            let mut b2k = b;
-            while b2k != Fp::one() {
-                // invariant: b2k = b^(2^k) after entering this loop
-                b2k = b2k.square();
-                k += 1;
-            }
-
-            let j = v - k - 1;
-            w = z;
-            for _ in 0..j {
-                w = w.square();
-            }
-
-            z = w.square();
-            b *= &z;
-            x *= &w;
-            v = k;
-        }
-
-        CtOption::new(x, 1.ct_eq(&1))
     }
 
     #[inline]
