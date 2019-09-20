@@ -297,11 +297,16 @@ impl G1Affine {
 
     /// Attempts to deserialize a compressed element. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
-    pub fn from_compressed(bytes: &[u8; 48]) -> CtOption<Self> {
+    pub fn from_compressed(bytes: &[u8; 48]) -> Option<Self> {
         // We already know the point is on the curve because this is established
         // by the y-coordinate recovery procedure in from_compressed_unchecked().
 
-        Self::from_compressed_unchecked(bytes).and_then(|p| CtOption::new(p, p.is_torsion_free()))
+        Self::from_compressed_unchecked(bytes).and_then(|p| 
+            match bool::from(p.is_torsion_free()) {
+                true => Some(p),
+                _ => None,
+            }
+        )
     }
 
     /// Attempts to deserialize an uncompressed element, not checking if the
@@ -325,44 +330,43 @@ impl G1Affine {
             Fp::from_bytes(&tmp)
         };
 
-        x.and_then(|x| {
-            use crate::CtOptionExt;
+        match bool::from(x.is_some()) {
+            false => None,
+            _ =>
+           {
+                let x = x.unwrap();
+                // If the infinity flag is set, return the value assuming
+                // the x-coordinate is zero and the sort bit is not set.
+                //
+                // Otherwise, return a recovered point (assuming the correct
+                // y-coordinate can be found) so long as the infinity flag
+                // was not set.
+                
+                match bool::from(infinity_flag_set & // Infinity flag should be set
+                    compression_flag_set & // Compression flag should be set
+                    (!sort_flag_set) & // Sort flag should not be set
+                    x.is_zero()) // The x-coordinate should be zero
+                {
+                    true => Some(G1Affine::identity()),
+                    _ => None,
+                }.or_else(|| {
+                    // Recover a y-coordinate given x by y = sqrt(x^3 + 4)
+                    ((x.square() * x) + B).sqrt().and_then(|y| {
+                        // Switch to the correct y-coordinate if necessary.
+                        let y = Fp::conditional_select(
+                            &y,
+                            &-y,
+                            y.lexicographically_largest() ^ sort_flag_set,
+                        );
 
-            // If the infinity flag is set, return the value assuming
-            // the x-coordinate is zero and the sort bit is not set.
-            //
-            // Otherwise, return a recovered point (assuming the correct
-            // y-coordinate can be found) so long as the infinity flag
-            // was not set.
-            CtOption::new(
-                G1Affine::identity(),
-                infinity_flag_set & // Infinity flag should be set
-                compression_flag_set & // Compression flag should be set
-                (!sort_flag_set) & // Sort flag should not be set
-                x.is_zero(), // The x-coordinate should be zero
-            )
-            .or_else(|| {
-                // Recover a y-coordinate given x by y = sqrt(x^3 + 4)
-                ((x.square() * x) + B).sqrt().and_then(|y| {
-                    // Switch to the correct y-coordinate if necessary.
-                    let y = Fp::conditional_select(
-                        &y,
-                        &-y,
-                        y.lexicographically_largest() ^ sort_flag_set,
-                    );
-
-                    CtOption::new(
-                        G1Affine {
-                            x,
-                            y,
-                            infinity: infinity_flag_set,
-                        },
-                        (!infinity_flag_set) & // Infinity flag should not be set
-                        compression_flag_set, // Compression flag should be set
-                    )
+                        match bool::from((!infinity_flag_set) & compression_flag_set) {
+                            true => Some(G1Affine { x, y, infinity: infinity_flag_set }), 
+                            _ => None,
+                        }
+                    })
                 })
-            })
-        })
+            }
+        }
     }
 
     /// Returns true if this element is the identity (the point at infinity).
