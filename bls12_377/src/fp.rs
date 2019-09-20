@@ -314,7 +314,8 @@ impl Fp {
 
     pub fn legendre(&self) -> LegendreSymbol {
         let s = self.pow_vartime(&MODULUS_MINUS_ONE_DIV_TWO);
-        println!("{:x?}", s);
+     //   println!("{:x?}", s);
+     //   println!("{:x?}", Self::zero());
         if s == Self::zero() {
             LegendreSymbol::Zero
         } else if s == Self::one() {
@@ -328,9 +329,9 @@ impl Fp {
     #[inline]
     pub fn sqrt(&self) -> Option<Self> {
         match self.legendre() {
-            Zero => Some(*self),
-            QuadraticNonResidue => None,
-            QuadraticResidue => {
+            LegendreSymbol::Zero => Some(*self),
+            LegendreSymbol::QuadraticNonResidue => None,
+            LegendreSymbol::QuadraticResidue => {
                 let mut z = ROOT_OF_UNITY;
                 let mut w = self.pow_vartime(&T_MINUS_ONE_DIV_TWO);
                 let mut x = w * self;
@@ -369,12 +370,8 @@ impl Fp {
                     x *= &w;
                     v = k;
                 }
-                if x.square() == *self {
-                    Some(x)
-                } else {
-                    None
-                }
-            }
+                Some(x)
+            },
         }
     }
 
