@@ -315,7 +315,6 @@ impl Fp {
     pub fn legendre(&self) -> LegendreSymbol {
         let s = self.pow_vartime(&MODULUS_MINUS_ONE_DIV_TWO);
         println!("{:x?}", s);
-        println!("{:x?}", Self::zero());
         if s == Self::zero() {
             LegendreSymbol::Zero
         } else if s == Self::one() {
@@ -892,6 +891,7 @@ fn test_sqrt() {
         // sqrt(4) = -2
         a.sqrt().unwrap(),
         // 2
+        // b7365bc1527cc225, 80c4410c13dad980, 405a608866ec9af9, bae77f06775d9e86, 631d7a2378887188, 24475d61e565d7
         Fp::from_raw_unchecked([
             0xb7365bc1527cc225,
             0x80c4410c13dad980, 
