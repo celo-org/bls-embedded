@@ -265,14 +265,14 @@ impl Fp2 {
     // TODO: Investigate switching to algo 10
     // TODO: Mark clearly as non-constant
     // TODO: Deal with case where c1 = 0
-    pub fn sqrt(&self) -> CtOption<Self> {
-      /*  if self.c1 == Fp::zero() {
+    pub fn sqrt(&self) -> Option<Self> {
+        if self.c1 == Fp::zero() {
             return self.c0.sqrt().map(|c0| Self { c0, c1: Fp::zero() } )
-        }*/
+        }
 
         match self.legendre() {
-            LegendreSymbol::Zero => CtOption::new(*self, 1.ct_eq(&1)),
-            LegendreSymbol::QuadraticNonResidue => CtOption::new(*self, 1.ct_eq(&0)),
+            LegendreSymbol::Zero => Some(*self),
+            LegendreSymbol::QuadraticNonResidue => None,
             LegendreSymbol::QuadraticResidue => {
                let two_inv = Fp::one()
                    .add(Fp::one())
@@ -288,7 +288,7 @@ impl Fp2 {
                }
                let c0 = delta.sqrt().unwrap();
                let c0_inv = c0.invert().unwrap();
-               CtOption::new(Self { c0: c0, c1: self.c1 * two_inv *c0_inv }, 1.ct_eq(&1))
+               Some(Self { c0: c0, c1: self.c1 * two_inv *c0_inv })
             },
         }
     } 
