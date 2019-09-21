@@ -1,7 +1,7 @@
 //! This module implements arithmetic over the quadratic extension field Fp2.
 
 use core::fmt;
-use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Not, Sub, SubAssign};
 
 use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
@@ -18,19 +18,6 @@ const NONRESIDUE: Fp = Fp::from_raw_unchecked([
     0xbaf1ec35813f9eb,
     0x9974a2c0945ad2,
 ]);
-
-// from Zexe Bls-377 fp2 implementation
-/*const QUADRATIC_NONRESIDUE: Fp2 = Fp2 {
-    c0: Fp::zero(),
-    c1: Fp::from_raw_unchecked([
-            202099033278250856u64,
-            5854854902718660529u64,
-            11492539364873682930u64,
-            8885205928937022213u64,
-            5545221690922665192u64,
-            39800542322357402u64,
-    ]),
-};*/
 
 #[derive(Copy, Clone)]
 pub struct Fp2 {
@@ -276,9 +263,13 @@ impl Fp2 {
 
     // Algorithm 8, https://eprint.iacr.org/2012/685.pdf
     // TODO: Investigate switching to algo 10
+    // TODO: Mark clearly as non-constant
+    // TODO: Deal with case where c1 = 0
     pub fn sqrt(&self) -> CtOption<Self> {
-        //TODO: Handle case where c0 is zero
-        
+      /*  if self.c1 == Fp::zero() {
+            return self.c0.sqrt().map(|c0| Self { c0, c1: Fp::zero() } )
+        }*/
+
         match self.legendre() {
             LegendreSymbol::Zero => CtOption::new(*self, 1.ct_eq(&1)),
             LegendreSymbol::QuadraticNonResidue => CtOption::new(*self, 1.ct_eq(&0)),
@@ -307,8 +298,8 @@ impl Fp2 {
     /// is zero.
     pub fn invert(&self) -> CtOption<Self> {
         // We wish to find the multiplicative inverse of a nonzero
-        // element a + bu in Fp2. Taken from Zexe codebase: algorithm 5.19
-        // of Guide to Pairing Based Cryptography
+        // element a + bu in Fp2. Algorithm 5.19
+        // from Guide to Pairing Based Cryptography
         
         let v0 = self.c0.square();
         let v1 = self.c1.square();
@@ -317,7 +308,7 @@ impl Fp2 {
         CtOption::new(Fp2 {
             c0: self.c0 * v1,
             c1: -(self.c1 * v1),
-        }, 1.ct_eq(&1))
+        }, Choice::not(self.is_zero()))
     }
 
     /// Although this is labeled "vartime", it is only
