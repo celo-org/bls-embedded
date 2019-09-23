@@ -31,19 +31,6 @@ impl Default for Fp {
     }
 }
 
-/*impl ConstantTimeEq for Fp {
-    fn ct_eq(&self, other: &Self) -> Choice {
-        let self_red = self.to_bytes();
-        let other_red = other.to_bytes();
-        self_red[0].ct_eq(&other_red[0])
-            & self_red[1].ct_eq(&other_red[1])
-            & self_red[2].ct_eq(&other_red[2])
-            & self_red[3].ct_eq(&other_red[3])
-            & self_red[4].ct_eq(&other_red[4])
-            & self_red[5].ct_eq(&other_red[5])
-    }
-}*/
-
 impl ConstantTimeEq for Fp {
     fn ct_eq(&self, other: &Self) -> Choice {
         self.0[0].ct_eq(&other.0[0])
@@ -111,7 +98,7 @@ const R2: Fp = Fp([
     0x6dfccb1e914b88,
 ]);
 
-/// from zexe codebase: c^t, where p - 1 = 2^s*t and t odd
+/// c^t, where p - 1 = 2^s*t and t odd
 const ROOT_OF_UNITY: Fp = Fp([
     2022196864061697551u64,
     17419102863309525423u64,
