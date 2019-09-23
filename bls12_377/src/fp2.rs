@@ -263,11 +263,9 @@ impl Fp2 {
 
     // Algorithm 8, https://eprint.iacr.org/2012/685.pdf
     // TODO: Investigate switching to algo 10
-    // TODO: Mark clearly as non-constant
-    // TODO: Deal with case where c1 = 0
-    pub fn sqrt(&self) -> Option<Self> {
+    pub fn sqrt_vartime(&self) -> Option<Self> {
         if self.c1 == Fp::zero() {
-            return self.c0.sqrt().map(|c0| Self { c0, c1: Fp::zero() } )
+            return self.c0.sqrt_vartime().map(|c0| Self { c0, c1: Fp::zero() } )
         }
 
         match self.legendre() {
@@ -280,13 +278,13 @@ impl Fp2 {
                    .unwrap();
                let alpha = self
                    .norm()
-                   .sqrt()
+                   .sqrt_vartime()
                    .unwrap();
                let mut delta = (alpha + self.c0) * two_inv;
                if delta.legendre() == LegendreSymbol::QuadraticNonResidue {
                    delta -= alpha;
                }
-               let c0 = delta.sqrt().unwrap();
+               let c0 = delta.sqrt_vartime().unwrap();
                let c0_inv = c0.invert().unwrap();
                Some(Self { c0: c0, c1: self.c1 * two_inv *c0_inv })
             },
@@ -446,7 +444,6 @@ fn test_squaring() {
             0x10a768d0df4eabc,
         ]),
     };
-    //9180cfbd5231eb92, 80ba5cc15826ee06, 6e4810398ff8110a, 17b1565c3b5de972, adfa03c911c9f3d, 45616e22b1a459])), c1: Fp384(BigInteger384([de372dea33981b66, 235f7eb8baf88c85, 3837e2636f0d07bc, ba39294a74709e4b, 274cb0edb1fdd1e2, 11abe141195cea6
     let b = Fp2 {
         c0: Fp::from_raw_unchecked([
             0x9180cfbd5231eb92, 
@@ -507,7 +504,6 @@ fn test_multiplication() {
             0x11b94d5076c7b7b1,
         ]),
     };
-    //[a2332499367dd291, 41882f1e421e6c04, bc6a01cea4131ffb, d5ccc0ffed5730d8, 28c08d93d3196725, 113a0b1f3ec936b])), c1: Fp384(BigInteger384([c00e498bee3a3b12, 3ac6975d105a3631, 99d635ebdedee2ca, bc815bde58a6ecc8, 26382035f22c7652, 54f5a96fa8aef8]
     let c = Fp2 {
         c0: Fp::from_raw_unchecked([
             0xa2332499367dd291, 
@@ -693,8 +689,8 @@ fn test_negation() {
 }
 
 #[test]
-fn test_sqrt() {
-    let a = Fp2 {
+fn test_sqrt_vartime() {
+    /*let a = Fp2 {
         c0: Fp::from_raw_unchecked([
             0x2beed14627d7f9e9,
             0xb6617e06660e5dce,
@@ -711,10 +707,27 @@ fn test_sqrt() {
             0x305993d043d91b68,
             0x626f03c0489b72d,
         ]),
+    };*/
+    let a = Fp2 {
+        c0: Fp::from_raw_unchecked([
+            0xa1e09175a4d2c1fe,
+            0x8b33acfc204eff12,
+            0xe24415a11b456e42,
+            0x61d996b1b6ee1936,
+            0x1164dbe8667c853c,
+            0x788557acc7d9c79,
+        ]),
+        c1: Fp::from_raw_unchecked([
+            0xda6a87cc6f48fa36,
+            0xfc7b488277c1903,
+            0x9445ac4adc448187,
+            0x2616d5bc9099209,
+            0xdbed46772db58d48,
+            0x11b94d5076c7b7b1,
+        ]),
     };
 
-    println!("{:x?}", a.sqrt().unwrap());
-//    assert_eq!(a.sqrt().unwrap(), a);
+    assert_eq!(a.sqrt_vartime().unwrap().square(), a);
 
     // b = 5, which is a generator of the p - 1 order
     // multiplicative subgroup
@@ -730,7 +743,7 @@ fn test_sqrt() {
         c1: Fp::zero(),
     };
 
-    //assert_eq!(b.sqrt().unwrap().square(), b);
+    //assert_eq!(b.sqrt_vartime().unwrap().square(), b);
 
     // c = 25, which is a generator of the (p - 1) / 2 order
     // multiplicative subgroup
@@ -746,7 +759,7 @@ fn test_sqrt() {
         c1: Fp::zero(),
     };*/
 
-    //assert_eq!(c.sqrt().unwrap().square(), c);
+    //assert_eq!(c.sqrt_vartime().unwrap().square(), c);
 
     // 2155129644831861015726826462986972654175647013268275306775721078997042729172900466542651176384766902407257452753362*u + 2796889544896299244102912275102369318775038861758288697415827248356648685135290329705805931514906495247464901062529
     // is nonsquare.
@@ -769,7 +782,7 @@ fn test_sqrt() {
                 0x13e1c895cc4b6c22
             ])
         }
-        .sqrt()
+        .sqrt_vartime()
         .is_none()
     ));*/
 }
@@ -794,7 +807,6 @@ fn test_inversion() {
             0x1333f55a35725be0,
         ]),
     };
-    //[a972fe45912ab0b0, 2fad422c707d2a7a, 1e0c99ca54b14292, 12b35bad27bfbb4b, aac12849e9ca08be, 9ca440f7d792c1])), c1: Fp384(BigInteger384([93f803dee0c6aee, 85be5ff1bf7a8b20, 9343d05ec64f00b6, 91a1db9f810ce2ac, c7a4b33169335bd, a9202f9769f137]
 
     let b = Fp2 {
         c0: Fp::from_raw_unchecked([

@@ -361,11 +361,11 @@ impl G2Affine {
 
     /// Attempts to deserialize a compressed element. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
-    pub fn from_compressed(bytes: &[u8; 96]) -> Option<Self> {
+    pub fn from_compressed_vartime(bytes: &[u8; 96]) -> Option<Self> {
         // We already know the point is on the curve because this is established
         // by the y-coordinate recovery procedure in from_compressed_unchecked().
 
-        Self::from_compressed_unchecked(bytes).and_then(|p| 
+        Self::from_compressed_unchecked_vartime(bytes).and_then(|p| 
             match bool::from(p.is_torsion_free()) {
                 true => Some(p),
                 _ => None,
@@ -377,7 +377,7 @@ impl G2Affine {
     /// element is in the correct subgroup.
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_compressed()` instead.
-    pub fn from_compressed_unchecked(bytes: &[u8; 96]) -> Option<Self> {
+    pub fn from_compressed_unchecked_vartime(bytes: &[u8; 96]) -> Option<Self> {
         // Obtain the three flags from the start of the byte sequence
         let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
         let infinity_flag_set = Choice::from((bytes[0] >> 6) & 1);
@@ -427,8 +427,8 @@ impl G2Affine {
                             true => Some(G2Affine::identity()),
                             _ => None,
                         }.or_else(|| {
-                            // Recover a y-coordinate given x by y = sqrt(x^3 + 4)
-                            ((x.square() * x) + B).sqrt().and_then(|y| {
+                            // Recover a y-coordinate given x by y = sqrt_vartime(x^3 + 4)
+                            ((x.square() * x) + B).sqrt_vartime().and_then(|y| {
                                 // Switch to the correct y-coordinate if necessary.
                                 let y = Fp2::conditional_select(
                                     &y,
@@ -875,7 +875,7 @@ fn test_is_on_curve() {
     assert!(bool::from(G2Projective::generator().is_on_curve()));
 
     let mut pt = G2Projective::generator();
-    for i in 0..100 {
+    for _i in 0..100 {
         pt = pt.double();
         assert!(bool::from(pt.is_on_curve()));
     }

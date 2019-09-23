@@ -65,12 +65,12 @@ impl ConditionallySelectable for Fp {
 
 /// p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177
 pub const MODULUS: [u64; 6] = [
-        0x8508c00000000001,
-        0x170b5d4430000000,
-        0x1ef3622fba094800,
-        0x1a22d9f300f5138f,
-        0xc63b05c06ca1493b,
-        0x1ae3a4617c510ea,
+    0x8508c00000000001,
+    0x170b5d4430000000,
+    0x1ef3622fba094800,
+    0x1a22d9f300f5138f,
+    0xc63b05c06ca1493b,
+    0x1ae3a4617c510ea,
 ];
 
 /// INV = -(p^{-1} mod 2^64) mod 2^64
@@ -80,12 +80,12 @@ const TWO_ADICITY: u32 = 46u32;
 
 /// R = 2^384 mod p
 const R: Fp = Fp([
-    202099033278250856u64,
-    5854854902718660529u64,
-    11492539364873682930u64,
-    8885205928937022213u64,
-    5545221690922665192u64,
-    39800542322357402u64,
+    0x2cdffffffffff68,
+    0x51409f837fffffb1,
+    0x9f7db3a98a7d3ff2,
+    0x7b4e97b76e7c6305,
+    0x4cf495bf803c84e8,
+    0x8d6661e2fdf49a,
 ]);
 
 /// R2 = 2^(384*2) mod p
@@ -100,12 +100,12 @@ const R2: Fp = Fp([
 
 /// c^t, where p - 1 = 2^s*t and t odd
 const ROOT_OF_UNITY: Fp = Fp([
-    2022196864061697551u64,
-    17419102863309525423u64,
-    8564289679875062096u64,
-    17152078065055548215u64,
-    17966377291017729567u64,
-    68610905582439508u64,
+    0x1c104955744e6e0f,
+    0xf1bd15c3898dd1af,
+    0x76da78169a7f3950,
+    0xee086c1fe367c337,
+    0xf95564f4cbc1b61f,
+    0xf3c1414ef58c54,
 ]);
 
 const T_MINUS_ONE_DIV_TWO: [u64; 6] = [
@@ -261,11 +261,11 @@ impl Fp {
         );
 
         let (_, borrow) = sbb(tmp.0[0], 0x4284600000000001, 0);
-        let (_, borrow) = sbb(tmp.0[1], 0x0B85AEA218000000, borrow);
-        let (_, borrow) = sbb(tmp.0[2], 0x8F79B117DD04A400, borrow);
-        let (_, borrow) = sbb(tmp.0[3], 0x8D116CF9807A89C7, borrow);
-        let (_, borrow) = sbb(tmp.0[4], 0x631D82E03650A49D, borrow);
-        let (_, borrow) = sbb(tmp.0[5], 0xD71D230BE28875, borrow);
+        let (_, borrow) = sbb(tmp.0[1], 0x0b85aea218000000, borrow);
+        let (_, borrow) = sbb(tmp.0[2], 0x8f79b117dd04a400, borrow);
+        let (_, borrow) = sbb(tmp.0[3], 0x8d116cf9807a89c7, borrow);
+        let (_, borrow) = sbb(tmp.0[4], 0x631d82e03650a49d, borrow);
+        let (_, borrow) = sbb(tmp.0[5], 0xd71d230be28875, borrow);
 
         // If the element was smaller, the subtraction will underflow
         // producing a borrow value of 0xffff...ffff, otherwise it will
@@ -301,8 +301,6 @@ impl Fp {
 
     pub fn legendre(&self) -> LegendreSymbol {
         let s = self.pow_vartime(&MODULUS_MINUS_ONE_DIV_TWO);
-     //   println!("{:x?}", s);
-     //   println!("{:x?}", Self::zero());
         if s == Self::zero() {
             LegendreSymbol::Zero
         } else if s == Self::one() {
@@ -312,9 +310,8 @@ impl Fp {
         }
     }
 
-    //TODO: Clearly indicate this is non-constant
     #[inline]
-    pub fn sqrt(&self) -> Option<Self> {
+    pub fn sqrt_vartime(&self) -> Option<Self> {
         match self.legendre() {
             LegendreSymbol::Zero => Some(*self),
             LegendreSymbol::QuadraticNonResidue => None,
@@ -369,12 +366,12 @@ impl Fp {
     pub fn invert(&self) -> CtOption<Self> {
         // Exponentiate by p - 2 
         let t = self.pow_vartime(&[
-            0x8508BFFFFFFFFFFF,
-            0x170B5D4430000000,
-            0x1EF3622FBA094800,
-            0x1A22D9F300F5138F,
-            0xC63B05C06CA1493B,
-            0x1AE3A4617C510EA,
+            0x8508bfffffffffff,
+            0x170b5d4430000000,
+            0x1ef3622fba094800,
+            0x1a22d9f300f5138f,
+            0xc63b05c06ca1493b,
+            0x1ae3a4617c510ea,
         ]);
 
         CtOption::new(t, !self.is_zero())
@@ -744,12 +741,12 @@ fn test_addition() {
         0x15fdcaa4e4bb2091,
     ]);
     let c = Fp([
-        0x6E2A82CCB58B5DD1,
-        0x18330B19BD2947E2,
-        0x7BBF959DE81272ED,
-        0x439B065D69187E85,
-        0xD00200866A50440E,
-        0x25A9BAB356B0CE02,
+        0x6e2a82ccb58b5dd1,
+        0x18330b19bd2947e2,
+        0x7bbf959de81272ed,
+        0x439b065d69187e85,
+        0xd00200866a50440e,
+        0x25a9bab356b0ce02,
     ]);
 
     assert_eq!(a + b, c);
@@ -857,8 +854,7 @@ fn test_from_bytes() {
 }
 
 #[test]
-fn test_sqrt() {
-    // a = 4
+fn test_sqrt_vartime() {
     let a = Fp::from_raw_unchecked([
         0xaa270000000cfff3,
         0x53cc0032fc34000a,
@@ -869,10 +865,7 @@ fn test_sqrt() {
     ]);
 
     assert_eq!(
-        // sqrt(4) = -2
-        a.sqrt().unwrap(),
-        // 2
-        // b7365bc1527cc225, 80c4410c13dad980, 405a608866ec9af9, bae77f06775d9e86, 631d7a2378887188, 24475d61e565d7
+        a.sqrt_vartime().unwrap(),
         Fp::from_raw_unchecked([
             0xb7365bc1527cc225,
             0x80c4410c13dad980, 

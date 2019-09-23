@@ -876,33 +876,6 @@ fn test_squaring() {
     }
 }
 
-fn test_sqrt() {
-    {
-        assert_eq!(Scalar::zero().sqrt().unwrap(), Scalar::zero());
-    }
-
-    let mut square = Scalar([
-        0x46cd85a5f273077e,
-        0x1d30c47dd68fc735,
-        0x77f656f60beca0eb,
-        0x494aa01bdf32468d,
-    ]);
-
-    let mut none_count = 0;
-
-    for _ in 0..100 {
-        let square_root = square.sqrt();
-        if square_root.is_none().unwrap_u8() == 1 {
-            none_count += 1;
-        } else {
-            assert_eq!(square_root.unwrap() * square_root.unwrap(), square);
-        }
-        square -= Scalar::one();
-    }
-
-    assert_eq!(49, none_count);
-}
-
 #[test]
 fn test_from_raw() {
     /*assert_eq!(

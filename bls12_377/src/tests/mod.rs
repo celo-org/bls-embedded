@@ -46,7 +46,7 @@ fn g1_compressed_valid_test_vectors() {
         G1Projective,
         G1Affine,
         to_compressed,
-        from_compressed,
+        from_compressed_vartime,
         bytes
     );
 }
@@ -70,7 +70,7 @@ fn g2_compressed_valid_test_vectors() {
         G2Projective,
         G2Affine,
         to_compressed,
-        from_compressed,
+        from_compressed_vartime,
         bytes
     );
 }
