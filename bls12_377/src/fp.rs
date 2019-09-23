@@ -768,35 +768,32 @@ fn test_addition() {
     assert_eq!(a + b, c);
 }
 
-//TODO: Use result smaller than modulus
 #[test]
 fn test_subtraction() {
     let a = Fp([
-        0x5360bb5978678032,
-        0x7dd275ae799e128e,
-        0x5c5b5071ce4f4dcf,
-        0xcdb21f93078dbb3e,
-        0xc32365c5e73f474a,
-        0x115a2a5489babe5b,
+        0xaa270000000cfff3,
+        0x53cc0032fc34000a,
+        0x478fe97a6b0a807f,
+        0xb1d37ebee6ba24d7,
+        0x8ec9733bbf78ab2f,
+        0x9d645513d83de7e,
     ]);
     let b = Fp([
-        0x9fd287733d23dda0,
-        0xb16bf2af738b3554,
-        0x3e57a75bd3cc6d1d,
-        0x900bc0bd627fd6d6,
-        0xd319a080efb245fe,
-        0x15fdcaa4e4bb2091,
+        0x7d828664baf4f566,
+        0xd17e663996ec7339,
+        0x679ead55cb4078d0,
+        0xfe3b2260e001ec28,
+        0x305993d043d91b68,
+        0x626f03c0489b72d,
     ]);
-    // ([3896f3e63b43a293, e371e0433612dd3a, 3cf70b45b48c28b1, 57c938c8a602f7f7, b644cb05642e4a87, fd0a99f5bcc4aeb4]))
     let c = Fp([
-        0x3896f3e63b43a293,
-        0xe371e0433612dd3a,
-        0x3cf70b45b48c28b1,
-        0x57c938c8a602f7f7,
-        0xb644cb05642e4a87,
-        0xfd0a99f5bcc4aeb4,
+        0x2ca4799b45180a8d, 
+        0x824d99f965478cd1, 
+        0xdff13c249fca07ae, 
+        0xb3985c5e06b838ae, 
+        0x5e6fdf6b7b9f8fc6, 
+        0x3af551538fa2751,
     ]);
-    let c = c.subtract_p();
 
     assert_eq!(a - b, c);
 }

@@ -304,7 +304,7 @@ impl Fp2 {
         let v0 = self.c0.square();
         let v1 = self.c1.square();
         let v0 = v0 - NONRESIDUE * v1;
-        let v1 = v0.invert().unwrap();
+        let v1 = v0.invert().unwrap_or(Fp::zero());
         CtOption::new(Fp2 {
             c0: self.c0 * v1,
             c1: -(self.c1 * v1),

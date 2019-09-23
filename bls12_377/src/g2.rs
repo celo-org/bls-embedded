@@ -29,11 +29,11 @@ impl Default for G2Affine {
 
 impl<'a> From<&'a G2Projective> for G2Affine {
     fn from(p: &'a G2Projective) -> G2Affine {
-        let zinv = p.z.invert().unwrap_or(Fp2::zero());
-        let zinv2 = zinv.square();
-        let x = p.x * zinv2;
-        let zinv3 = zinv2 * zinv;
-        let y = p.y * zinv3;
+       let zinv = p.z.invert().unwrap_or(Fp2::zero());
+       let zinv2 = zinv.square();
+       let x = p.x * zinv2;
+       let zinv3 = zinv2 * zinv;
+       let y = p.y * zinv3;
 
         let tmp = G2Affine {
             x,
@@ -941,34 +941,7 @@ fn test_projective_to_affine() {
     assert!(!bool::from(G2Affine::from(a).is_identity()));
     let b = G2Affine::from(b);
     assert!(bool::from(b.is_on_curve()));
-//    assert!(bool::from(G2Affine::from(b).is_identity()));
-
-   /* let z = Fp2 {
-        c0: Fp::from_raw_unchecked([
-            0xba7afa1f9a6fe250,
-            0xfa0f5b595eafe731,
-            0x3bdc477694c306e7,
-            0x2149be4b3949fa24,
-            0x64aa6e0649b2078c,
-            0x12b108ac33643c3e,
-        ]),
-        c1: Fp::from_raw_unchecked([
-            0x125325df3d35b5a8,
-            0xdc469ef5555d7fe3,
-            0x2d716d2443106a9,
-            0x5a1db59a6ff37d0,
-            0x7cf7784e5300bb8f,
-            0x16a88922c7a5e844,
-        ]),
-    };
-
-    let c = G2Projective {
-        x: a.x * (z.square()),
-        y: a.y * (z.square() * z),
-        z,
-    };
-
-    assert_eq!(G2Affine::from(c), G2Affine::generator());*/
+    assert!(bool::from(G2Affine::from(b).is_identity()));
 }
 
 #[test]
@@ -994,7 +967,6 @@ fn test_doubling() {
         assert!(!bool::from(tmp.is_identity()));
         assert!(bool::from(tmp.is_on_curve()));
 
-        //x: Fp2 { c0: Fp384(BigInteger384([b7bb9a26fb72697a, 59e88dfa302f5e0c, 89849dc62d07d624, 83d4c44ae291b4ba, 6b7eaf596b73a0c5, dda97ba8280944])), c1: Fp384(BigInteger384([1b6a166ce673cd07, 31e0c506cb0db98f, 18cb95a5acb8df95, cc39f4a3d83cab36, 5312c87ab58e6344, e7508915955a38])) }, y: Fp2 { c0: Fp384(BigInteger384([376c611156c8bce1, a277d39ac4448ef, 15c841eafd60bc7a, 6273ecbddcafead0, 8b19ec1a24a43c0b, 12402b7b65e9c74])), c1: Fp384(BigInteger384([9c85713196b4d134, f1c7f3ebe43a28d2, ffbadf706f7094da, 9ad1c308f942a59a, fb1decdcb0423bbf, 168a86463e56bee]
         assert_eq!(
             G2Affine::from(tmp),
             G2Affine {
