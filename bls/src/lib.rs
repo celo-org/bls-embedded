@@ -4,10 +4,15 @@ extern crate blake2s_simd;
 
 pub mod bls;
 pub mod hash;
+pub mod error;
 
 use libc::c_int;
 
+use bls12_381::G2Projective;
 use crate::bls::keys::{PublicKey, PrivateKey, Signature};
+use crate::error::ErrorCode;
+
+use core::slice;
 
 #[no_mangle]
 pub extern "C" fn generate_private_key(_out_private_key: *mut *mut PrivateKey) -> bool {
@@ -45,15 +50,27 @@ pub extern "C" fn private_key_to_public_key(
 
 #[no_mangle]
 pub extern "C" fn sign_message(
-    _in_private_key: *const PrivateKey,
-    _in_message: *const u8,
-    _in_message_len: c_int,
-    _in_extra_data: *const u8,
-    _in_extra_data_len: c_int,
-    _should_use_composite: bool,
-    _out_signature: *mut *mut Signature,
-) -> bool {
-    unimplemented!();
+    in_private_key: *const PrivateKey,
+    in_message: *const u8,
+    in_message_len: c_int,
+    in_extra_data: *const u8,
+    in_extra_data_len: c_int,
+    should_use_composite: bool,
+    out_signature: *mut *mut Signature,
+    hash: *const G2Projective,
+) -> Result<Signature, ErrorCode> {
+    let private_key = unsafe { &*in_private_key };
+    let message = unsafe { slice::from_raw_parts(in_message, in_message_len as usize) };
+    let extra_data = unsafe { slice::from_raw_parts(in_extra_data, in_extra_data_len as usize) };
+    let hash = unsafe { &*hash };
+    let signature = if should_use_composite {
+        private_key.sign(message, extra_data, *hash)?
+    } else {
+        private_key.sign(message, extra_data, *hash)?
+    };
+    unsafe { *out_signature = &mut signature; }
+
+    Ok(())
 }
 
 #[no_mangle]
