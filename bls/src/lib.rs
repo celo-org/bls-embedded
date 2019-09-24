@@ -3,7 +3,7 @@ extern crate rand;
 extern crate blake2s_simd;
 
 pub mod bls;
-pub mod hash;
+//pub mod hash;
 pub mod error;
 
 use libc::c_int;
@@ -13,6 +13,15 @@ use crate::bls::keys::{PublicKey, PrivateKey, Signature};
 use crate::error::ErrorCode;
 
 use core::slice;
+
+fn convert_result_to_bool<T, E, F: Fn() -> Result<T, E>>(f: F) -> bool {
+    match f() {
+        Err(e) => {
+            false
+        }
+        _ => true,
+    }
+}
 
 #[no_mangle]
 pub extern "C" fn generate_private_key(_out_private_key: *mut *mut PrivateKey) -> bool {
@@ -58,19 +67,21 @@ pub extern "C" fn sign_message(
     should_use_composite: bool,
     out_signature: *mut *mut Signature,
     hash: *const G2Projective,
-) -> Result<Signature, ErrorCode> {
-    let private_key = unsafe { &*in_private_key };
-    let message = unsafe { slice::from_raw_parts(in_message, in_message_len as usize) };
-    let extra_data = unsafe { slice::from_raw_parts(in_extra_data, in_extra_data_len as usize) };
-    let hash = unsafe { &*hash };
-    let signature = if should_use_composite {
-        private_key.sign(message, extra_data, *hash)?
-    } else {
-        private_key.sign(message, extra_data, *hash)?
-    };
-    unsafe { *out_signature = &mut signature; }
+) -> bool {
+    convert_result_to_bool::<_, ErrorCode, _>(|| {
+        let private_key = unsafe { &*in_private_key };
+        let message = unsafe { slice::from_raw_parts(in_message, in_message_len as usize) };
+        let extra_data = unsafe { slice::from_raw_parts(in_extra_data, in_extra_data_len as usize) };
+        let hash = unsafe { &*hash };
+        let mut signature = if should_use_composite {
+            private_key.sign(message, extra_data, hash)?
+        } else {
+            private_key.sign(message, extra_data, hash)?
+        };
+        unsafe { *out_signature = &mut signature; }
 
-    Ok(())
+        Ok(())
+    })
 }
 
 #[no_mangle]

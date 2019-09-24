@@ -1,4 +1,4 @@
-pub mod direct;
+/*pub mod direct;
 use std::error::Error;
 
 pub trait PRF {
@@ -6,4 +6,4 @@ pub trait PRF {
     fn prf(&self, key: &[u8], domain: &[u8], hashed_message: &[u8], output_size_in_bits: usize) -> Result<Vec<u8>, Box<dyn Error>>;
     fn hash(&self, key: &[u8], domain: &[u8], message: &[u8], output_size_in_bits: usize) -> Result<Vec<u8>, Box<dyn Error>>;
 }
-
+*/

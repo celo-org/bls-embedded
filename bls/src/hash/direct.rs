@@ -1,4 +1,4 @@
-use crate::hash::PRF;
+/*use crate::hash::PRF;
 
 use blake2s_simd::Params;
 use std::error::Error;
@@ -144,4 +144,4 @@ mod test {
         }
         let _result = hasher.hash(b"096b36a5804bfacef1691e173c366a47ff5ba84a44f26ddd7e8d9f79d5b42df0", b"ULforprf", &msg, 760).unwrap();
     }
-}
+}*/
