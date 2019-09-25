@@ -1,4 +1,4 @@
-use bls12_381::{Scalar, G1Projective, G2Projective};
+use bls12_377::{Scalar, G1Projective, G2Projective};
 use crate::error::ErrorCode;
 use core::ops::Mul;
 

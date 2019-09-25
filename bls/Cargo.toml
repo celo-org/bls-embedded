@@ -6,10 +6,8 @@ edition = "2018"
 build = "src/build.rs"
 
 [dependencies]
-bls12_381 = { path = "../bls12_381" }
+bls12_377 = { path = "../bls12_377" }
 libc = "0.2"
-rand = "0.7"
-blake2s_simd = "0.5.7"
 
 [build-dependencies]
 cbindgen = "^0.6.0"
@@ -17,4 +15,6 @@ cbindgen = "^0.6.0"
 [lib]
 name = "bls_embedded"
 path = "src/lib.rs"
-crate-type = ["cdylib"]
+crate-type = ["staticlib"]
+lto = true
+opt-level = "s"

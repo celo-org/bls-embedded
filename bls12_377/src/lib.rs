@@ -8,7 +8,7 @@
 //! * This implementation does not require the Rust standard library.
 //! * All operations are constant time unless explicitly noted.
 
-//#![no_std]
+#![no_std]
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
 #![deny(unsafe_code)]
@@ -20,9 +20,6 @@
 // In our library, some of the arithmetic involving extension fields will necessarily
 // involve various binary operators, and so this lint is triggered unnecessarily.
 #![allow(clippy::suspicious_arithmetic_impl)]
-
-#[cfg(feature = "pairings")]
-extern crate alloc;
 
 #[cfg(test)]
 #[macro_use]

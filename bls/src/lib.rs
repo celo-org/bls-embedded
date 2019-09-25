@@ -1,6 +1,6 @@
 extern crate libc;
-extern crate rand;
-extern crate blake2s_simd;
+//extern crate rand;
+//extern crate blake2s_simd;
 
 pub mod bls;
 //pub mod hash;
@@ -8,7 +8,7 @@ pub mod error;
 
 use libc::c_int;
 
-use bls12_381::G2Projective;
+use bls12_377::G2Projective;
 use crate::bls::keys::{PublicKey, PrivateKey, Signature};
 use crate::error::ErrorCode;
 
