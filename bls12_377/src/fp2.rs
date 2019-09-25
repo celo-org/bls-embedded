@@ -726,6 +726,7 @@ fn test_sqrt_vartime() {
             0x11b94d5076c7b7b1,
         ]),
     };
+    
 
     assert_eq!(a.sqrt_vartime().unwrap().square(), a);
 
