@@ -1,14 +1,13 @@
-#include <cstdarg>
-#include <cstdint>
-#include <cstdlib>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-struct PrivateKey;
+typedef struct PrivateKey PrivateKey;
 
-struct PublicKey;
+typedef struct PublicKey PublicKey;
 
-struct Signature;
-
-extern "C" {
+typedef struct Signature Signature;
 
 bool aggregate_public_keys(const PublicKey *const *_in_public_keys,
                            int _in_public_keys_len,
@@ -76,5 +75,3 @@ bool verify_signature(const PublicKey *_in_public_key,
                       const Signature *_in_signature,
                       bool _should_use_composite,
                       bool *_out_verified);
-
-} // extern "C"
