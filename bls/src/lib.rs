@@ -24,8 +24,30 @@ fn convert_result_to_bool<T, E, F: Fn() -> Result<T, E>>(f: F) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn generate_private_key(_out_private_key: *mut *mut PrivateKey) -> bool {
-    unimplemented!();
+pub extern "C" fn generate_private_key(out_private_key: *mut *mut PrivateKey) -> bool {
+    let mut key = PrivateKey::default();
+    unsafe {
+        *out_private_key = &mut key;
+    };
+    true
+}
+
+#[no_mangle]
+pub extern "C" fn generate_signature(out_signature: *mut *mut Signature) -> bool {
+    let mut sig = Signature::default();
+    unsafe {
+        *out_signature = &mut sig;
+    };
+    true
+}
+
+#[no_mangle]
+pub extern "C" fn generate_hash(out_hash: *mut *mut G2Projective) -> bool {
+    let mut hash = G2Projective::generator();
+    unsafe {
+        *out_hash = &mut hash;
+    }
+    true
 }
 
 #[no_mangle]

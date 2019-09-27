@@ -42,7 +42,11 @@ void destroy_signature(Signature *_signature);
 
 void free_vec(uint8_t *_bytes, int _len);
 
-bool generate_private_key(PrivateKey **_out_private_key);
+bool generate_hash(G2Projective **out_hash);
+
+bool generate_private_key(PrivateKey **out_private_key);
+
+bool generate_signature(Signature **out_signature);
 
 bool private_key_to_public_key(const PrivateKey *in_private_key, PublicKey **out_public_key);
 
