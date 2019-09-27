@@ -11,6 +11,10 @@ pub struct PrivateKey {
 }
 
 impl PrivateKey {
+    pub fn default() -> Self {
+        Self { sk: Scalar::from(5) }
+    }
+
     pub fn to_public(&self) -> PublicKey {
         PublicKey::from_pk(&(G1Projective::generator() * &self.sk))
     }
@@ -39,6 +43,10 @@ pub struct Signature {
 }
 
 impl Signature {
+    pub fn default() -> Self {
+       Self { sig: G2Projective::generator() }  
+    }
+
     pub fn from_sig(sig: &G2Projective) -> Signature {
         Signature { sig: sig.clone() }
     }
