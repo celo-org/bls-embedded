@@ -1,7 +1,7 @@
-#[cfg(feature="gen-header")]
+#[cfg(feature="gen_header")]
 extern crate cbindgen;
 
-#[cfg(feature="gen-header")]
+#[cfg(feature="gen_header")]
 fn main() {
     let crate_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
 
@@ -10,6 +10,6 @@ fn main() {
         .write_to_file("./bls-embedded.h");
 }
 
-#[cfg(not(feature="gen-header"))]
+#[cfg(not(feature="gen_header"))]
 fn main() {
 }

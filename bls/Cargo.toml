@@ -21,3 +21,9 @@ opt-level = "s"
 
 [features]
 gen_header = []
+
+[profile.dev]
+panic= "abort"
+
+[profile.release]
+panic= "abort"
