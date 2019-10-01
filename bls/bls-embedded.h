@@ -58,14 +58,12 @@ bool serialize_public_key(const PublicKey *_in_public_key, uint8_t **_out_bytes,
 
 bool serialize_signature(const Signature *_in_signature, uint8_t **_out_bytes, int32_t *_out_len);
 
-bool sign_message(const PrivateKey *in_private_key,
+bool sign_message(const uint64_t *in_private_key,
                   const uint8_t *in_message,
                   int32_t in_message_len,
                   const uint8_t *in_extra_data,
                   int32_t in_extra_data_len,
-                  bool should_use_composite,
-                  Signature **out_signature,
-                  const G2Projective *hash);
+                  bool should_use_composite);
 
 bool sign_pop(const PrivateKey *_in_private_key, Signature **_out_signature);
 

@@ -7,7 +7,7 @@ pub mod bls;
 //pub mod hash;
 pub mod error;
 
-use bls12_377::G2Projective;
+use bls12_377::{G2Projective, Scalar};
 use crate::bls::keys::{PublicKey, PrivateKey, Signature};
 use crate::error::ErrorCode;
 
@@ -86,26 +86,24 @@ pub extern "C" fn private_key_to_public_key(
 
 #[no_mangle]
 pub extern "C" fn sign_message(
-    in_private_key: *const PrivateKey,
+    in_private_key: *const u64,
     in_message: *const u8,
     in_message_len: i32,
     in_extra_data: *const u8,
     in_extra_data_len: i32,
     should_use_composite: bool,
-    out_signature: *mut *mut Signature,
-    hash: *const G2Projective,
 ) -> bool {
     convert_result_to_bool::<_, ErrorCode, _>(|| {
-        let private_key = unsafe { &*in_private_key };
+        let pk_array = in_private_key as *const [u64; 4];
+        let private_key = unsafe { PrivateKey::from_scalar(&Scalar::from_raw(*pk_array))  };
         let message = unsafe { slice::from_raw_parts(in_message, in_message_len as usize) };
         let extra_data = unsafe { slice::from_raw_parts(in_extra_data, in_extra_data_len as usize) };
-        let hash = unsafe { &*hash };
+        let hash = G2Projective::generator();//unsafe { &*hash };
         let mut signature = if should_use_composite {
-            private_key.sign(message, extra_data, hash)?
+            private_key.sign(message, extra_data, &hash)?
         } else {
-            private_key.sign(message, extra_data, hash)?
+            private_key.sign(message, extra_data, &hash)?
         };
-        unsafe { *out_signature = &mut signature; }
 
         Ok(())
     })

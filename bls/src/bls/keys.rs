@@ -15,6 +15,10 @@ impl PrivateKey {
         Self { sk: Scalar::from(5) }
     }
 
+    pub fn from_scalar(s: &Scalar) -> Self {
+        Self { sk: s.clone() }
+    }
+
     pub fn to_public(&self) -> PublicKey {
         PublicKey::from_pk(&(G1Projective::generator() * &self.sk))
     }
