@@ -10,6 +10,7 @@ pub mod error;
 use bls12_377::{G2Projective, Scalar};
 use crate::bls::keys::{PublicKey, PrivateKey, Signature};
 use crate::error::ErrorCode;
+use subtle::CtOption;
 
 use core::slice;
 
@@ -35,6 +36,17 @@ pub extern "C" fn generate_private_key(out_private_key: *mut *mut PrivateKey) ->
         *out_private_key = &mut key;
     };
     true
+}
+
+#[no_mangle]
+pub extern "C" fn is_valid_key(in_private_key: *const u8) -> bool {
+   /*   let pk_array = in_private_key as *const [u64; 4];
+   let private_key = unsafe { PrivateKey::from_scalar(&Scalar::from_raw(*pk_array))  };
+   private_key < Scalar::MODULUS */
+   let pk_array = in_private_key as *const [u8; 32];
+   let priv_key = unsafe { Scalar::from_bytes(&*pk_array) } ;
+//   bool::from(CtOption::is_some(&priv_key))
+   true
 }
 
 #[no_mangle]
@@ -86,27 +98,33 @@ pub extern "C" fn private_key_to_public_key(
 
 #[no_mangle]
 pub extern "C" fn sign_message(
-    in_private_key: *const u64,
+    in_private_key: *mut u64,
     in_message: *const u8,
     in_message_len: i32,
     in_extra_data: *const u8,
     in_extra_data_len: i32,
     should_use_composite: bool,
 ) -> bool {
-    convert_result_to_bool::<_, ErrorCode, _>(|| {
-        let pk_array = in_private_key as *const [u64; 4];
-        let private_key = unsafe { PrivateKey::from_scalar(&Scalar::from_raw(*pk_array))  };
-        let message = unsafe { slice::from_raw_parts(in_message, in_message_len as usize) };
-        let extra_data = unsafe { slice::from_raw_parts(in_extra_data, in_extra_data_len as usize) };
-        let hash = G2Projective::generator();//unsafe { &*hash };
-        let mut signature = if should_use_composite {
-            private_key.sign(message, extra_data, &hash)?
-        } else {
-            private_key.sign(message, extra_data, &hash)?
-        };
-
-        Ok(())
-    })
+//    convert_result_to_bool::<_, ErrorCode, _>(|| {
+        let pk_array = in_private_key as *mut [u64; 4];
+//        let val = Scalar::do_nothing();
+//        let pk = unsafe { &Scalar::from_raw(*pk_array)};
+        let g1 = G2Projective::generator();
+        let g2 = G2Projective::generator();
+        let g3 = g2 + g1;
+//        let g2 = G2Projective::generator();
+//        let private_key = unsafe { PrivateKey::from_scalar(&Scalar::from_raw(*pk_array))  };
+//        let message = unsafe { slice::from_raw_parts(in_message, in_message_len as usize) };
+//        let extra_data = unsafe { slice::from_raw_parts(in_extra_data, in_extra_data_len as usize) };
+//        let hash = G2Projective::generator();//unsafe { &*hash };
+//        let mut signature = if should_use_composite {
+//            private_key.sign(message, extra_data, &hash);
+//        } else {
+//            private_key.sign(message, extra_data, &hash)?
+//        };
+        true
+//        Ok(())
+//    })
 }
 
 #[no_mangle]

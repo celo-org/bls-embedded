@@ -203,6 +203,48 @@ const G2_GEN_Y_C1: Fp = Fp::from_raw_unchecked([
 
 const G2_GEN_Y: Fp2 = Fp2 { c0: G2_GEN_Y_C0, c1: G2_GEN_Y_C1 };
 
+fn g2_generator_x() -> Fp2 {
+    Fp2 {
+       c0: Fp::from_raw_unchecked([
+           0x68904082f268725b,
+           0x668f2ea74f45328b,
+           0xebca7a65802be84f,
+           0x1e1850f4c1ada3e6,
+           0x830dc22d588ef1e9,
+           0x1862a81767c0982, 
+           ]), 
+       c1: Fp::from_raw_unchecked([
+           0x5f02a915c91c7f39,
+           0xf8c553ba388da2a7,
+           0xd51a416dbd198850,
+           0xe943c6f38ae3073a,
+           0xffe24aa8259a4981,
+           0x11853391e73dfdd,  
+           ]),
+    }
+}
+
+fn g2_generator_y() -> Fp2 {
+    Fp2 {
+       c0: Fp::from_raw_unchecked([
+           0xd5b19b897881430f,
+           0x5be9118a5b371ed,
+           0x6063f91f86c131ee,
+           0x3244a61be8f4ec19,
+           0xa02e425b9f9a3a12,
+           0x18af8c04f3360d2, 
+           ]), 
+       c1: Fp::from_raw_unchecked([
+           0x57601ac71a5b96f5,
+           0xe99acc1714f2440e,
+           0x2339612f10118ea9,
+           0x8321e68a3b1cd722,
+           0x2b543b050cc74917,
+           0x590182b396c112,
+           ]),
+    }
+}
+
 impl G2Affine {
     /// Returns the identity of the group: the point at infinity.
     pub fn identity() -> G2Affine {
@@ -611,10 +653,11 @@ impl G2Projective {
 
     /// Returns a fixed generator of the group. See [`notes::design`](notes/design/index.html#fixed-generators)
     /// for how this generator is chosen.
+    #[inline(always)]
     pub fn generator() -> G2Projective {
         G2Projective {
-            x: G2_GEN_X,  
-            y: G2_GEN_Y,
+            x: g2_generator_x(),  
+            y: g2_generator_y(),
             z: Fp2::one(),
         }
     }

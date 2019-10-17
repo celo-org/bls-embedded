@@ -182,6 +182,31 @@ impl Scalar {
         R
     }
 
+    /// Returns R^2
+    pub const fn R2() -> Scalar {
+Scalar([
+    0x25D577BAB861857B,
+    0xCC2C27B58860591F,
+    0xA7CC008FE5DC8593,
+    0x11FDAE7EFF1C939,
+])
+    }
+
+    /// Returns -(q^{-1} mod 2^64) mod 2^64  
+    pub const fn inv() -> u64 {
+        725501752471715839u64
+    }
+
+    /// Returns modulus of the scalar field
+    pub const fn modulus() -> Scalar {
+ Scalar([
+    725501752471715841u64,
+    6461107452199829505u64,
+    6968279316240510977u64,
+    1345280370688173398u64,
+])
+    }
+
     /// Doubles this field element.
     #[inline]
     pub const fn double(&self) -> Scalar {
@@ -271,7 +296,19 @@ impl Scalar {
     /// Converts from an integer represented in little endian
     /// into its (congruent) `Scalar` representation.
     pub const fn from_raw(val: [u64; 4]) -> Self {
-        (&Scalar(val)).mul(&R2)
+        let r0 = 0x25D577BAB861857B;
+        let r1 = 0xCC2C27B58860591F;
+        let r2 = 0xA7CC008FE5DC8593;
+        let r3 = 0x11FDAE7EFF1C939;
+        let (r4, r5) = mac(r0, r1, r3, 0);
+        let (r6, r7) = mac(r2, r3, r5, 0);
+//        Scalar([r4, r5, r6, r7])
+        (&Scalar(val)).mul(&Scalar::R2())
+    }
+
+    /// Does nothing and returns true
+    pub fn do_nothing() -> Self {
+        Scalar::R2()
     }
 
     /// Squares this element.
@@ -405,40 +442,43 @@ impl Scalar {
         // Handbook of Applied Cryptography
         // <http://cacr.uwaterloo.ca/hac/about/chap14.pdf>.
 
-        let k = r0.wrapping_mul(INV);
-        let (_, carry) = mac(r0, k, MODULUS.0[0], 0);
-        let (r1, carry) = mac(r1, k, MODULUS.0[1], carry);
-        let (r2, carry) = mac(r2, k, MODULUS.0[2], carry);
-        let (r3, carry) = mac(r3, k, MODULUS.0[3], carry);
+        let modulus = Scalar::modulus();
+        let inv = Scalar::inv();
+        let k = r0.wrapping_mul(inv);
+        let (_, carry) = mac(r0, k, modulus.0[0], 0);
+        let (r1, carry) = mac(r1, k, modulus.0[1], carry);
+        let (r2, carry) = mac(r2, k, modulus.0[2], carry);
+        let (r3, carry) = mac(r3, k, modulus.0[3], carry);
         let (r4, carry2) = adc(r4, 0, carry);
 
-        let k = r1.wrapping_mul(INV);
-        let (_, carry) = mac(r1, k, MODULUS.0[0], 0);
-        let (r2, carry) = mac(r2, k, MODULUS.0[1], carry);
-        let (r3, carry) = mac(r3, k, MODULUS.0[2], carry);
-        let (r4, carry) = mac(r4, k, MODULUS.0[3], carry);
+        let k = r1.wrapping_mul(inv);
+        let (_, carry) = mac(r1, k, modulus.0[0], 0);
+        let (r2, carry) = mac(r2, k, modulus.0[1], carry);
+        let (r3, carry) = mac(r3, k, modulus.0[2], carry);
+        let (r4, carry) = mac(r4, k, modulus.0[3], carry);
         let (r5, carry2) = adc(r5, carry2, carry);
 
-        let k = r2.wrapping_mul(INV);
-        let (_, carry) = mac(r2, k, MODULUS.0[0], 0);
-        let (r3, carry) = mac(r3, k, MODULUS.0[1], carry);
-        let (r4, carry) = mac(r4, k, MODULUS.0[2], carry);
-        let (r5, carry) = mac(r5, k, MODULUS.0[3], carry);
+        let k = r2.wrapping_mul(inv);
+        let (_, carry) = mac(r2, k, modulus.0[0], 0);
+        let (r3, carry) = mac(r3, k, modulus.0[1], carry);
+        let (r4, carry) = mac(r4, k, modulus.0[2], carry);
+        let (r5, carry) = mac(r5, k, modulus.0[3], carry);
         let (r6, carry2) = adc(r6, carry2, carry);
 
-        let k = r3.wrapping_mul(INV);
-        let (_, carry) = mac(r3, k, MODULUS.0[0], 0);
-        let (r4, carry) = mac(r4, k, MODULUS.0[1], carry);
-        let (r5, carry) = mac(r5, k, MODULUS.0[2], carry);
-        let (r6, carry) = mac(r6, k, MODULUS.0[3], carry);
+        let k = r3.wrapping_mul(inv);
+        let (_, carry) = mac(r3, k, modulus.0[0], 0);
+        let (r4, carry) = mac(r4, k, modulus.0[1], carry);
+        let (r5, carry) = mac(r5, k, modulus.0[2], carry);
+        let (r6, carry) = mac(r6, k, modulus.0[3], carry);
         let (r7, _) = adc(r7, carry2, carry);
-
+//        Scalar::R2()
+//        Scalar([r4, r5, r6, r7])
         // Result may be within MODULUS of the correct value
-        (&Scalar([r4, r5, r6, r7])).sub(&MODULUS)
+        (&Scalar([r4, r5, r6, r7])).sub(&modulus)
     }
 
     /// Multiplies `rhs` by `self`, returning the result.
-    #[inline]
+    #[inline(always)]
     pub const fn mul(&self, rhs: &Self) -> Self {
         // Schoolbook multiplication
 
@@ -462,12 +502,14 @@ impl Scalar {
         let (r5, carry) = mac(r5, self.0[3], rhs.0[2], carry);
         let (r6, r7) = mac(r6, self.0[3], rhs.0[3], carry);
 
+//        Scalar([r0, r1, r2, r3])
         Scalar::montgomery_reduce(r0, r1, r2, r3, r4, r5, r6, r7)
     }
 
     /// Subtracts `rhs` from `self`, returning the result.
-    #[inline]
+    #[inline(always)]
     pub const fn sub(&self, rhs: &Self) -> Self {
+        let modulus = Scalar::modulus();
         let (d0, borrow) = sbb(self.0[0], rhs.0[0], 0);
         let (d1, borrow) = sbb(self.0[1], rhs.0[1], borrow);
         let (d2, borrow) = sbb(self.0[2], rhs.0[2], borrow);
@@ -475,12 +517,14 @@ impl Scalar {
 
         // If underflow occurred on the final limb, borrow = 0xfff...fff, otherwise
         // borrow = 0x000...000. Thus, we use it as a mask to conditionally add the modulus.
-        let (d0, carry) = adc(d0, MODULUS.0[0] & borrow, 0);
-        let (d1, carry) = adc(d1, MODULUS.0[1] & borrow, carry);
-        let (d2, carry) = adc(d2, MODULUS.0[2] & borrow, carry);
-        let (d3, _) = adc(d3, MODULUS.0[3] & borrow, carry);
+        let (d0, carry) = adc(d0, modulus.0[0] & borrow, 0);
+        let (d1, carry) = adc(d1, modulus.0[1] & borrow, carry);
+        let (d2, carry) = adc(d2, modulus.0[2] & borrow, carry);
+        let (d3, _) = adc(d3, modulus.0[3] & borrow, carry);
 
+//        Scalar([0x04, 0x03, 0x02, 0x01])
         Scalar([d0, d1, d2, d3])
+//        Scalar::R2()
     }
 
     /// Adds `rhs` to `self`, returning the result.

@@ -37,6 +37,7 @@ dependencies = [
  "bls12_377 0.0.0",
  "cbindgen 0.6.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.62 (registry+https://github.com/rust-lang/crates.io-index)",
+ "subtle 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

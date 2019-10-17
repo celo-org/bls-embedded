@@ -9,6 +9,10 @@ build = "src/build.rs"
 bls12_377 = { path = "../bls12_377" }
 libc = "0.2"
 
+[dependencies.subtle]
+version = "2.1"
+default-features = false
+
 [build-dependencies]
 cbindgen = "^0.6.0"
 

@@ -9,6 +9,8 @@ typedef struct PublicKey PublicKey;
 
 typedef struct Signature Signature;
 
+typedef struct G2Projective G2Projective;
+
 bool aggregate_public_keys(const PublicKey *const *_in_public_keys,
                            int32_t _in_public_keys_len,
                            PublicKey **_out_public_key);
@@ -47,6 +49,8 @@ bool generate_hash(G2Projective **out_hash);
 bool generate_private_key(PrivateKey **out_private_key);
 
 bool generate_signature(Signature **out_signature);
+
+bool is_valid_key(const uint8_t *in_private_key);
 
 bool private_key_to_public_key(const PrivateKey *in_private_key, PublicKey **out_public_key);
 
