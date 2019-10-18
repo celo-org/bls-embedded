@@ -22,12 +22,14 @@ pub struct G2Affine {
 }
 
 impl Default for G2Affine {
+    #[inline(always)]
     fn default() -> G2Affine {
         G2Affine::identity()
     }
 }
 
 impl<'a> From<&'a G2Projective> for G2Affine {
+    #[inline(always)]
     fn from(p: &'a G2Projective) -> G2Affine {
        let zinv = p.z.invert().unwrap_or(Fp2::zero());
        let zinv2 = zinv.square();
@@ -46,12 +48,14 @@ impl<'a> From<&'a G2Projective> for G2Affine {
 }
 
 impl From<G2Projective> for G2Affine {
+    #[inline(always)]
     fn from(p: G2Projective) -> G2Affine {
         G2Affine::from(&p)
     }
 }
 
 impl ConstantTimeEq for G2Affine {
+    #[inline(always)]
     fn ct_eq(&self, other: &Self) -> Choice {
         // The only cases in which two points are equal are
         // 1. infinity is set on both
@@ -66,6 +70,7 @@ impl ConstantTimeEq for G2Affine {
 }
 
 impl ConditionallySelectable for G2Affine {
+    #[inline(always)]
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         G2Affine {
             x: Fp2::conditional_select(&a.x, &b.x, choice),
@@ -77,7 +82,7 @@ impl ConditionallySelectable for G2Affine {
 
 impl Eq for G2Affine {}
 impl PartialEq for G2Affine {
-    #[inline]
+    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         bool::from(self.ct_eq(other))
     }
@@ -86,7 +91,7 @@ impl PartialEq for G2Affine {
 impl<'a> Neg for &'a G2Affine {
     type Output = G2Affine;
 
-    #[inline]
+    #[inline(always)]
     fn neg(self) -> G2Affine {
         G2Affine {
             x: self.x,
@@ -99,7 +104,7 @@ impl<'a> Neg for &'a G2Affine {
 impl Neg for G2Affine {
     type Output = G2Affine;
 
-    #[inline]
+    #[inline(always)]
     fn neg(self) -> G2Affine {
         -&self
     }
@@ -108,7 +113,7 @@ impl Neg for G2Affine {
 impl<'a, 'b> Add<&'b G2Projective> for &'a G2Affine {
     type Output = G2Projective;
 
-    #[inline]
+    #[inline(always)]
     fn add(self, rhs: &'b G2Projective) -> G2Projective {
         rhs.add_mixed(self)
     }
@@ -117,7 +122,7 @@ impl<'a, 'b> Add<&'b G2Projective> for &'a G2Affine {
 impl<'a, 'b> Add<&'b G2Affine> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline]
+    #[inline(always)]
     fn add(self, rhs: &'b G2Affine) -> G2Projective {
         self.add_mixed(rhs)
     }
@@ -126,7 +131,7 @@ impl<'a, 'b> Add<&'b G2Affine> for &'a G2Projective {
 impl<'a, 'b> Sub<&'b G2Projective> for &'a G2Affine {
     type Output = G2Projective;
 
-    #[inline]
+    #[inline(always)]
     fn sub(self, rhs: &'b G2Projective) -> G2Projective {
         self + (-rhs)
     }
@@ -135,7 +140,7 @@ impl<'a, 'b> Sub<&'b G2Projective> for &'a G2Affine {
 impl<'a, 'b> Sub<&'b G2Affine> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline]
+    #[inline(always)]
     fn sub(self, rhs: &'b G2Affine) -> G2Projective {
         self + (-rhs)
     }
@@ -144,66 +149,30 @@ impl<'a, 'b> Sub<&'b G2Affine> for &'a G2Projective {
 impl_binops_additive!(G2Projective, G2Affine);
 impl_binops_additive_specify_output!(G2Affine, G2Projective, G2Projective);
 
-const B: Fp2 = Fp2 {
-    c0: Fp::from_raw_unchecked([
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-    ]),
-    c1: Fp::from_raw_unchecked([
-        9255502405446297221u64,
-        10229180150694123945u64,
-        9215585410771530959u64,
-        13357015519562362907u64,
-        5437107869987383107u64,
-        16259554076827459u64,
-    ]),
-};
+#[inline(always)]
+const fn b() -> Fp2 {
+    Fp2 {
+        c0: Fp::from_raw_unchecked([
+            0x0,
+            0x0,
+            0x0,
+            0x0,
+            0x0,
+            0x0,
+        ]),
+        c1: Fp::from_raw_unchecked([
+            9255502405446297221u64,
+            10229180150694123945u64,
+            9215585410771530959u64,
+            13357015519562362907u64,
+            5437107869987383107u64,
+            16259554076827459u64,
+        ])
+    }
+}
 
-const G2_GEN_X_C0: Fp = Fp::from_raw_unchecked([
-    0x68904082f268725b,
-    0x668f2ea74f45328b,
-    0xebca7a65802be84f,
-    0x1e1850f4c1ada3e6,
-    0x830dc22d588ef1e9,
-    0x1862a81767c0982, 
-]);
-
-const G2_GEN_X_C1: Fp =  Fp::from_raw_unchecked([
-    0x5f02a915c91c7f39,
-    0xf8c553ba388da2a7,
-    0xd51a416dbd198850,
-    0xe943c6f38ae3073a,
-    0xffe24aa8259a4981,
-    0x11853391e73dfdd,  
-]);
-
-const G2_GEN_X: Fp2 = Fp2 { c0: G2_GEN_X_C0, c1: G2_GEN_X_C1 };
-
-const G2_GEN_Y_C0: Fp =  Fp::from_raw_unchecked([
-    0xd5b19b897881430f,
-    0x5be9118a5b371ed,
-    0x6063f91f86c131ee,
-    0x3244a61be8f4ec19,
-    0xa02e425b9f9a3a12,
-    0x18af8c04f3360d2, 
-]);
-
-const G2_GEN_Y_C1: Fp = Fp::from_raw_unchecked([
-    0x57601ac71a5b96f5,
-    0xe99acc1714f2440e,
-    0x2339612f10118ea9,
-    0x8321e68a3b1cd722,
-    0x2b543b050cc74917,
-    0x590182b396c112,
-]); 
-
-const G2_GEN_Y: Fp2 = Fp2 { c0: G2_GEN_Y_C0, c1: G2_GEN_Y_C1 };
-
-fn g2_generator_x() -> Fp2 {
+#[inline(always)]
+const fn g2_generator_x() -> Fp2 {
     Fp2 {
        c0: Fp::from_raw_unchecked([
            0x68904082f268725b,
@@ -224,7 +193,8 @@ fn g2_generator_x() -> Fp2 {
     }
 }
 
-fn g2_generator_y() -> Fp2 {
+#[inline(always)]
+const fn g2_generator_y() -> Fp2 {
     Fp2 {
        c0: Fp::from_raw_unchecked([
            0xd5b19b897881430f,
@@ -247,6 +217,7 @@ fn g2_generator_y() -> Fp2 {
 
 impl G2Affine {
     /// Returns the identity of the group: the point at infinity.
+    #[inline(always)] 
     pub fn identity() -> G2Affine {
         G2Affine {
             x: Fp2::zero(),
@@ -257,16 +228,18 @@ impl G2Affine {
 
     /// Returns a fixed generator of the group. See [`notes::design`](notes/design/index.html#fixed-generators)
     /// for how this generator is chosen.
+    #[inline(always)]
     pub fn generator() -> G2Affine {
         G2Affine {
-            x: G2_GEN_X, 
-            y: G2_GEN_Y, 
+            x: g2_generator_x(), 
+            y: g2_generator_y(), 
             infinity: Choice::from(0u8),
         }
     }
 
     /// Serializes this element into compressed form. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
+    #[inline(always)] 
     pub fn to_compressed(&self) -> [u8; 96] {
         // Strictly speaking, self.x is zero already when self.infinity is true, but
         // to guard against implementation mistakes we do not assume this.
@@ -297,6 +270,7 @@ impl G2Affine {
 
     /// Serializes this element into uncompressed form. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
+    #[inline(always)]  
     pub fn to_uncompressed(&self) -> [u8; 192] {
         let mut res = [0; 192];
 
@@ -316,6 +290,7 @@ impl G2Affine {
 
     /// Attempts to deserialize an uncompressed element. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
+    #[inline(always)] 
     pub fn from_uncompressed(bytes: &[u8; 192]) -> CtOption<Self> {
         Self::from_uncompressed_unchecked(bytes)
             .and_then(|p| CtOption::new(p, p.is_on_curve() & p.is_torsion_free()))
@@ -325,6 +300,7 @@ impl G2Affine {
     /// element is on the curve and not checking if it is in the correct subgroup.
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_uncompressed()` instead.
+    #[inline(always)]  
     pub fn from_uncompressed_unchecked(bytes: &[u8; 192]) -> CtOption<Self> {
         // Obtain the three flags from the start of the byte sequence
         let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
@@ -403,6 +379,7 @@ impl G2Affine {
 
     /// Attempts to deserialize a compressed element. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
+    #[inline(always)]  
     pub fn from_compressed_vartime(bytes: &[u8; 96]) -> Option<Self> {
         // We already know the point is on the curve because this is established
         // by the y-coordinate recovery procedure in from_compressed_unchecked().
@@ -419,6 +396,7 @@ impl G2Affine {
     /// element is in the correct subgroup.
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_compressed()` instead.
+    #[inline(always)]  
     pub fn from_compressed_unchecked_vartime(bytes: &[u8; 96]) -> Option<Self> {
         // Obtain the three flags from the start of the byte sequence
         let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
@@ -470,7 +448,7 @@ impl G2Affine {
                             _ => None,
                         }.or_else(|| {
                             // Recover a y-coordinate given x by y = sqrt_vartime(x^3 + 4)
-                            ((x.square() * x) + B).sqrt_vartime().and_then(|y| {
+                            ((x.square() * x) + b()).sqrt_vartime().and_then(|y| {
                                 // Switch to the correct y-coordinate if necessary.
                                 let y = Fp2::conditional_select(
                                     &y,
@@ -491,7 +469,7 @@ impl G2Affine {
     }
 
     /// Returns true if this element is the identity (the point at infinity).
-    #[inline]
+    #[inline(always)]
     pub fn is_identity(&self) -> Choice {
         self.infinity
     }
@@ -499,22 +477,24 @@ impl G2Affine {
     /// Returns true if this point is free of an $h$-torsion component, and so it
     /// exists within the $q$-order subgroup $\mathbb{G}_2$. This should always return true
     /// unless an "unchecked" API was used.
+    #[inline(always)]  
     pub fn is_torsion_free(&self) -> Choice {
-        const FQ_MODULUS_BYTES: [u8; 32] = [
+        let fq_modulus_bytes = [
     1, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 96, 86, 165, 44, 154, 94, 101, 171, 18
         ];
 
         // Clear the r-torsion from the point and check if it is the identity
         G2Projective::from(*self)
-            .multiply(&FQ_MODULUS_BYTES)
+            .multiply(&fq_modulus_bytes)
             .is_identity()
     }
 
     /// Returns true if this point is on the curve. This should always return
     /// true unless an "unchecked" API was used.
+    #[inline(always)]  
     pub fn is_on_curve(&self) -> Choice {
         // y^2 - x^3 ?= 4(u + 1)
-        (self.y.square() - (self.x.square() * self.x)).ct_eq(&B) | self.infinity
+        (self.y.square() - (self.x.square() * self.x)).ct_eq(&b()) | self.infinity
     }
 }
 
@@ -527,6 +507,7 @@ pub struct G2Projective {
 }
 
 impl<'a> From<&'a G2Affine> for G2Projective {
+    #[inline(always)]  
     fn from(p: &'a G2Affine) -> G2Projective {
         G2Projective {
             x: p.x,
@@ -537,12 +518,14 @@ impl<'a> From<&'a G2Affine> for G2Projective {
 }
 
 impl From<G2Affine> for G2Projective {
+    #[inline(always)]  
     fn from(p: G2Affine) -> G2Projective {
         G2Projective::from(&p)
     }
 }
 
 impl ConstantTimeEq for G2Projective {
+    #[inline(always)]  
     fn ct_eq(&self, other: &Self) -> Choice {
         // Is (xz^2, yz^3, z) equal to (x'z'^2, yz'^3, z') when converted to affine?
 
@@ -564,6 +547,7 @@ impl ConstantTimeEq for G2Projective {
 }
 
 impl ConditionallySelectable for G2Projective {
+    #[inline(always)]  
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         G2Projective {
             x: Fp2::conditional_select(&a.x, &b.x, choice),
@@ -575,7 +559,7 @@ impl ConditionallySelectable for G2Projective {
 
 impl Eq for G2Projective {}
 impl PartialEq for G2Projective {
-    #[inline]
+    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         bool::from(self.ct_eq(other))
     }
@@ -584,7 +568,7 @@ impl PartialEq for G2Projective {
 impl<'a> Neg for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline]
+    #[inline(always)]
     fn neg(self) -> G2Projective {
         G2Projective {
             x: self.x,
@@ -597,7 +581,7 @@ impl<'a> Neg for &'a G2Projective {
 impl Neg for G2Projective {
     type Output = G2Projective;
 
-    #[inline]
+    #[inline(always)]
     fn neg(self) -> G2Projective {
         -&self
     }
@@ -606,7 +590,7 @@ impl Neg for G2Projective {
 impl<'a, 'b> Add<&'b G2Projective> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline]
+    #[inline(always)]
     fn add(self, rhs: &'b G2Projective) -> G2Projective {
         self.add(rhs)
     }
@@ -615,7 +599,7 @@ impl<'a, 'b> Add<&'b G2Projective> for &'a G2Projective {
 impl<'a, 'b> Sub<&'b G2Projective> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline]
+    #[inline(always)]
     fn sub(self, rhs: &'b G2Projective) -> G2Projective {
         self + (-rhs)
     }
@@ -624,6 +608,7 @@ impl<'a, 'b> Sub<&'b G2Projective> for &'a G2Projective {
 impl<'a, 'b> Mul<&'b Scalar> for &'a G2Projective {
     type Output = G2Projective;
 
+    #[inline(always)]
     fn mul(self, other: &'b Scalar) -> Self::Output {
         self.multiply(&other.to_bytes())
     }
@@ -632,6 +617,7 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a G2Projective {
 impl<'a, 'b> Mul<&'b Scalar> for &'a G2Affine {
     type Output = G2Projective;
 
+    #[inline(always)]
     fn mul(self, other: &'b Scalar) -> Self::Output {
         G2Projective::from(self).multiply(&other.to_bytes())
     }
@@ -643,6 +629,7 @@ impl_binops_multiplicative_mixed!(G2Affine, Scalar, G2Projective);
 
 impl G2Projective {
     /// Returns the identity of the group: the point at infinity.
+    #[inline(always)] 
     pub fn identity() -> G2Projective {
         G2Projective {
             x: Fp2::zero(),
@@ -663,6 +650,8 @@ impl G2Projective {
     }
 
     /// Computes the doubling of this point.
+
+    #[inline(always)]
     pub fn double(&self) -> G2Projective {
         // http://www.hyperelliptic.org/EFD/g2p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
         //
@@ -696,6 +685,7 @@ impl G2Projective {
     }
 
     /// Adds this point to another point.
+    #[inline(always)]
     pub fn add(&self, rhs: &G2Projective) -> G2Projective {
         // This Jacobian point addition technique is based on the implementation in libsecp256k1,
         // which assumes that rhs has z=1. Let's address the case of zero z-coordinates generally.
@@ -765,6 +755,7 @@ impl G2Projective {
     }
 
     /// Adds this point to another point in the affine model.
+    #[inline(always)]
     pub fn add_mixed(&self, rhs: &G2Affine) -> G2Projective {
         // This Jacobian point addition technique is based on the implementation in libsecp256k1,
         // which assumes that rhs has z=1. Let's address the case of zero z-coordinates generally.
@@ -831,6 +822,7 @@ impl G2Projective {
         G2Projective::conditional_select(&res, &tmp, (!f1) & (!f2) & (!f3))
     }
 
+    #[inline(always)]
     fn multiply(&self, by: &[u8; 32]) -> G2Projective {
         let mut acc = G2Projective::identity();
 
@@ -894,18 +886,19 @@ impl G2Projective {
     }
 
     /// Returns true if this element is the identity (the point at infinity).
-    #[inline]
+    #[inline(always)]
     pub fn is_identity(&self) -> Choice {
         self.z.is_zero()
     }
 
     /// Returns true if this point is on the curve. This should always return
     /// true unless an "unchecked" API was used.
+    #[inline(always)]
     pub fn is_on_curve(&self) -> Choice {
         // Y^2 - X^3 = 4(u + 1)(Z^6)
 
         (self.y.square() - (self.x.square() * self.x))
-            .ct_eq(&((self.z.square() * self.z).square() * B))
+            .ct_eq(&((self.z.square() * self.z).square() * b()))
             | self.z.is_zero()
     }
 }

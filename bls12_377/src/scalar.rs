@@ -30,7 +30,7 @@ impl fmt::Debug for Scalar {
 
 impl From<u64> for Scalar {
     fn from(val: u64) -> Scalar {
-        Scalar([val, 0, 0, 0]) * R2
+        Scalar([val, 0, 0, 0]) * r_squared()
     }
 }
 
@@ -64,12 +64,15 @@ impl ConditionallySelectable for Scalar {
 /// Constant representing the modulus
 /// TODO: Put actual modulus value
 /// q =! 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-const MODULUS: Scalar = Scalar([
-    725501752471715841u64,
-    6461107452199829505u64,
-    6968279316240510977u64,
-    1345280370688173398u64,
-]);
+#[inline(always)]
+const fn modulus() -> Scalar {
+    Scalar([
+        725501752471715841u64,
+        6461107452199829505u64,
+        6968279316240510977u64,
+        1345280370688173398u64,
+    ])
+}
 
 impl<'a> Neg for &'a Scalar {
     type Output = Scalar;
@@ -120,33 +123,48 @@ impl_binops_additive!(Scalar, Scalar);
 impl_binops_multiplicative!(Scalar, Scalar);
 
 /// INV = -(q^{-1} mod 2^64) mod 2^64
-const INV: u64 = 725501752471715839u64;
+#[inline(always)]
+const fn inv() -> u64 {
+    725501752471715839u64
+}
 
 /// R = 2^256 mod q
-const R: Scalar = Scalar([
-    0x7D1C7FFFFFFFFFF3,
-    0x7257F50F6FFFFFF2,
-    0x16D81575512C0FEE,
-    0xD4BDA322BBB9A9D,
-]);
+#[inline(always)]
+const fn r() -> Scalar {
+   Scalar([
+       0x7D1C7FFFFFFFFFF3,
+       0x7257F50F6FFFFFF2,
+       0x16D81575512C0FEE,
+       0xD4BDA322BBB9A9D,
+   ]) 
+}
 
 /// R^2 = 2^512 mod q
-const R2: Scalar = Scalar([
-    0x25D577BAB861857B,
-    0xCC2C27B58860591F,
-    0xA7CC008FE5DC8593,
-    0x11FDAE7EFF1C939,
-]);
+#[inline(always)]
+const fn r_squared() -> Scalar {
+    Scalar([
+        0x25D577BAB861857B,
+        0xCC2C27B58860591F,
+        0xA7CC008FE5DC8593,
+        0x11FDAE7EFF1C939,
+    ]) 
+}
 
 /// R^3 = 2^768 mod q
-const R3: Scalar = Scalar([
-    0x6A4295C90F65454C, 
-    0x624D23FFAE271699,
-    0xB1E55EF6F1C9D713,
-    0x601DFA555C48DDA,
-]);
+#[inline(always)]
+const fn r_cubed() -> Scalar {
+    Scalar([
+        0x6A4295C90F65454C, 
+        0x624D23FFAE271699,
+        0xB1E55EF6F1C9D713,
+        0x601DFA555C48DDA,
+    ])
+}
 
-const S: u32 = 47;
+#[inline(always)]
+const fn s() -> u32 {
+    47
+}
 
 /// GENERATOR^t where t * 2^s + 1 = q
 /// with t odd. In other words, this
@@ -155,12 +173,15 @@ const S: u32 = 47;
 /// `GENERATOR = 7 mod q` is a generator
 /// of the q - 1 order multiplicative
 /// subgroup.
-const ROOT_OF_UNITY: Scalar = Scalar([
-    0x3c3d3ca739381fb2,
-    0x9a14cda3ec99772b,
-    0xd7aacc7c59724826,
-    0xd1ba211c5cc349c,
-]);
+#[inline(always)]
+const fn root_of_unity() -> Scalar {
+    Scalar([
+        0x3c3d3ca739381fb2,
+        0x9a14cda3ec99772b,
+        0xd7aacc7c59724826,
+        0xd1ba211c5cc349c,
+    ])
+}
 
 impl Default for Scalar {
     #[inline]
@@ -179,32 +200,7 @@ impl Scalar {
     /// Returns one, the multiplicative identity.
     #[inline]
     pub const fn one() -> Scalar {
-        R
-    }
-
-    /// Returns R^2
-    pub const fn R2() -> Scalar {
-Scalar([
-    0x25D577BAB861857B,
-    0xCC2C27B58860591F,
-    0xA7CC008FE5DC8593,
-    0x11FDAE7EFF1C939,
-])
-    }
-
-    /// Returns -(q^{-1} mod 2^64) mod 2^64  
-    pub const fn inv() -> u64 {
-        725501752471715839u64
-    }
-
-    /// Returns modulus of the scalar field
-    pub const fn modulus() -> Scalar {
- Scalar([
-    725501752471715841u64,
-    6461107452199829505u64,
-    6968279316240510977u64,
-    1345280370688173398u64,
-])
+        r()
     }
 
     /// Doubles this field element.
@@ -218,6 +214,7 @@ Scalar([
     /// a scalar into a `Scalar`, failing if the input is not canonical.
     pub fn from_bytes(bytes: &[u8; 32]) -> CtOption<Scalar> {
         let mut tmp = Scalar([0, 0, 0, 0]);
+        let modulus = modulus();
 
         tmp.0[0] = LittleEndian::read_u64(&bytes[0..8]);
         tmp.0[1] = LittleEndian::read_u64(&bytes[8..16]);
@@ -225,10 +222,10 @@ Scalar([
         tmp.0[3] = LittleEndian::read_u64(&bytes[24..32]);
 
         // Try to subtract the modulus
-        let (_, borrow) = sbb(tmp.0[0], MODULUS.0[0], 0);
-        let (_, borrow) = sbb(tmp.0[1], MODULUS.0[1], borrow);
-        let (_, borrow) = sbb(tmp.0[2], MODULUS.0[2], borrow);
-        let (_, borrow) = sbb(tmp.0[3], MODULUS.0[3], borrow);
+        let (_, borrow) = sbb(tmp.0[0], modulus.0[0], 0);
+        let (_, borrow) = sbb(tmp.0[1], modulus.0[1], borrow);
+        let (_, borrow) = sbb(tmp.0[2], modulus.0[2], borrow);
+        let (_, borrow) = sbb(tmp.0[3], modulus.0[3], borrow);
 
         // If the element is smaller than MODULUS then the
         // subtraction will underflow, producing a borrow value
@@ -237,7 +234,7 @@ Scalar([
 
         // Convert to Montgomery form by computing
         // (a.R^0 * R^2) / R = a.R
-        tmp *= &R2;
+        tmp *= &r_squared();
 
         CtOption::new(tmp, Choice::from(is_some))
     }
@@ -290,7 +287,7 @@ Scalar([
         let d0 = Scalar([limbs[0], limbs[1], limbs[2], limbs[3]]);
         let d1 = Scalar([limbs[4], limbs[5], limbs[6], limbs[7]]);
         // Convert to Montgomery form
-        d0 * R2 + d1 * R3
+        d0 * r_squared() + d1 * r_cubed()
     }
 
     /// Converts from an integer represented in little endian
@@ -302,13 +299,7 @@ Scalar([
         let r3 = 0x11FDAE7EFF1C939;
         let (r4, r5) = mac(r0, r1, r3, 0);
         let (r6, r7) = mac(r2, r3, r5, 0);
-//        Scalar([r4, r5, r6, r7])
-        (&Scalar(val)).mul(&Scalar::R2())
-    }
-
-    /// Does nothing and returns true
-    pub fn do_nothing() -> Self {
-        Scalar::R2()
+        (&Scalar(val)).mul(&r_squared())
     }
 
     /// Squares this element.
@@ -357,14 +348,16 @@ Scalar([
             0x0000000039f6d3a9,
         ]);
 
-        let mut v = S;
+        let s = s();
+
+        let mut v = s;
         let mut x = self * w;
         let mut b = x * w;
 
         // Initialize z as the 2^S root of unity.
-        let mut z = ROOT_OF_UNITY;
+        let mut z = root_of_unity();
 
-        for max_v in (1..=S).rev() {
+        for max_v in (1..=s).rev() {
             let mut k = 1;
             let mut tmp = b.square();
             let mut j_less_than_v: Choice = 1.into();
@@ -442,8 +435,8 @@ Scalar([
         // Handbook of Applied Cryptography
         // <http://cacr.uwaterloo.ca/hac/about/chap14.pdf>.
 
-        let modulus = Scalar::modulus();
-        let inv = Scalar::inv();
+        let modulus = modulus();
+        let inv = inv();
         let k = r0.wrapping_mul(inv);
         let (_, carry) = mac(r0, k, modulus.0[0], 0);
         let (r1, carry) = mac(r1, k, modulus.0[1], carry);
@@ -509,7 +502,7 @@ Scalar([
     /// Subtracts `rhs` from `self`, returning the result.
     #[inline(always)]
     pub const fn sub(&self, rhs: &Self) -> Self {
-        let modulus = Scalar::modulus();
+        let modulus = modulus();
         let (d0, borrow) = sbb(self.0[0], rhs.0[0], 0);
         let (d1, borrow) = sbb(self.0[1], rhs.0[1], borrow);
         let (d2, borrow) = sbb(self.0[2], rhs.0[2], borrow);
@@ -522,9 +515,7 @@ Scalar([
         let (d2, carry) = adc(d2, modulus.0[2] & borrow, carry);
         let (d3, _) = adc(d3, modulus.0[3] & borrow, carry);
 
-//        Scalar([0x04, 0x03, 0x02, 0x01])
         Scalar([d0, d1, d2, d3])
-//        Scalar::R2()
     }
 
     /// Adds `rhs` to `self`, returning the result.
@@ -537,7 +528,7 @@ Scalar([
 
         // Attempt to subtract the modulus, to ensure the value
         // is smaller than the modulus.
-        (&Scalar([d0, d1, d2, d3])).sub(&MODULUS)
+        (&Scalar([d0, d1, d2, d3])).sub(&modulus())
     }
 
     /// Negates `self`.
@@ -546,10 +537,11 @@ Scalar([
         // Subtract `self` from `MODULUS` to negate. Ignore the final
         // borrow because it cannot underflow; self is guaranteed to
         // be in the field.
-        let (d0, borrow) = sbb(MODULUS.0[0], self.0[0], 0);
-        let (d1, borrow) = sbb(MODULUS.0[1], self.0[1], borrow);
-        let (d2, borrow) = sbb(MODULUS.0[2], self.0[2], borrow);
-        let (d3, _) = sbb(MODULUS.0[3], self.0[3], borrow);
+        let modulus = modulus();
+        let (d0, borrow) = sbb(modulus.0[0], self.0[0], 0);
+        let (d1, borrow) = sbb(modulus.0[1], self.0[1], borrow);
+        let (d2, borrow) = sbb(modulus.0[2], self.0[2], borrow);
+        let (d3, _) = sbb(modulus.0[3], self.0[3], borrow);
 
         // `tmp` could be `MODULUS` if `self` was zero. Create a mask that is
         // zero if `self` was zero, and `u64::max_value()` if self was nonzero.
@@ -573,11 +565,11 @@ fn test_inv() {
     let mut inv = 1u64;
     for _ in 0..63 {
         inv = inv.wrapping_mul(inv);
-        inv = inv.wrapping_mul(MODULUS.0[0]);
+        inv = inv.wrapping_mul(modulus().0[0]);
     }
     inv = inv.wrapping_neg();
 
-    assert_eq!(inv, INV);
+    assert_eq!(inv, inv());
 }
 
 #[cfg(feature = "std")]
@@ -592,7 +584,7 @@ fn test_debug() {
         "0x0000000000000000000000000000000000000000000000000000000000000001"
     );
     assert_eq!(
-        format!("{:?}", R2),
+        format!("{:?}", r2()),
         "0x1824b159acc5056f998c4fefecbc4ff55884b7fa0003480200000001fffffffe"
     );
 }
@@ -601,10 +593,10 @@ fn test_debug() {
 fn test_equality() {
     assert_eq!(Scalar::zero(), Scalar::zero());
     assert_eq!(Scalar::one(), Scalar::one());
-    assert_eq!(R2, R2);
+    assert_eq!(r2(), r2());
 
     assert!(Scalar::zero() != Scalar::one());
-    assert!(Scalar::one() != R2);
+    assert!(Scalar::one() != r2());
 }
 
 #[test]
@@ -728,10 +720,10 @@ fn test_from_u512_zero() {
     assert_eq!(
         Scalar::zero(),
         Scalar::from_u512([
-            MODULUS.0[0],
-            MODULUS.0[1],
-            MODULUS.0[2],
-            MODULUS.0[3],
+            modulus.0[0],
+            modulus.0[1],
+            modulus.0[2],
+            modulus.0[3],
             0,
             0,
             0,
@@ -742,27 +734,27 @@ fn test_from_u512_zero() {
 
 #[test]
 fn test_from_u512_r() {
-    assert_eq!(R, Scalar::from_u512([1, 0, 0, 0, 0, 0, 0, 0]));
+    assert_eq!(r(), Scalar::from_u512([1, 0, 0, 0, 0, 0, 0, 0]));
 }
 
 #[test]
-fn test_from_u512_r2() {
-    assert_eq!(R2, Scalar::from_u512([0, 0, 0, 0, 1, 0, 0, 0]));
+fn test_from_u512_r_squared() {
+    assert_eq!(r_squared(), Scalar::from_u512([0, 0, 0, 0, 1, 0, 0, 0]));
 }
 
 #[test]
 fn test_from_u512_max() {
     let max_u64 = 0xffffffffffffffff;
     assert_eq!(
-        R3 - R,
+        r_cubed() - r(),
         Scalar::from_u512([max_u64, max_u64, max_u64, max_u64, max_u64, max_u64, max_u64, max_u64])
     );
 }
 
 #[test]
-fn test_from_bytes_wide_r2() {
+fn test_from_bytes_wide_r_squared() {
     assert_eq!(
-        R2,
+        r_squared(),
         Scalar::from_bytes_wide(&[
             243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
             44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -856,7 +848,7 @@ fn test_subtraction() {
     let mut tmp = Scalar::zero();
     tmp -= &LARGEST;
 
-    let mut tmp2 = MODULUS;
+    let mut tmp2 = modulus();
     tmp2 -= &LARGEST;
 
     assert_eq!(tmp, tmp2);
@@ -932,7 +924,7 @@ fn test_from_raw() {
         Scalar::from_raw([0xffffffffffffffff; 4])
     );*/
 
-    assert_eq!(Scalar::from_raw(MODULUS.0), Scalar::zero());
+    assert_eq!(Scalar::from_raw(modulus().0), Scalar::zero());
 
     assert_eq!(Scalar::from_raw([1, 0, 0, 0]), R);
 }

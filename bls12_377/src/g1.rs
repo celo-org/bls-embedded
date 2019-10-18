@@ -143,32 +143,38 @@ impl<'a, 'b> Sub<&'b G1Affine> for &'a G1Projective {
 impl_binops_additive!(G1Projective, G1Affine);
 impl_binops_additive_specify_output!(G1Affine, G1Projective, G1Projective);
 
-const B: Fp = Fp::from_raw_unchecked([
-    0x2cdffffffffff68,
-    0x51409f837fffffb1,
-    0x9f7db3a98a7d3ff2,
-    0x7b4e97b76e7c6305,
-    0x4cf495bf803c84e8,
-    0x8d6661e2fdf49a,
-]);
+const fn b() -> Fp {
+    Fp::from_raw_unchecked([
+        0x2cdffffffffff68,
+        0x51409f837fffffb1,
+        0x9f7db3a98a7d3ff2,
+        0x7b4e97b76e7c6305,
+        0x4cf495bf803c84e8,
+        0x8d6661e2fdf49a,
+    ])
+}
 
-const GEN_X: Fp = Fp::from_raw_unchecked([
-    0x260f33b9772451f4,
-    0xc54dd773169d5658,
-    0x5c1551c469a510dd,
-    0x761662e4425e1698,
-    0xc97d78cc6f065272,
-    0xa41206b361fd4d,
-]);
+const fn gen_x() -> Fp {
+    Fp::from_raw_unchecked([
+        0x260f33b9772451f4,
+        0xc54dd773169d5658,
+        0x5c1551c469a510dd,
+        0x761662e4425e1698,
+        0xc97d78cc6f065272,
+        0xa41206b361fd4d,
+    ])
+} 
 
-const GEN_Y: Fp = Fp::from_raw_unchecked([
-    0x8193961fb8cb81f3,
-    0x638d4c5f44adb8,
-    0xfafaf3dad4daf54a,
-    0xc27849e2d655cd18,
-    0x2ec3ddb401d52814,
-    0x7da93326303c71,
-]);
+const fn gen_y() -> Fp {
+    Fp::from_raw_unchecked([
+        0x8193961fb8cb81f3,
+        0x638d4c5f44adb8,
+        0xfafaf3dad4daf54a,
+        0xc27849e2d655cd18,
+        0x2ec3ddb401d52814,
+        0x7da93326303c71,
+    ])
+}
 
 impl G1Affine {
     /// Returns the identity of the group: the point at infinity.
@@ -184,8 +190,8 @@ impl G1Affine {
     /// for how this generator is chosen.
     pub fn generator() -> G1Affine {
         G1Affine {
-            x: GEN_X, 
-            y: GEN_Y,
+            x: gen_x(), 
+            y: gen_y(),
             infinity: Choice::from(0u8),
         }
     }
@@ -351,7 +357,7 @@ impl G1Affine {
                     _ => None,
                 }.or_else(|| {
                     // Recover a y-coordinate given x by y = sqrt_vartime(x^3 + 4)
-                    ((x.square() * x) + B).sqrt_vartime().and_then(|y| {
+                    ((x.square() * x) + b()).sqrt_vartime().and_then(|y| {
                         // Switch to the correct y-coordinate if necessary.
                         let y = Fp::conditional_select(
                             &y,
@@ -379,21 +385,22 @@ impl G1Affine {
     /// exists within the $q$-order subgroup $\mathbb{G}_1$. This should always return true
     /// unless an "unchecked" API was used.
     pub fn is_torsion_free(&self) -> Choice {
-        const FQ_MODULUS_BYTES: [u8; 32] = [
+        let fq_modulus_bytes = [
             1, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 96, 86, 165, 44, 154, 94, 101, 171, 18
         ];
 
         // Clear the r-torsion from the point and check if it is the identity
         G1Projective::from(*self)
-            .multiply(&FQ_MODULUS_BYTES)
+            .multiply(&fq_modulus_bytes)
             .is_identity()
     }
+
 
     /// Returns true if this point is on the curve. This should always return
     /// true unless an "unchecked" API was used.
     pub fn is_on_curve(&self) -> Choice {
         // y^2 - x^3 ?= 4
-        (self.y.square() - (self.x.square() * self.x)).ct_eq(&B) | self.infinity
+        (self.y.square() - (self.x.square() * self.x)).ct_eq(&b()) | self.infinity
     }
 }
 
@@ -534,8 +541,8 @@ impl G1Projective {
     /// for how this generator is chosen.
     pub fn generator() -> G1Projective {
         G1Projective {
-            x: GEN_X,  
-            y: GEN_Y, 
+            x: gen_x(),  
+            y: gen_y(), 
             z: Fp::one(),
         }
     }
@@ -782,7 +789,7 @@ impl G1Projective {
         // Y^2 - X^3 = 4(Z^6)
 
         (self.y.square() - (self.x.square() * self.x))
-            .ct_eq(&((self.z.square() * self.z).square() * B))
+            .ct_eq(&((self.z.square() * self.z).square() * b()))
             | self.z.is_zero()
     }
 }

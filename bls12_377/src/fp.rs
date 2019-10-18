@@ -26,12 +26,14 @@ impl fmt::Debug for Fp {
 }
 
 impl Default for Fp {
+    #[inline(always)]
     fn default() -> Self {
         Fp::zero()
     }
 }
 
 impl ConstantTimeEq for Fp {
+    #[inline(always)]
     fn ct_eq(&self, other: &Self) -> Choice {
         self.0[0].ct_eq(&other.0[0])
             & self.0[1].ct_eq(&other.0[1])
@@ -44,13 +46,14 @@ impl ConstantTimeEq for Fp {
 
 impl Eq for Fp {}
 impl PartialEq for Fp {
-    #[inline]
+    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.ct_eq(other).unwrap_u8() == 1
     }
 }
 
 impl ConditionallySelectable for Fp {
+    #[inline(always)]
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         Fp([
             u64::conditional_select(&a.0[0], &b.0[0], choice),
@@ -64,72 +67,97 @@ impl ConditionallySelectable for Fp {
 }
 
 /// p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177
-pub const MODULUS: [u64; 6] = [
-    0x8508c00000000001,
-    0x170b5d4430000000,
-    0x1ef3622fba094800,
-    0x1a22d9f300f5138f,
-    0xc63b05c06ca1493b,
-    0x1ae3a4617c510ea,
-];
+#[inline(always)]
+pub const fn modulus() -> [u64; 6] {
+    [
+        0x8508c00000000001,
+        0x170b5d4430000000,
+        0x1ef3622fba094800,
+        0x1a22d9f300f5138f,
+        0xc63b05c06ca1493b,
+        0x1ae3a4617c510ea,
+    ]
+}
+
 
 /// INV = -(p^{-1} mod 2^64) mod 2^64
-const INV: u64 = 9586122913090633727u64;
+#[inline(always)]
+const fn inv() -> u64 {
+    9586122913090633727u64
+}
 
-const TWO_ADICITY: u32 = 46u32;
+#[inline(always)]
+const fn two_adicity() -> u32 {
+    46u32
+}
 
 /// R = 2^384 mod p
-const R: Fp = Fp([
-    0x2cdffffffffff68,
-    0x51409f837fffffb1,
-    0x9f7db3a98a7d3ff2,
-    0x7b4e97b76e7c6305,
-    0x4cf495bf803c84e8,
-    0x8d6661e2fdf49a,
-]);
+#[inline(always)]
+const fn r1() -> Fp {
+    Fp([
+        0x2cdffffffffff68,
+        0x51409f837fffffb1,
+        0x9f7db3a98a7d3ff2,
+        0x7b4e97b76e7c6305,
+        0x4cf495bf803c84e8,
+        0x8d6661e2fdf49a,
+    ])
+}
 
 /// R2 = 2^(384*2) mod p
-const R2: Fp = Fp([
-    0xb786686c9400cd22,
-    0x329fcaab00431b1,
-    0x22a5f11162d6b46d,
-    0xbfdf7d03827dc3ac,
-    0x837e92f041790bf9,
-    0x6dfccb1e914b88,
-]);
+#[inline(always)]
+const fn r2() -> Fp {
+    Fp([
+        0xb786686c9400cd22,
+        0x329fcaab00431b1,
+        0x22a5f11162d6b46d,
+        0xbfdf7d03827dc3ac,
+        0x837e92f041790bf9,
+        0x6dfccb1e914b88,
+    ])
+}
 
 /// c^t, where p - 1 = 2^s*t and t odd
-const ROOT_OF_UNITY: Fp = Fp([
+#[inline(always)]
+const fn root_of_unity() -> Fp {
+   Fp([
     0x1c104955744e6e0f,
     0xf1bd15c3898dd1af,
     0x76da78169a7f3950,
     0xee086c1fe367c337,
     0xf95564f4cbc1b61f,
     0xf3c1414ef58c54,
-]);
+   ])
+}
 
-const T_MINUS_ONE_DIV_TWO: [u64; 6] = [
-    0xba88600000010a11,
-    0xc45f741290002e16,
-    0xb3e601ea271e3de6,
-    0xb80d94292763445,
-    0x748c2f8a21d58c76,
-    0x35c,
-];
+#[inline(always)]
+const fn t_minus_one_div_two() -> [u64; 6] {
+    [
+        0xba88600000010a11,
+        0xc45f741290002e16,
+        0xb3e601ea271e3de6,
+        0xb80d94292763445,
+        0x748c2f8a21d58c76,
+        0x35c,
+    ]
+}
 
-const MODULUS_MINUS_ONE_DIV_TWO: [u64; 6] = [
-    0x4284600000000000,
-    0xb85aea218000000,
-    0x8f79b117dd04a400,
-    0x8d116cf9807a89c7,
-    0x631d82e03650a49d,
-    0xd71d230be28875,
-];
+#[inline(always)]
+const fn modulus_minus_one_div_two() -> [u64; 6] {
+    [
+        0x4284600000000000,
+        0xb85aea218000000,
+        0x8f79b117dd04a400,
+        0x8d116cf9807a89c7,
+        0x631d82e03650a49d,
+        0xd71d230be28875,
+    ]
+}
 
 impl<'a> Neg for &'a Fp {
     type Output = Fp;
 
-    #[inline]
+    #[inline(always)]
     fn neg(self) -> Fp {
         self.neg()
     }
@@ -138,7 +166,7 @@ impl<'a> Neg for &'a Fp {
 impl Neg for Fp {
     type Output = Fp;
 
-    #[inline]
+    #[inline(always)]
     fn neg(self) -> Fp {
         -&self
     }
@@ -147,7 +175,7 @@ impl Neg for Fp {
 impl<'a, 'b> Sub<&'b Fp> for &'a Fp {
     type Output = Fp;
 
-    #[inline]
+    #[inline(always)]
     fn sub(self, rhs: &'b Fp) -> Fp {
         self.sub(rhs)
     }
@@ -156,7 +184,7 @@ impl<'a, 'b> Sub<&'b Fp> for &'a Fp {
 impl<'a, 'b> Add<&'b Fp> for &'a Fp {
     type Output = Fp;
 
-    #[inline]
+    #[inline(always)]
     fn add(self, rhs: &'b Fp) -> Fp {
         self.add(rhs)
     }
@@ -165,7 +193,7 @@ impl<'a, 'b> Add<&'b Fp> for &'a Fp {
 impl<'a, 'b> Mul<&'b Fp> for &'a Fp {
     type Output = Fp;
 
-    #[inline]
+    #[inline(always)]
     fn mul(self, rhs: &'b Fp) -> Fp {
         self.mul(rhs)
     }
@@ -176,40 +204,33 @@ impl_binops_multiplicative!(Fp, Fp);
 
 impl Fp {
     /// Returns zero, the additive identity.
-    #[inline]
+    #[inline(always)]
     pub const fn zero() -> Fp {
         Fp([0, 0, 0, 0, 0, 0])
     }
 
-    pub const fn R1() -> Fp {
-        Fp([
-        0x2cdffffffffff68,
-        0x51409f837fffffb1,
-        0x9f7db3a98a7d3ff2,
-        0x7b4e97b76e7c6305,
-        0x4cf495bf803c84e8,
-        0x8d6661e2fdf49a,
-        ])
-    }
-
     /// Returns one, the multiplicative identity.
-    #[inline]
-    pub const fn one() -> Fp {
-        Fp::R1()    
+    #[inline(always)]
+    pub fn one() -> Fp {
+        r1()
     }
 
+    #[inline(always)] 
     pub fn is_zero(&self) -> Choice {
         self.ct_eq(&Fp::zero())
     }
 
+    #[inline(always)] 
     pub fn is_one(&self) -> Choice {
         self.ct_eq(&Fp::one())
     }
 
     /// Attempts to convert a little-endian byte representation of
     /// a scalar into an `Fp`, failing if the input is not canonical.
+    #[inline(always)]  
     pub fn from_bytes(bytes: &[u8; 48]) -> CtOption<Fp> {
         let mut tmp = Fp([0, 0, 0, 0, 0, 0]);
+        let modulus = modulus();
 
         tmp.0[5] = BigEndian::read_u64(&bytes[0..8]);
         tmp.0[4] = BigEndian::read_u64(&bytes[8..16]);
@@ -219,12 +240,12 @@ impl Fp {
         tmp.0[0] = BigEndian::read_u64(&bytes[40..48]);
 
         // Try to subtract the modulus
-        let (_, borrow) = sbb(tmp.0[0], MODULUS[0], 0);
-        let (_, borrow) = sbb(tmp.0[1], MODULUS[1], borrow);
-        let (_, borrow) = sbb(tmp.0[2], MODULUS[2], borrow);
-        let (_, borrow) = sbb(tmp.0[3], MODULUS[3], borrow);
-        let (_, borrow) = sbb(tmp.0[4], MODULUS[4], borrow);
-        let (_, borrow) = sbb(tmp.0[5], MODULUS[5], borrow);
+        let (_, borrow) = sbb(tmp.0[0], modulus[0], 0);
+        let (_, borrow) = sbb(tmp.0[1], modulus[1], borrow);
+        let (_, borrow) = sbb(tmp.0[2], modulus[2], borrow);
+        let (_, borrow) = sbb(tmp.0[3], modulus[3], borrow);
+        let (_, borrow) = sbb(tmp.0[4], modulus[4], borrow);
+        let (_, borrow) = sbb(tmp.0[5], modulus[5], borrow);
 
         // If the element is smaller than MODULUS then the
         // subtraction will underflow, producing a borrow value
@@ -233,13 +254,14 @@ impl Fp {
 
         // Convert to Montgomery form by computing
         // (a.R^0 * R^2) / R = a.R
-        tmp *= &R2;
+        tmp *= &r2();
 
         CtOption::new(tmp, Choice::from(is_some))
     }
 
     /// Converts an element of `Fp` into a byte representation in
     /// big-endian byte order.
+    #[inline(always)]  
     pub fn to_bytes(&self) -> [u8; 48] {
         // Turn into canonical form by computing
         // (a.R) / R = a
@@ -260,6 +282,7 @@ impl Fp {
 
     /// Returns whether or not this element is strictly lexicographically
     /// larger than its negation.
+    #[inline(always)]  
     pub fn lexicographically_largest(&self) -> Choice {
         // This can be determined by checking to see if the element is
         // larger than (p - 1) // 2. If we subtract by ((p - 1) // 2) + 1
@@ -289,6 +312,7 @@ impl Fp {
 
     /// Constructs an element of `Fp` without checking that it is
     /// canonical.
+    #[inline(always)] 
     pub const fn from_raw_unchecked(v: [u64; 6]) -> Fp {
         Fp(v)
     }
@@ -296,6 +320,7 @@ impl Fp {
     /// Although this is labeled "vartime", it is only
     /// variable time with respect to the exponent. It
     /// is also not exposed in the public API.
+    #[inline(always)] 
     pub fn pow_vartime(&self, by: &[u64; 6]) -> Self {
         let mut res = Self::one();
         for e in by.iter().rev() {
@@ -310,8 +335,9 @@ impl Fp {
         res
     }
 
+    #[inline(always)]
     pub fn legendre(&self) -> LegendreSymbol {
-        let s = self.pow_vartime(&MODULUS_MINUS_ONE_DIV_TWO);
+        let s = self.pow_vartime(&modulus_minus_one_div_two());
         if s == Self::zero() {
             LegendreSymbol::Zero
         } else if s == Self::one() {
@@ -321,17 +347,17 @@ impl Fp {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn sqrt_vartime(&self) -> Option<Self> {
         match self.legendre() {
             LegendreSymbol::Zero => Some(*self),
             LegendreSymbol::QuadraticNonResidue => None,
             LegendreSymbol::QuadraticResidue => {
-                let mut z = ROOT_OF_UNITY;
-                let mut w = self.pow_vartime(&T_MINUS_ONE_DIV_TWO);
+                let mut z = root_of_unity();
+                let mut w = self.pow_vartime(&t_minus_one_div_two());
                 let mut x = w * self;
                 let mut b = x * &w;
-                let mut v = TWO_ADICITY as usize;
+                let mut v = two_adicity() as usize;
 
                 // t = self^t
                 {
@@ -370,7 +396,7 @@ impl Fp {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     /// Computes the multiplicative inverse of this field
     /// element, returning None in the case that this element
     /// is zero.
@@ -388,14 +414,15 @@ impl Fp {
         CtOption::new(t, !self.is_zero())
     }
 
-    #[inline]
+    #[inline(always)]
     const fn subtract_p(&self) -> Fp {
-        let (r0, borrow) = sbb(self.0[0], MODULUS[0], 0);
-        let (r1, borrow) = sbb(self.0[1], MODULUS[1], borrow);
-        let (r2, borrow) = sbb(self.0[2], MODULUS[2], borrow);
-        let (r3, borrow) = sbb(self.0[3], MODULUS[3], borrow);
-        let (r4, borrow) = sbb(self.0[4], MODULUS[4], borrow);
-        let (r5, borrow) = sbb(self.0[5], MODULUS[5], borrow);
+        let modulus = modulus();
+        let (r0, borrow) = sbb(self.0[0], modulus[0], 0);
+        let (r1, borrow) = sbb(self.0[1], modulus[1], borrow);
+        let (r2, borrow) = sbb(self.0[2], modulus[2], borrow);
+        let (r3, borrow) = sbb(self.0[3], modulus[3], borrow);
+        let (r4, borrow) = sbb(self.0[4], modulus[4], borrow);
+        let (r5, borrow) = sbb(self.0[5], modulus[5], borrow);
 
         // If underflow occurred on the final limb, borrow = 0xfff...fff, otherwise
         // borrow = 0x000...000. Thus, we use it as a mask!
@@ -409,7 +436,7 @@ impl Fp {
         Fp([r0, r1, r2, r3, r4, r5])
     }
 
-    #[inline]
+    #[inline(always)]
     pub const fn add(&self, rhs: &Fp) -> Fp {
         let (d0, carry) = adc(self.0[0], rhs.0[0], 0);
         let (d1, carry) = adc(self.0[1], rhs.0[1], carry);
@@ -423,14 +450,15 @@ impl Fp {
         (&Fp([d0, d1, d2, d3, d4, d5])).subtract_p()
     }
 
-    #[inline]
+    #[inline(always)]
     pub const fn neg(&self) -> Fp {
-        let (d0, borrow) = sbb(MODULUS[0], self.0[0], 0);
-        let (d1, borrow) = sbb(MODULUS[1], self.0[1], borrow);
-        let (d2, borrow) = sbb(MODULUS[2], self.0[2], borrow);
-        let (d3, borrow) = sbb(MODULUS[3], self.0[3], borrow);
-        let (d4, borrow) = sbb(MODULUS[4], self.0[4], borrow);
-        let (d5, _) = sbb(MODULUS[5], self.0[5], borrow);
+        let modulus = modulus();
+        let (d0, borrow) = sbb(modulus[0], self.0[0], 0);
+        let (d1, borrow) = sbb(modulus[1], self.0[1], borrow);
+        let (d2, borrow) = sbb(modulus[2], self.0[2], borrow);
+        let (d3, borrow) = sbb(modulus[3], self.0[3], borrow);
+        let (d4, borrow) = sbb(modulus[4], self.0[4], borrow);
+        let (d5, _) = sbb(modulus[5], self.0[5], borrow);
 
         // Let's use a mask if `self` was zero, which would mean
         // the result of the subtraction is p.
@@ -448,7 +476,7 @@ impl Fp {
         ])
     }
 
-    #[inline]
+    #[inline(always)]
     pub const fn sub(&self, rhs: &Fp) -> Fp {
         (&rhs.neg()).add(self)
     }
@@ -471,59 +499,61 @@ impl Fp {
         // The Montgomery reduction here is based on Algorithm 14.32 in
         // Handbook of Applied Cryptography
         // <http://cacr.uwaterloo.ca/hac/about/chap14.pdf>.
+        let inv = inv();
+        let modulus = modulus();
 
-        let k = t0.wrapping_mul(INV);
-        let (_, carry) = mac(t0, k, MODULUS[0], 0);
-        let (r1, carry) = mac(t1, k, MODULUS[1], carry);
-        let (r2, carry) = mac(t2, k, MODULUS[2], carry);
-        let (r3, carry) = mac(t3, k, MODULUS[3], carry);
-        let (r4, carry) = mac(t4, k, MODULUS[4], carry);
-        let (r5, carry) = mac(t5, k, MODULUS[5], carry);
+        let k = t0.wrapping_mul(inv);
+        let (_, carry) = mac(t0, k, modulus[0], 0);
+        let (r1, carry) = mac(t1, k, modulus[1], carry);
+        let (r2, carry) = mac(t2, k, modulus[2], carry);
+        let (r3, carry) = mac(t3, k, modulus[3], carry);
+        let (r4, carry) = mac(t4, k, modulus[4], carry);
+        let (r5, carry) = mac(t5, k, modulus[5], carry);
         let (r6, r7) = adc(t6, 0, carry);
 
-        let k = r1.wrapping_mul(INV);
-        let (_, carry) = mac(r1, k, MODULUS[0], 0);
-        let (r2, carry) = mac(r2, k, MODULUS[1], carry);
-        let (r3, carry) = mac(r3, k, MODULUS[2], carry);
-        let (r4, carry) = mac(r4, k, MODULUS[3], carry);
-        let (r5, carry) = mac(r5, k, MODULUS[4], carry);
-        let (r6, carry) = mac(r6, k, MODULUS[5], carry);
+        let k = r1.wrapping_mul(inv);
+        let (_, carry) = mac(r1, k, modulus[0], 0);
+        let (r2, carry) = mac(r2, k, modulus[1], carry);
+        let (r3, carry) = mac(r3, k, modulus[2], carry);
+        let (r4, carry) = mac(r4, k, modulus[3], carry);
+        let (r5, carry) = mac(r5, k, modulus[4], carry);
+        let (r6, carry) = mac(r6, k, modulus[5], carry);
         let (r7, r8) = adc(t7, r7, carry);
 
-        let k = r2.wrapping_mul(INV);
-        let (_, carry) = mac(r2, k, MODULUS[0], 0);
-        let (r3, carry) = mac(r3, k, MODULUS[1], carry);
-        let (r4, carry) = mac(r4, k, MODULUS[2], carry);
-        let (r5, carry) = mac(r5, k, MODULUS[3], carry);
-        let (r6, carry) = mac(r6, k, MODULUS[4], carry);
-        let (r7, carry) = mac(r7, k, MODULUS[5], carry);
+        let k = r2.wrapping_mul(inv);
+        let (_, carry) = mac(r2, k, modulus[0], 0);
+        let (r3, carry) = mac(r3, k, modulus[1], carry);
+        let (r4, carry) = mac(r4, k, modulus[2], carry);
+        let (r5, carry) = mac(r5, k, modulus[3], carry);
+        let (r6, carry) = mac(r6, k, modulus[4], carry);
+        let (r7, carry) = mac(r7, k, modulus[5], carry);
         let (r8, r9) = adc(t8, r8, carry);
 
-        let k = r3.wrapping_mul(INV);
-        let (_, carry) = mac(r3, k, MODULUS[0], 0);
-        let (r4, carry) = mac(r4, k, MODULUS[1], carry);
-        let (r5, carry) = mac(r5, k, MODULUS[2], carry);
-        let (r6, carry) = mac(r6, k, MODULUS[3], carry);
-        let (r7, carry) = mac(r7, k, MODULUS[4], carry);
-        let (r8, carry) = mac(r8, k, MODULUS[5], carry);
+        let k = r3.wrapping_mul(inv);
+        let (_, carry) = mac(r3, k, modulus[0], 0);
+        let (r4, carry) = mac(r4, k, modulus[1], carry);
+        let (r5, carry) = mac(r5, k, modulus[2], carry);
+        let (r6, carry) = mac(r6, k, modulus[3], carry);
+        let (r7, carry) = mac(r7, k, modulus[4], carry);
+        let (r8, carry) = mac(r8, k, modulus[5], carry);
         let (r9, r10) = adc(t9, r9, carry);
 
-        let k = r4.wrapping_mul(INV);
-        let (_, carry) = mac(r4, k, MODULUS[0], 0);
-        let (r5, carry) = mac(r5, k, MODULUS[1], carry);
-        let (r6, carry) = mac(r6, k, MODULUS[2], carry);
-        let (r7, carry) = mac(r7, k, MODULUS[3], carry);
-        let (r8, carry) = mac(r8, k, MODULUS[4], carry);
-        let (r9, carry) = mac(r9, k, MODULUS[5], carry);
+        let k = r4.wrapping_mul(inv);
+        let (_, carry) = mac(r4, k, modulus[0], 0);
+        let (r5, carry) = mac(r5, k, modulus[1], carry);
+        let (r6, carry) = mac(r6, k, modulus[2], carry);
+        let (r7, carry) = mac(r7, k, modulus[3], carry);
+        let (r8, carry) = mac(r8, k, modulus[4], carry);
+        let (r9, carry) = mac(r9, k, modulus[5], carry);
         let (r10, r11) = adc(t10, r10, carry);
 
-        let k = r5.wrapping_mul(INV);
-        let (_, carry) = mac(r5, k, MODULUS[0], 0);
-        let (r6, carry) = mac(r6, k, MODULUS[1], carry);
-        let (r7, carry) = mac(r7, k, MODULUS[2], carry);
-        let (r8, carry) = mac(r8, k, MODULUS[3], carry);
-        let (r9, carry) = mac(r9, k, MODULUS[4], carry);
-        let (r10, carry) = mac(r10, k, MODULUS[5], carry);
+        let k = r5.wrapping_mul(inv);
+        let (_, carry) = mac(r5, k, modulus[0], 0);
+        let (r6, carry) = mac(r6, k, modulus[1], carry);
+        let (r7, carry) = mac(r7, k, modulus[2], carry);
+        let (r8, carry) = mac(r8, k, modulus[3], carry);
+        let (r9, carry) = mac(r9, k, modulus[4], carry);
+        let (r10, carry) = mac(r10, k, modulus[5], carry);
         let (r11, _) = adc(t11, r11, carry);
 
         // Attempt to subtract the modulus, to ensure the value
@@ -531,7 +561,7 @@ impl Fp {
         (&Fp([r6, r7, r8, r9, r10, r11])).subtract_p()
     }
 
-    #[inline]
+    #[inline(always)]
     pub const fn mul(&self, rhs: &Fp) -> Fp {
         let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
         let (t1, carry) = mac(0, self.0[0], rhs.0[1], carry);
@@ -579,7 +609,7 @@ impl Fp {
     }
 
     /// Squares this element.
-    #[inline]
+    #[inline(always)]
     pub const fn square(&self) -> Self {
         let (t1, carry) = mac(0, self.0[0], self.0[1], 0);
         let (t2, carry) = mac(0, self.0[0], self.0[2], carry);
