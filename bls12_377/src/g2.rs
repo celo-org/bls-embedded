@@ -217,7 +217,7 @@ const fn g2_generator_y() -> Fp2 {
 
 impl G2Affine {
     /// Returns the identity of the group: the point at infinity.
-    #[inline(always)] 
+    
     pub fn identity() -> G2Affine {
         G2Affine {
             x: Fp2::zero(),
@@ -239,7 +239,7 @@ impl G2Affine {
 
     /// Serializes this element into compressed form. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
-    #[inline(always)] 
+    
     pub fn to_compressed(&self) -> [u8; 96] {
         // Strictly speaking, self.x is zero already when self.infinity is true, but
         // to guard against implementation mistakes we do not assume this.
@@ -270,7 +270,7 @@ impl G2Affine {
 
     /// Serializes this element into uncompressed form. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
-    #[inline(always)]  
+     
     pub fn to_uncompressed(&self) -> [u8; 192] {
         let mut res = [0; 192];
 
@@ -290,7 +290,7 @@ impl G2Affine {
 
     /// Attempts to deserialize an uncompressed element. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
-    #[inline(always)] 
+    
     pub fn from_uncompressed(bytes: &[u8; 192]) -> CtOption<Self> {
         Self::from_uncompressed_unchecked(bytes)
             .and_then(|p| CtOption::new(p, p.is_on_curve() & p.is_torsion_free()))
@@ -300,7 +300,7 @@ impl G2Affine {
     /// element is on the curve and not checking if it is in the correct subgroup.
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_uncompressed()` instead.
-    #[inline(always)]  
+     
     pub fn from_uncompressed_unchecked(bytes: &[u8; 192]) -> CtOption<Self> {
         // Obtain the three flags from the start of the byte sequence
         let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
@@ -379,7 +379,7 @@ impl G2Affine {
 
     /// Attempts to deserialize a compressed element. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
-    #[inline(always)]  
+     
     pub fn from_compressed_vartime(bytes: &[u8; 96]) -> Option<Self> {
         // We already know the point is on the curve because this is established
         // by the y-coordinate recovery procedure in from_compressed_unchecked().
@@ -396,7 +396,7 @@ impl G2Affine {
     /// element is in the correct subgroup.
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_compressed()` instead.
-    #[inline(always)]  
+     
     pub fn from_compressed_unchecked_vartime(bytes: &[u8; 96]) -> Option<Self> {
         // Obtain the three flags from the start of the byte sequence
         let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
@@ -477,7 +477,7 @@ impl G2Affine {
     /// Returns true if this point is free of an $h$-torsion component, and so it
     /// exists within the $q$-order subgroup $\mathbb{G}_2$. This should always return true
     /// unless an "unchecked" API was used.
-    #[inline(always)]  
+     
     pub fn is_torsion_free(&self) -> Choice {
         let fq_modulus_bytes = [
     1, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 96, 86, 165, 44, 154, 94, 101, 171, 18
@@ -491,7 +491,7 @@ impl G2Affine {
 
     /// Returns true if this point is on the curve. This should always return
     /// true unless an "unchecked" API was used.
-    #[inline(always)]  
+     
     pub fn is_on_curve(&self) -> Choice {
         // y^2 - x^3 ?= 4(u + 1)
         (self.y.square() - (self.x.square() * self.x)).ct_eq(&b()) | self.infinity
@@ -507,7 +507,7 @@ pub struct G2Projective {
 }
 
 impl<'a> From<&'a G2Affine> for G2Projective {
-    #[inline(always)]  
+     
     fn from(p: &'a G2Affine) -> G2Projective {
         G2Projective {
             x: p.x,
@@ -518,14 +518,14 @@ impl<'a> From<&'a G2Affine> for G2Projective {
 }
 
 impl From<G2Affine> for G2Projective {
-    #[inline(always)]  
+     
     fn from(p: G2Affine) -> G2Projective {
         G2Projective::from(&p)
     }
 }
 
 impl ConstantTimeEq for G2Projective {
-    #[inline(always)]  
+     
     fn ct_eq(&self, other: &Self) -> Choice {
         // Is (xz^2, yz^3, z) equal to (x'z'^2, yz'^3, z') when converted to affine?
 
@@ -547,7 +547,7 @@ impl ConstantTimeEq for G2Projective {
 }
 
 impl ConditionallySelectable for G2Projective {
-    #[inline(always)]  
+     
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         G2Projective {
             x: Fp2::conditional_select(&a.x, &b.x, choice),
@@ -629,7 +629,7 @@ impl_binops_multiplicative_mixed!(G2Affine, Scalar, G2Projective);
 
 impl G2Projective {
     /// Returns the identity of the group: the point at infinity.
-    #[inline(always)] 
+    
     pub fn identity() -> G2Projective {
         G2Projective {
             x: Fp2::zero(),
@@ -640,7 +640,6 @@ impl G2Projective {
 
     /// Returns a fixed generator of the group. See [`notes::design`](notes/design/index.html#fixed-generators)
     /// for how this generator is chosen.
-    #[inline(always)]
     pub fn generator() -> G2Projective {
         G2Projective {
             x: g2_generator_x(),  
@@ -651,7 +650,6 @@ impl G2Projective {
 
     /// Computes the doubling of this point.
 
-    #[inline(always)]
     pub fn double(&self) -> G2Projective {
         // http://www.hyperelliptic.org/EFD/g2p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
         //
@@ -692,35 +690,36 @@ impl G2Projective {
 
         // If self is the identity, return rhs. Otherwise, return self. The other cases will be
         // predicated on neither self nor rhs being the identity.
-        let f1 = self.is_identity();
-        let res = G2Projective::conditional_select(self, rhs, f1);
-        let f2 = rhs.is_identity();
+        // f1
+        let mut a = self.is_identity();
+        let mut res = G2Projective::conditional_select(self, rhs, a);
+        let b = rhs.is_identity();
 
         // If neither are the identity but x1 = x2 and y1 != y2, then return the identity
-        let z = rhs.z.square();
-        let u1 = self.x * z;
-        let z = z * rhs.z;
-        let s1 = self.y * z;
-        let z = self.z.square();
-        let u2 = rhs.x * z;
-        let z = z * self.z;
-        let s2 = rhs.y * z;
-        let f3 = u1.ct_eq(&u2) & (!s1.ct_eq(&s2));
-        let res =
-            G2Projective::conditional_select(&res, &G2Projective::identity(), (!f1) & (!f2) & f3);
+        let mut c = rhs.z.square();
+        let mut d = self.x * c;
+        let mut e = c * rhs.z;
+        e = self.y * e;
+        let mut f = self.z.square();
+        let u2 = rhs.x * f;
+        f = f * self.z;
+        f = rhs.y * f;
+        let mut g = d.ct_eq(&u2) & (!e.ct_eq(&f));
+        res =
+            G2Projective::conditional_select(&res, &G2Projective::identity(), (!a) & (!b) & g);
 
-        let t = u1 + u2;
-        let m = s1 + s2;
+        let t = d + u2;
+        let m = e + f;
         let rr = t.square();
         let m_alt = -u2;
-        let tt = u1 * m_alt;
+        let tt = d * m_alt;
         let rr = rr + tt;
 
         // Correct for x1 != x2 but y1 = -y2, which can occur because p - 1 is divisible by 3.
         // libsecp256k1 does this by substituting in an alternative (defined) expression for lambda.
         let degenerate = m.is_zero() & rr.is_zero();
-        let rr_alt = s1 + s1;
-        let m_alt = m_alt + u1;
+        let rr_alt = e + e;
+        let m_alt = m_alt + d;
         let rr_alt = Fp2::conditional_select(&rr_alt, &rr, !degenerate);
         let m_alt = Fp2::conditional_select(&m_alt, &m, !degenerate);
 
@@ -751,7 +750,8 @@ impl G2Projective {
             z: z3,
         };
 
-        G2Projective::conditional_select(&res, &tmp, (!f1) & (!f2) & (!f3))
+        G2Projective::conditional_select(&res, &tmp, (!a) & (!b) & (!g))
+        //G2Projective::generator()
     }
 
     /// Adds this point to another point in the affine model.
