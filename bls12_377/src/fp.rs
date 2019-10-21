@@ -26,14 +26,12 @@ impl fmt::Debug for Fp {
 }
 
 impl Default for Fp {
-    #[inline(always)]
     fn default() -> Self {
         Fp::zero()
     }
 }
 
 impl ConstantTimeEq for Fp {
-    #[inline(always)]
     fn ct_eq(&self, other: &Self) -> Choice {
         self.0[0].ct_eq(&other.0[0])
             & self.0[1].ct_eq(&other.0[1])
@@ -46,14 +44,12 @@ impl ConstantTimeEq for Fp {
 
 impl Eq for Fp {}
 impl PartialEq for Fp {
-    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.ct_eq(other).unwrap_u8() == 1
     }
 }
 
 impl ConditionallySelectable for Fp {
-    #[inline(always)]
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         Fp([
             u64::conditional_select(&a.0[0], &b.0[0], choice),
@@ -67,7 +63,7 @@ impl ConditionallySelectable for Fp {
 }
 
 /// p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177
-#[inline(always)]
+#[inline]
 pub const fn modulus() -> [u64; 6] {
     [
         0x8508c00000000001,
@@ -81,18 +77,16 @@ pub const fn modulus() -> [u64; 6] {
 
 
 /// INV = -(p^{-1} mod 2^64) mod 2^64
-#[inline(always)]
+#[inline]
 const fn inv() -> u64 {
     9586122913090633727u64
 }
 
-#[inline(always)]
 const fn two_adicity() -> u32 {
     46u32
 }
 
 /// R = 2^384 mod p
-#[inline(always)]
 const fn r1() -> Fp {
     Fp([
         0x2cdffffffffff68,
@@ -105,7 +99,6 @@ const fn r1() -> Fp {
 }
 
 /// R2 = 2^(384*2) mod p
-#[inline(always)]
 const fn r2() -> Fp {
     Fp([
         0xb786686c9400cd22,
@@ -118,7 +111,6 @@ const fn r2() -> Fp {
 }
 
 /// c^t, where p - 1 = 2^s*t and t odd
-#[inline(always)]
 const fn root_of_unity() -> Fp {
    Fp([
     0x1c104955744e6e0f,
@@ -130,7 +122,6 @@ const fn root_of_unity() -> Fp {
    ])
 }
 
-#[inline(always)]
 const fn t_minus_one_div_two() -> [u64; 6] {
     [
         0xba88600000010a11,
@@ -142,7 +133,6 @@ const fn t_minus_one_div_two() -> [u64; 6] {
     ]
 }
 
-#[inline(always)]
 const fn modulus_minus_one_div_two() -> [u64; 6] {
     [
         0x4284600000000000,
@@ -157,7 +147,7 @@ const fn modulus_minus_one_div_two() -> [u64; 6] {
 impl<'a> Neg for &'a Fp {
     type Output = Fp;
 
-    #[inline(always)]
+    #[inline]
     fn neg(self) -> Fp {
         self.neg()
     }
@@ -166,7 +156,7 @@ impl<'a> Neg for &'a Fp {
 impl Neg for Fp {
     type Output = Fp;
 
-    #[inline(always)]
+    #[inline]
     fn neg(self) -> Fp {
         -&self
     }
@@ -175,7 +165,6 @@ impl Neg for Fp {
 impl<'a, 'b> Sub<&'b Fp> for &'a Fp {
     type Output = Fp;
 
-    #[inline(always)]
     fn sub(self, rhs: &'b Fp) -> Fp {
         self.sub(rhs)
     }
@@ -184,7 +173,7 @@ impl<'a, 'b> Sub<&'b Fp> for &'a Fp {
 impl<'a, 'b> Add<&'b Fp> for &'a Fp {
     type Output = Fp;
 
-    #[inline(always)]
+    #[inline]
     fn add(self, rhs: &'b Fp) -> Fp {
         self.add(rhs)
     }
@@ -193,7 +182,7 @@ impl<'a, 'b> Add<&'b Fp> for &'a Fp {
 impl<'a, 'b> Mul<&'b Fp> for &'a Fp {
     type Output = Fp;
 
-    #[inline(always)]
+    #[inline]
     fn mul(self, rhs: &'b Fp) -> Fp {
         self.mul(rhs)
     }
@@ -204,30 +193,25 @@ impl_binops_multiplicative!(Fp, Fp);
 
 impl Fp {
     /// Returns zero, the additive identity.
-    #[inline(always)]
     pub const fn zero() -> Fp {
         Fp([0, 0, 0, 0, 0, 0])
     }
 
     /// Returns one, the multiplicative identity.
-    #[inline(always)]
-    pub fn one() -> Fp {
+    pub const fn one() -> Fp {
         r1()
     }
 
-    #[inline(always)] 
     pub fn is_zero(&self) -> Choice {
         self.ct_eq(&Fp::zero())
     }
 
-    #[inline(always)] 
     pub fn is_one(&self) -> Choice {
         self.ct_eq(&Fp::one())
     }
 
     /// Attempts to convert a little-endian byte representation of
     /// a scalar into an `Fp`, failing if the input is not canonical.
-    #[inline(always)]  
     pub fn from_bytes(bytes: &[u8; 48]) -> CtOption<Fp> {
         let mut tmp = Fp([0, 0, 0, 0, 0, 0]);
         let modulus = modulus();
@@ -261,7 +245,6 @@ impl Fp {
 
     /// Converts an element of `Fp` into a byte representation in
     /// big-endian byte order.
-    #[inline(always)]  
     pub fn to_bytes(&self) -> [u8; 48] {
         // Turn into canonical form by computing
         // (a.R) / R = a
@@ -282,7 +265,6 @@ impl Fp {
 
     /// Returns whether or not this element is strictly lexicographically
     /// larger than its negation.
-    #[inline(always)]  
     pub fn lexicographically_largest(&self) -> Choice {
         // This can be determined by checking to see if the element is
         // larger than (p - 1) // 2. If we subtract by ((p - 1) // 2) + 1
@@ -312,7 +294,6 @@ impl Fp {
 
     /// Constructs an element of `Fp` without checking that it is
     /// canonical.
-    #[inline(always)] 
     pub const fn from_raw_unchecked(v: [u64; 6]) -> Fp {
         Fp(v)
     }
@@ -320,7 +301,6 @@ impl Fp {
     /// Although this is labeled "vartime", it is only
     /// variable time with respect to the exponent. It
     /// is also not exposed in the public API.
-    #[inline(always)] 
     pub fn pow_vartime(&self, by: &[u64; 6]) -> Self {
         let mut res = Self::one();
         for e in by.iter().rev() {
@@ -335,7 +315,6 @@ impl Fp {
         res
     }
 
-    #[inline(always)]
     pub fn legendre(&self) -> LegendreSymbol {
         let s = self.pow_vartime(&modulus_minus_one_div_two());
         if s == Self::zero() {
@@ -347,7 +326,6 @@ impl Fp {
         }
     }
 
-    #[inline(always)]
     pub fn sqrt_vartime(&self) -> Option<Self> {
         match self.legendre() {
             LegendreSymbol::Zero => Some(*self),
@@ -396,7 +374,6 @@ impl Fp {
         }
     }
 
-    #[inline(always)]
     /// Computes the multiplicative inverse of this field
     /// element, returning None in the case that this element
     /// is zero.
@@ -414,7 +391,7 @@ impl Fp {
         CtOption::new(t, !self.is_zero())
     }
 
-    #[inline(always)]
+    #[inline]
     const fn subtract_p(&self) -> Fp {
         let modulus = modulus();
         let (r0, borrow) = sbb(self.0[0], modulus[0], 0);
@@ -436,7 +413,7 @@ impl Fp {
         Fp([r0, r1, r2, r3, r4, r5])
     }
 
-    #[inline(always)]
+    #[inline]
     pub const fn add(&self, rhs: &Fp) -> Fp {
         let (d0, carry) = adc(self.0[0], rhs.0[0], 0);
         let (d1, carry) = adc(self.0[1], rhs.0[1], carry);
@@ -450,7 +427,6 @@ impl Fp {
         (&Fp([d0, d1, d2, d3, d4, d5])).subtract_p()
     }
 
-    #[inline(always)]
     pub const fn neg(&self) -> Fp {
         let modulus = modulus();
         let (d0, borrow) = sbb(modulus[0], self.0[0], 0);
@@ -476,7 +452,7 @@ impl Fp {
         ])
     }
 
-    #[inline(always)]
+    #[inline]
     pub const fn sub(&self, rhs: &Fp) -> Fp {
         (&rhs.neg()).add(self)
     }
@@ -609,7 +585,6 @@ impl Fp {
     }
 
     /// Squares this element.
-    #[inline(always)]
     pub const fn square(&self) -> Self {
         let (t1, carry) = mac(0, self.0[0], self.0[1], 0);
         let (t2, carry) = mac(0, self.0[0], self.0[2], carry);

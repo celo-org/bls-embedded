@@ -10,7 +10,7 @@ use crate::util::LegendreSymbol;
 
 
 /// beta = -5
-#[inline(always)]
+#[inline]
 const fn nonresidue() -> Fp {
     Fp::from_raw_unchecked([
         0xfc0b8000000002fa,
@@ -57,14 +57,12 @@ impl ConstantTimeEq for Fp2 {
 
 impl Eq for Fp2 {}
 impl PartialEq for Fp2 {
-    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.ct_eq(other).unwrap_u8() == 1
     }
 }
 
 impl ConditionallySelectable for Fp2 {
-    #[inline(always)] 
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         Fp2 {
             c0: Fp::conditional_select(&a.c0, &b.c0, choice),
@@ -76,7 +74,6 @@ impl ConditionallySelectable for Fp2 {
 impl<'a> Neg for &'a Fp2 {
     type Output = Fp2;
 
-    #[inline(always)]
     fn neg(self) -> Fp2 {
         self.neg()
     }
@@ -85,7 +82,6 @@ impl<'a> Neg for &'a Fp2 {
 impl Neg for Fp2 {
     type Output = Fp2;
 
-    #[inline(always)]
     fn neg(self) -> Fp2 {
         -&self
     }
@@ -94,7 +90,7 @@ impl Neg for Fp2 {
 impl<'a, 'b> Sub<&'b Fp2> for &'a Fp2 {
     type Output = Fp2;
 
-    #[inline(always)]
+    #[inline]
     fn sub(self, rhs: &'b Fp2) -> Fp2 {
         self.sub(rhs)
     }
@@ -103,7 +99,7 @@ impl<'a, 'b> Sub<&'b Fp2> for &'a Fp2 {
 impl<'a, 'b> Add<&'b Fp2> for &'a Fp2 {
     type Output = Fp2;
 
-    #[inline(always)]
+   #[inline]
     fn add(self, rhs: &'b Fp2) -> Fp2 {
         self.add(rhs)
     }
@@ -112,7 +108,7 @@ impl<'a, 'b> Add<&'b Fp2> for &'a Fp2 {
 impl<'a, 'b> Mul<&'b Fp2> for &'a Fp2 {
     type Output = Fp2;
 
-    #[inline(always)]
+    #[inline]
     fn mul(self, rhs: &'b Fp2) -> Fp2 {
         self.mul(rhs)
     }
@@ -122,7 +118,6 @@ impl_binops_additive!(Fp2, Fp2);
 impl_binops_multiplicative!(Fp2, Fp2);
 
 impl Fp2 {
-    #[inline(always)]
     pub const fn zero() -> Fp2 {
         Fp2 {
             c0: Fp::zero(),
@@ -130,28 +125,24 @@ impl Fp2 {
         }
     }
 
-    #[inline(always)]
-    pub fn one() -> Fp2 {
+    pub const fn one() -> Fp2 {
         Fp2 {
             c0: Fp::one(),
             c1: Fp::zero(),
         }
     }
 
-    #[inline(always)]
     pub fn is_zero(&self) -> Choice {
         self.c0.is_zero() & self.c1.is_zero()
     }
 
     /// Raises this element to p.
-    #[inline(always)]
     pub fn frobenius_map(&self) -> Self {
         // This is always just a conjugation. If you're curious why, here's
         // an article about it: https://alicebob.cryptoland.net/the-frobenius-endomorphism-with-finite-fields/
         self.conjugate()
     }
 
-    #[inline(always)]
     pub fn conjugate(&self) -> Self {
         Fp2 {
             c0: self.c0,
@@ -159,7 +150,6 @@ impl Fp2 {
         }
     }
 
-    #[inline(always)]
     pub fn mul_by_nonresidue(&self) -> Fp2 {
         // Multiply a + bu by u + 1, getting
         // au + a + bu^2 + bu
@@ -174,7 +164,6 @@ impl Fp2 {
 
     /// Returns whether or not this element is strictly lexicographically
     /// larger than its negation.
-    #[inline(always)]
     pub fn lexicographically_largest(&self) -> Choice {
         // If this element's c1 coefficient is lexicographically largest
         // then it is lexicographically largest. Otherwise, in the event
@@ -186,7 +175,7 @@ impl Fp2 {
             | (self.c1.is_zero() & self.c0.lexicographically_largest())
     }
 
-    #[inline(always)] 
+    #[inline]
     pub const fn square(&self) -> Fp2 {
         // Complex squaring:
         //
@@ -206,7 +195,7 @@ impl Fp2 {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub const fn mul(&self, rhs: &Fp2) -> Fp2 {
         // Karatsuba multiplication:
         //
@@ -234,7 +223,7 @@ impl Fp2 {
         Fp2 { c0, c1 }
     }
 
-    #[inline(always)]
+    #[inline]
     pub const fn add(&self, rhs: &Fp2) -> Fp2 {
         Fp2 {
             c0: (&self.c0).add(&rhs.c0),
@@ -242,7 +231,7 @@ impl Fp2 {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub const fn sub(&self, rhs: &Fp2) -> Fp2 {
         Fp2 {
             c0: (&self.c0).sub(&rhs.c0),
@@ -250,7 +239,6 @@ impl Fp2 {
         }
     }
 
-    #[inline(always)]
     pub const fn neg(&self) -> Fp2 {
         Fp2 {
             c0: (&self.c0).neg(),
@@ -258,7 +246,6 @@ impl Fp2 {
         }
     }
 
-    #[inline(always)]
     fn norm(&self) -> Fp {
         let t0 = self.c0.square();
         let mut t1 = self.c1.square();
@@ -267,7 +254,6 @@ impl Fp2 {
         t1
     }
 
-    #[inline(always)]
     fn legendre(&self) -> LegendreSymbol {
         self.norm().legendre()
     }
@@ -275,7 +261,6 @@ impl Fp2 {
 
     /// Algorithm 8, https://eprint.iacr.org/2012/685.pdf
     /// TODO: Investigate switching to algo 10
-    #[inline(always)] 
     pub fn sqrt_vartime(&self) -> Option<Self> {
         if self.c1 == Fp::zero() {
             return self.c0.sqrt_vartime().map(|c0| Self { c0, c1: Fp::zero() } )
@@ -307,7 +292,6 @@ impl Fp2 {
     /// Computes the multiplicative inverse of this field
     /// element, returning None in the case that this element
     /// is zero.
-    #[inline(always)] 
     pub fn invert(&self) -> CtOption<Self> {
         // We wish to find the multiplicative inverse of a nonzero
         // element a + bu in Fp2. Algorithm 5.19
@@ -325,7 +309,6 @@ impl Fp2 {
 
     /// Although this is labeled "vartime", it is only
     /// variable time with respect to the exponent. It
-    #[inline(always)] 
     /// is also not exposed in the public API.
     pub fn pow_vartime(&self, by: &[u64; 6]) -> Self {
         let mut res = Self::one();

@@ -44,7 +44,6 @@ impl ConstantTimeEq for Scalar {
 }
 
 impl PartialEq for Scalar {
-    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.ct_eq(other).unwrap_u8() == 1
     }
@@ -64,7 +63,6 @@ impl ConditionallySelectable for Scalar {
 /// Constant representing the modulus
 /// TODO: Put actual modulus value
 /// q =! 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
-#[inline(always)]
 const fn modulus() -> Scalar {
     Scalar([
         725501752471715841u64,
@@ -77,7 +75,6 @@ const fn modulus() -> Scalar {
 impl<'a> Neg for &'a Scalar {
     type Output = Scalar;
 
-    #[inline]
     fn neg(self) -> Scalar {
         self.neg()
     }
@@ -86,7 +83,6 @@ impl<'a> Neg for &'a Scalar {
 impl Neg for Scalar {
     type Output = Scalar;
 
-    #[inline]
     fn neg(self) -> Scalar {
         -&self
     }
@@ -95,7 +91,6 @@ impl Neg for Scalar {
 impl<'a, 'b> Sub<&'b Scalar> for &'a Scalar {
     type Output = Scalar;
 
-    #[inline]
     fn sub(self, rhs: &'b Scalar) -> Scalar {
         self.sub(rhs)
     }
@@ -104,7 +99,6 @@ impl<'a, 'b> Sub<&'b Scalar> for &'a Scalar {
 impl<'a, 'b> Add<&'b Scalar> for &'a Scalar {
     type Output = Scalar;
 
-    #[inline]
     fn add(self, rhs: &'b Scalar) -> Scalar {
         self.add(rhs)
     }
@@ -113,7 +107,6 @@ impl<'a, 'b> Add<&'b Scalar> for &'a Scalar {
 impl<'a, 'b> Mul<&'b Scalar> for &'a Scalar {
     type Output = Scalar;
 
-    #[inline]
     fn mul(self, rhs: &'b Scalar) -> Scalar {
         self.mul(rhs)
     }
@@ -123,13 +116,11 @@ impl_binops_additive!(Scalar, Scalar);
 impl_binops_multiplicative!(Scalar, Scalar);
 
 /// INV = -(q^{-1} mod 2^64) mod 2^64
-#[inline(always)]
 const fn inv() -> u64 {
     725501752471715839u64
 }
 
 /// R = 2^256 mod q
-#[inline(always)]
 const fn r() -> Scalar {
    Scalar([
        0x7D1C7FFFFFFFFFF3,
@@ -140,7 +131,7 @@ const fn r() -> Scalar {
 }
 
 /// R^2 = 2^512 mod q
-#[inline(always)]
+#[inline]
 const fn r_squared() -> Scalar {
     Scalar([
         0x25D577BAB861857B,
@@ -151,7 +142,6 @@ const fn r_squared() -> Scalar {
 }
 
 /// R^3 = 2^768 mod q
-#[inline(always)]
 const fn r_cubed() -> Scalar {
     Scalar([
         0x6A4295C90F65454C, 
@@ -161,7 +151,6 @@ const fn r_cubed() -> Scalar {
     ])
 }
 
-#[inline(always)]
 const fn s() -> u32 {
     47
 }
@@ -173,7 +162,6 @@ const fn s() -> u32 {
 /// `GENERATOR = 7 mod q` is a generator
 /// of the q - 1 order multiplicative
 /// subgroup.
-#[inline(always)]
 const fn root_of_unity() -> Scalar {
     Scalar([
         0x3c3d3ca739381fb2,
@@ -184,7 +172,6 @@ const fn root_of_unity() -> Scalar {
 }
 
 impl Default for Scalar {
-    #[inline]
     fn default() -> Self {
         Self::zero()
     }
@@ -192,19 +179,16 @@ impl Default for Scalar {
 
 impl Scalar {
     /// Returns zero, the additive identity.
-    #[inline]
     pub const fn zero() -> Scalar {
         Scalar([0, 0, 0, 0])
     }
 
     /// Returns one, the multiplicative identity.
-    #[inline]
     pub const fn one() -> Scalar {
         r()
     }
 
     /// Doubles this field element.
-    #[inline]
     pub const fn double(&self) -> Scalar {
         // TODO: This can be achieved more efficiently with a bitshift.
         self.add(self)
@@ -292,6 +276,7 @@ impl Scalar {
 
     /// Converts from an integer represented in little endian
     /// into its (congruent) `Scalar` representation.
+    #[inline]
     pub const fn from_raw(val: [u64; 4]) -> Self {
         let r0 = 0x25D577BAB861857B;
         let r1 = 0xCC2C27B58860591F;
@@ -303,7 +288,6 @@ impl Scalar {
     }
 
     /// Squares this element.
-    #[inline]
     pub const fn square(&self) -> Scalar {
         let (r1, carry) = mac(0, self.0[0], self.0[1], 0);
         let (r2, carry) = mac(0, self.0[0], self.0[2], carry);
@@ -420,7 +404,7 @@ impl Scalar {
         res
     }
 
-    #[inline(always)]
+    #[inline]
     const fn montgomery_reduce(
         r0: u64,
         r1: u64,
@@ -471,7 +455,7 @@ impl Scalar {
     }
 
     /// Multiplies `rhs` by `self`, returning the result.
-    #[inline(always)]
+    #[inline]
     pub const fn mul(&self, rhs: &Self) -> Self {
         // Schoolbook multiplication
 
@@ -500,7 +484,6 @@ impl Scalar {
     }
 
     /// Subtracts `rhs` from `self`, returning the result.
-    #[inline(always)]
     pub const fn sub(&self, rhs: &Self) -> Self {
         let modulus = modulus();
         let (d0, borrow) = sbb(self.0[0], rhs.0[0], 0);
@@ -519,7 +502,6 @@ impl Scalar {
     }
 
     /// Adds `rhs` to `self`, returning the result.
-    #[inline]
     pub const fn add(&self, rhs: &Self) -> Self {
         let (d0, carry) = adc(self.0[0], rhs.0[0], 0);
         let (d1, carry) = adc(self.0[1], rhs.0[1], carry);
@@ -532,7 +514,6 @@ impl Scalar {
     }
 
     /// Negates `self`.
-    #[inline]
     pub const fn neg(&self) -> Self {
         // Subtract `self` from `MODULUS` to negate. Ignore the final
         // borrow because it cannot underflow; self is guaranteed to

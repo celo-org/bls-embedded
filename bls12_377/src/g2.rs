@@ -22,14 +22,12 @@ pub struct G2Affine {
 }
 
 impl Default for G2Affine {
-    #[inline(always)]
     fn default() -> G2Affine {
         G2Affine::identity()
     }
 }
 
 impl<'a> From<&'a G2Projective> for G2Affine {
-    #[inline(always)]
     fn from(p: &'a G2Projective) -> G2Affine {
        let zinv = p.z.invert().unwrap_or(Fp2::zero());
        let zinv2 = zinv.square();
@@ -48,14 +46,12 @@ impl<'a> From<&'a G2Projective> for G2Affine {
 }
 
 impl From<G2Projective> for G2Affine {
-    #[inline(always)]
     fn from(p: G2Projective) -> G2Affine {
         G2Affine::from(&p)
     }
 }
 
 impl ConstantTimeEq for G2Affine {
-    #[inline(always)]
     fn ct_eq(&self, other: &Self) -> Choice {
         // The only cases in which two points are equal are
         // 1. infinity is set on both
@@ -70,7 +66,7 @@ impl ConstantTimeEq for G2Affine {
 }
 
 impl ConditionallySelectable for G2Affine {
-    #[inline(always)]
+    #[inline]
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         G2Affine {
             x: Fp2::conditional_select(&a.x, &b.x, choice),
@@ -82,7 +78,6 @@ impl ConditionallySelectable for G2Affine {
 
 impl Eq for G2Affine {}
 impl PartialEq for G2Affine {
-    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         bool::from(self.ct_eq(other))
     }
@@ -91,7 +86,6 @@ impl PartialEq for G2Affine {
 impl<'a> Neg for &'a G2Affine {
     type Output = G2Affine;
 
-    #[inline(always)]
     fn neg(self) -> G2Affine {
         G2Affine {
             x: self.x,
@@ -104,7 +98,6 @@ impl<'a> Neg for &'a G2Affine {
 impl Neg for G2Affine {
     type Output = G2Affine;
 
-    #[inline(always)]
     fn neg(self) -> G2Affine {
         -&self
     }
@@ -113,7 +106,6 @@ impl Neg for G2Affine {
 impl<'a, 'b> Add<&'b G2Projective> for &'a G2Affine {
     type Output = G2Projective;
 
-    #[inline(always)]
     fn add(self, rhs: &'b G2Projective) -> G2Projective {
         rhs.add_mixed(self)
     }
@@ -122,7 +114,6 @@ impl<'a, 'b> Add<&'b G2Projective> for &'a G2Affine {
 impl<'a, 'b> Add<&'b G2Affine> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline(always)]
     fn add(self, rhs: &'b G2Affine) -> G2Projective {
         self.add_mixed(rhs)
     }
@@ -131,7 +122,6 @@ impl<'a, 'b> Add<&'b G2Affine> for &'a G2Projective {
 impl<'a, 'b> Sub<&'b G2Projective> for &'a G2Affine {
     type Output = G2Projective;
 
-    #[inline(always)]
     fn sub(self, rhs: &'b G2Projective) -> G2Projective {
         self + (-rhs)
     }
@@ -140,7 +130,6 @@ impl<'a, 'b> Sub<&'b G2Projective> for &'a G2Affine {
 impl<'a, 'b> Sub<&'b G2Affine> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline(always)]
     fn sub(self, rhs: &'b G2Affine) -> G2Projective {
         self + (-rhs)
     }
@@ -149,7 +138,6 @@ impl<'a, 'b> Sub<&'b G2Affine> for &'a G2Projective {
 impl_binops_additive!(G2Projective, G2Affine);
 impl_binops_additive_specify_output!(G2Affine, G2Projective, G2Projective);
 
-#[inline(always)]
 const fn b() -> Fp2 {
     Fp2 {
         c0: Fp::from_raw_unchecked([
@@ -171,7 +159,6 @@ const fn b() -> Fp2 {
     }
 }
 
-#[inline(always)]
 const fn g2_generator_x() -> Fp2 {
     Fp2 {
        c0: Fp::from_raw_unchecked([
@@ -193,7 +180,6 @@ const fn g2_generator_x() -> Fp2 {
     }
 }
 
-#[inline(always)]
 const fn g2_generator_y() -> Fp2 {
     Fp2 {
        c0: Fp::from_raw_unchecked([
@@ -218,6 +204,7 @@ const fn g2_generator_y() -> Fp2 {
 impl G2Affine {
     /// Returns the identity of the group: the point at infinity.
     
+    #[inline]
     pub fn identity() -> G2Affine {
         G2Affine {
             x: Fp2::zero(),
@@ -228,7 +215,6 @@ impl G2Affine {
 
     /// Returns a fixed generator of the group. See [`notes::design`](notes/design/index.html#fixed-generators)
     /// for how this generator is chosen.
-    #[inline(always)]
     pub fn generator() -> G2Affine {
         G2Affine {
             x: g2_generator_x(), 
@@ -469,7 +455,6 @@ impl G2Affine {
     }
 
     /// Returns true if this element is the identity (the point at infinity).
-    #[inline(always)]
     pub fn is_identity(&self) -> Choice {
         self.infinity
     }
@@ -559,7 +544,6 @@ impl ConditionallySelectable for G2Projective {
 
 impl Eq for G2Projective {}
 impl PartialEq for G2Projective {
-    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         bool::from(self.ct_eq(other))
     }
@@ -568,7 +552,6 @@ impl PartialEq for G2Projective {
 impl<'a> Neg for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline(always)]
     fn neg(self) -> G2Projective {
         G2Projective {
             x: self.x,
@@ -581,7 +564,6 @@ impl<'a> Neg for &'a G2Projective {
 impl Neg for G2Projective {
     type Output = G2Projective;
 
-    #[inline(always)]
     fn neg(self) -> G2Projective {
         -&self
     }
@@ -590,7 +572,6 @@ impl Neg for G2Projective {
 impl<'a, 'b> Add<&'b G2Projective> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline(always)]
     fn add(self, rhs: &'b G2Projective) -> G2Projective {
         self.add(rhs)
     }
@@ -599,7 +580,6 @@ impl<'a, 'b> Add<&'b G2Projective> for &'a G2Projective {
 impl<'a, 'b> Sub<&'b G2Projective> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline(always)]
     fn sub(self, rhs: &'b G2Projective) -> G2Projective {
         self + (-rhs)
     }
@@ -608,7 +588,7 @@ impl<'a, 'b> Sub<&'b G2Projective> for &'a G2Projective {
 impl<'a, 'b> Mul<&'b Scalar> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline(always)]
+    #[inline]
     fn mul(self, other: &'b Scalar) -> Self::Output {
         self.multiply(&other.to_bytes())
     }
@@ -617,7 +597,6 @@ impl<'a, 'b> Mul<&'b Scalar> for &'a G2Projective {
 impl<'a, 'b> Mul<&'b Scalar> for &'a G2Affine {
     type Output = G2Projective;
 
-    #[inline(always)]
     fn mul(self, other: &'b Scalar) -> Self::Output {
         G2Projective::from(self).multiply(&other.to_bytes())
     }
@@ -649,7 +628,7 @@ impl G2Projective {
     }
 
     /// Computes the doubling of this point.
-
+    #[inline]
     pub fn double(&self) -> G2Projective {
         // http://www.hyperelliptic.org/EFD/g2p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
         //
@@ -683,7 +662,6 @@ impl G2Projective {
     }
 
     /// Adds this point to another point.
-    #[inline(always)]
     pub fn add(&self, rhs: &G2Projective) -> G2Projective {
         // This Jacobian point addition technique is based on the implementation in libsecp256k1,
         // which assumes that rhs has z=1. Let's address the case of zero z-coordinates generally.
@@ -755,7 +733,6 @@ impl G2Projective {
     }
 
     /// Adds this point to another point in the affine model.
-    #[inline(always)]
     pub fn add_mixed(&self, rhs: &G2Affine) -> G2Projective {
         // This Jacobian point addition technique is based on the implementation in libsecp256k1,
         // which assumes that rhs has z=1. Let's address the case of zero z-coordinates generally.
@@ -822,7 +799,7 @@ impl G2Projective {
         G2Projective::conditional_select(&res, &tmp, (!f1) & (!f2) & (!f3))
     }
 
-    #[inline(always)]
+    #[inline]
     fn multiply(&self, by: &[u8; 32]) -> G2Projective {
         let mut acc = G2Projective::identity();
 
@@ -839,7 +816,7 @@ impl G2Projective {
             .skip(1)
         {
             acc = acc.double();
-            acc = G2Projective::conditional_select(&acc, &(acc + self), bit);
+          //  acc = G2Projective::conditional_select(&acc, &(acc + self), bit);
         }
 
         acc
@@ -886,14 +863,12 @@ impl G2Projective {
     }
 
     /// Returns true if this element is the identity (the point at infinity).
-    #[inline(always)]
     pub fn is_identity(&self) -> Choice {
         self.z.is_zero()
     }
 
     /// Returns true if this point is on the curve. This should always return
     /// true unless an "unchecked" API was used.
-    #[inline(always)]
     pub fn is_on_curve(&self) -> Choice {
         // Y^2 - X^3 = 4(u + 1)(Z^6)
 
