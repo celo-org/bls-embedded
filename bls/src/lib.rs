@@ -112,15 +112,9 @@ pub extern "C" fn sign_message(
         let message = unsafe { slice::from_raw_parts(in_message, in_message_len as usize) };
         let extra_data = unsafe { slice::from_raw_parts(in_extra_data, in_extra_data_len as usize) };
         let hash = G2Projective::generator();//unsafe { &*hash };
-//        let val = hash * pk;
-//        let mut signature = if should_use_composite {
-            private_key.sign(message, extra_data, &hash);
-//        } else {
-//            private_key.sign(message, extra_data, &hash)?
-//        };
+        private_key.sign(message, extra_data, &hash);
+
         true
-//        Ok(())
-//    })
 }
 
 #[no_mangle]
