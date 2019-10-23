@@ -10,6 +10,7 @@ pub mod error;
 use bls12_377::{G1Projective, G2Projective, Scalar};
 use crate::bls::keys::{PublicKey, PrivateKey, Signature};
 use crate::error::ErrorCode;
+use bls12_377::util::{os_exit, os_rng, os_multm};
 use subtle::CtOption;
 
 use core::slice;
@@ -65,6 +66,18 @@ pub extern "C" fn generate_hash(out_hash: *mut *mut G2Projective) -> bool {
         *out_hash = &mut hash;
     }
     true
+}
+
+#[no_mangle]
+pub extern "C" fn test_syscall() {
+    let mut buf: [u8; 4] = [0; 4];
+    let mut left: [u8; 4] = [0, 0, 0, 0];
+    let mut right: [u8; 4] = [0, 0, 0, 0];
+    let mut modulus: [u8; 4] = [1, 1, 1, 1];
+    let len: u32 = 4;
+//    os_rng(&mut buf);
+
+    os_multm(&mut buf, &mut left, &mut right, &mut modulus, len);
 }
 
 #[no_mangle]

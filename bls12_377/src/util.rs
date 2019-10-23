@@ -5,6 +5,56 @@ pub enum LegendreSymbol {
     QuadraticNonResidue = -1,
 }
 
+#[inline(always)]
+fn supervisor_call(syscall_id: (u32, u32), params: &[u32]) -> u32 {
+    let ret_id: u32;
+    let ret_val: u32;
+    unsafe {
+        // Invoke the supervisor
+        asm!("svc #1"
+            : "={r0}"(ret_id), "={r1}"(ret_val)
+            : "{r0}"(syscall_id.0),
+              "{r1}"(params.as_ptr())
+            : "r0", "r1"
+            : "volatile");
+        ret_val
+    }
+}
+
+#[inline(always)]
+pub fn os_exit(exit_code: u32) {
+    const SYSCALL_ID: (u32, u32) = (0x600062e1, 0x9000626f);
+    let params = [
+//        exit_code,
+        0,
+    ];
+    supervisor_call(SYSCALL_ID, &params);
+}
+
+#[inline(always)]
+pub fn os_rng(buf: &mut [u8]) {
+    const SYSCALL_ID: (u32, u32) = (0x600089ec, 0x900089d4);
+    let params = [
+        buf.as_mut_ptr() as u32,
+        buf.len() as u32,
+    ];
+    supervisor_call(SYSCALL_ID, &params);
+}
+
+#[inline(always)]
+pub fn os_multm(result: &mut [u8], left: &mut [u8], right: &mut [u8], modulus: &mut [u8], len: u32) -> () {
+    const SYSCALL_ID: (u32, u32) = (0x60004445, 0x900044f3);
+    let params = [
+        result.as_mut_ptr() as u32,
+        left.as_mut_ptr() as u32,
+        right.as_mut_ptr() as u32,
+        modulus.as_mut_ptr() as u32,
+        len,
+    ];
+    supervisor_call(SYSCALL_ID, &params);
+    ()
+}
+
 /// Compute a + b + carry, returning the result and the new carry over.
 #[inline(always)]
 pub const fn adc(a: u64, b: u64, carry: u64) -> (u64, u64) {

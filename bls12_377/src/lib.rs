@@ -8,10 +8,9 @@
 //! * This implementation does not require the Rust standard library.
 //! * All operations are constant time unless explicitly noted.
 
+#![feature(asm)]
 #![no_std]
 #![deny(missing_debug_implementations)]
-#![deny(missing_docs)]
-#![deny(unsafe_code)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::unreadable_literal)]
 #![allow(clippy::many_single_char_names)]
@@ -30,7 +29,7 @@ extern crate std;
 mod tests;
 
 #[macro_use]
-mod util;
+pub mod util;
 
 /// Notes about how the BLS12-381 elliptic curve is designed, specified
 /// and implemented by this library.

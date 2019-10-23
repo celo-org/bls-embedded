@@ -176,7 +176,7 @@ impl Fp2 {
     }
 
     #[inline]
-    pub const fn square(&self) -> Fp2 {
+    pub fn square(&self) -> Fp2 {
         // Complex squaring:
         //
         // v0  = c0 * c1
@@ -196,7 +196,7 @@ impl Fp2 {
     }
 
     #[inline]
-    pub const fn mul(&self, rhs: &Fp2) -> Fp2 {
+    pub fn mul(&self, rhs: &Fp2) -> Fp2 {
         // Karatsuba multiplication:
         //
         // v0  = a0 * b0

@@ -6,7 +6,7 @@ use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use byteorder::{BigEndian, ByteOrder};
 use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
-use crate::util::{adc, mac, sbb, LegendreSymbol};
+use crate::util::{adc, mac, sbb, LegendreSymbol, os_multm};
 
 // The internal representation of this type is six 64-bit unsigned
 // integers in little-endian order. `Fp` values are always in
@@ -538,8 +538,13 @@ impl Fp {
     }
 
     #[inline(always)]
-    pub const fn mul(&self, rhs: &Fp) -> Fp {
-        let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
+    pub fn mul(&self, rhs: &Fp) -> Fp {
+        let len: u32 = 48;
+        let mut result: [u8; 6] = [0;6];
+        let modulus = modulus();
+      //  os_multm(&mut result, &self.0, &rhs.0, &modulus, len);
+        Fp::one()
+/*        let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
         let (t1, carry) = mac(0, self.0[0], rhs.0[1], carry);
         let (t2, carry) = mac(0, self.0[0], rhs.0[2], carry);
         let (t3, carry) = mac(0, self.0[0], rhs.0[3], carry);
@@ -581,7 +586,7 @@ impl Fp {
         let (t9, carry) = mac(t9, self.0[5], rhs.0[4], carry);
         let (t10, t11) = mac(t10, self.0[5], rhs.0[5], carry);
 
-        Self::montgomery_reduce(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)
+        Self::montgomery_reduce(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)*/
     }
 
     /// Squares this element.
