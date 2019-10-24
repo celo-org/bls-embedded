@@ -540,9 +540,12 @@ impl Fp {
     #[inline(always)]
     pub fn mul(&self, rhs: &Fp) -> Fp {
         let len: u32 = 48;
-        let mut result: [u8; 6] = [0;6];
-        let modulus = modulus();
-      //  os_multm(&mut result, &self.0, &rhs.0, &modulus, len);
+        let mut result: [u8; 48] = [0; 48];
+        let mut modulus = Fp { 0: modulus() }.to_bytes();
+        let mut left_bytes = self.to_bytes();
+        let mut right_bytes = rhs.to_bytes();
+        os_multm(&mut result, &mut left_bytes, &mut right_bytes, &mut modulus, len);
+//        Fp::from_bytes(&result).unwrap()
         Fp::one()
 /*        let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
         let (t1, carry) = mac(0, self.0[0], rhs.0[1], carry);
