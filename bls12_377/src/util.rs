@@ -5,7 +5,7 @@ pub enum LegendreSymbol {
     QuadraticNonResidue = -1,
 }
 
-#[inline(always)]
+/*#[inline(always)]
 fn supervisor_call(syscall_id: (u32, u32), params: &[u32]) -> u32 {
     let ret_id: u32;
     let ret_val: u32;
@@ -53,7 +53,7 @@ pub fn os_multm(result: &mut [u8], left: &mut [u8], right: &mut [u8], modulus: &
     ];
     supervisor_call(SYSCALL_ID, &params);
     ()
-}
+}*/
 
 /// Compute a + b + carry, returning the result and the new carry over.
 #[inline(always)]

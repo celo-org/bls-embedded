@@ -50,6 +50,7 @@ impl From<Fp> for Fp2 {
 }
 
 impl ConstantTimeEq for Fp2 {
+    #[inline]
     fn ct_eq(&self, other: &Self) -> Choice {
         self.c0.ct_eq(&other.c0) & self.c1.ct_eq(&other.c1)
     }
@@ -63,6 +64,7 @@ impl PartialEq for Fp2 {
 }
 
 impl ConditionallySelectable for Fp2 {
+    #[inline]
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         Fp2 {
             c0: Fp::conditional_select(&a.c0, &b.c0, choice),
@@ -74,6 +76,7 @@ impl ConditionallySelectable for Fp2 {
 impl<'a> Neg for &'a Fp2 {
     type Output = Fp2;
 
+    #[inline(always)]
     fn neg(self) -> Fp2 {
         self.neg()
     }
@@ -82,6 +85,7 @@ impl<'a> Neg for &'a Fp2 {
 impl Neg for Fp2 {
     type Output = Fp2;
 
+    #[inline(always)]
     fn neg(self) -> Fp2 {
         -&self
     }
@@ -90,7 +94,7 @@ impl Neg for Fp2 {
 impl<'a, 'b> Sub<&'b Fp2> for &'a Fp2 {
     type Output = Fp2;
 
-    #[inline]
+    #[inline(always)]
     fn sub(self, rhs: &'b Fp2) -> Fp2 {
         self.sub(rhs)
     }
@@ -99,7 +103,7 @@ impl<'a, 'b> Sub<&'b Fp2> for &'a Fp2 {
 impl<'a, 'b> Add<&'b Fp2> for &'a Fp2 {
     type Output = Fp2;
 
-   #[inline]
+   #[inline(always)]
     fn add(self, rhs: &'b Fp2) -> Fp2 {
         self.add(rhs)
     }
@@ -108,7 +112,7 @@ impl<'a, 'b> Add<&'b Fp2> for &'a Fp2 {
 impl<'a, 'b> Mul<&'b Fp2> for &'a Fp2 {
     type Output = Fp2;
 
-    #[inline]
+    #[inline(always)]
     fn mul(self, rhs: &'b Fp2) -> Fp2 {
         self.mul(rhs)
     }
@@ -118,6 +122,7 @@ impl_binops_additive!(Fp2, Fp2);
 impl_binops_multiplicative!(Fp2, Fp2);
 
 impl Fp2 {
+    #[inline(always)]
     pub const fn zero() -> Fp2 {
         Fp2 {
             c0: Fp::zero(),
@@ -125,6 +130,7 @@ impl Fp2 {
         }
     }
 
+    #[inline(always)]
     pub const fn one() -> Fp2 {
         Fp2 {
             c0: Fp::one(),
@@ -132,6 +138,7 @@ impl Fp2 {
         }
     }
 
+    #[inline(always)]
     pub fn is_zero(&self) -> Choice {
         self.c0.is_zero() & self.c1.is_zero()
     }
@@ -195,7 +202,7 @@ impl Fp2 {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn mul(&self, rhs: &Fp2) -> Fp2 {
         // Karatsuba multiplication:
         //
@@ -223,7 +230,7 @@ impl Fp2 {
         Fp2 { c0, c1 }
     }
 
-    #[inline]
+    #[inline(always)]
     pub const fn add(&self, rhs: &Fp2) -> Fp2 {
         Fp2 {
             c0: (&self.c0).add(&rhs.c0),
@@ -231,7 +238,7 @@ impl Fp2 {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub const fn sub(&self, rhs: &Fp2) -> Fp2 {
         Fp2 {
             c0: (&self.c0).sub(&rhs.c0),
@@ -239,6 +246,7 @@ impl Fp2 {
         }
     }
 
+    #[inline(always)]
     pub const fn neg(&self) -> Fp2 {
         Fp2 {
             c0: (&self.c0).neg(),

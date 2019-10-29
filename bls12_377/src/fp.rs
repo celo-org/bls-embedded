@@ -6,7 +6,7 @@ use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use byteorder::{BigEndian, ByteOrder};
 use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
-use crate::util::{adc, mac, sbb, LegendreSymbol, os_multm};
+use crate::util::{adc, mac, sbb, LegendreSymbol};
 
 // The internal representation of this type is six 64-bit unsigned
 // integers in little-endian order. `Fp` values are always in
@@ -99,7 +99,7 @@ const fn r1() -> Fp {
 }
 
 /// R2 = 2^(384*2) mod p
-const fn r2() -> Fp {
+const fn r_squared() -> Fp {
     Fp([
         0xb786686c9400cd22,
         0x329fcaab00431b1,
@@ -165,6 +165,7 @@ impl Neg for Fp {
 impl<'a, 'b> Sub<&'b Fp> for &'a Fp {
     type Output = Fp;
 
+    #[inline]
     fn sub(self, rhs: &'b Fp) -> Fp {
         self.sub(rhs)
     }
@@ -193,19 +194,23 @@ impl_binops_multiplicative!(Fp, Fp);
 
 impl Fp {
     /// Returns zero, the additive identity.
+    #[inline]
     pub const fn zero() -> Fp {
         Fp([0, 0, 0, 0, 0, 0])
     }
 
     /// Returns one, the multiplicative identity.
+    #[inline]
     pub const fn one() -> Fp {
         r1()
     }
 
+    #[inline]
     pub fn is_zero(&self) -> Choice {
         self.ct_eq(&Fp::zero())
     }
 
+    #[inline]
     pub fn is_one(&self) -> Choice {
         self.ct_eq(&Fp::one())
     }
@@ -238,7 +243,7 @@ impl Fp {
 
         // Convert to Montgomery form by computing
         // (a.R^0 * R^2) / R = a.R
-        tmp *= &r2();
+        tmp *= &r_squared();
 
         CtOption::new(tmp, Choice::from(is_some))
     }
@@ -427,6 +432,7 @@ impl Fp {
         (&Fp([d0, d1, d2, d3, d4, d5])).subtract_p()
     }
 
+    #[inline]
     pub const fn neg(&self) -> Fp {
         let modulus = modulus();
         let (d0, borrow) = sbb(modulus[0], self.0[0], 0);
@@ -539,15 +545,7 @@ impl Fp {
 
     #[inline(always)]
     pub fn mul(&self, rhs: &Fp) -> Fp {
-        let len: u32 = 48;
-        let mut result: [u8; 48] = [0; 48];
-        let mut modulus = Fp { 0: modulus() }.to_bytes();
-        let mut left_bytes = self.to_bytes();
-        let mut right_bytes = rhs.to_bytes();
-        os_multm(&mut result, &mut left_bytes, &mut right_bytes, &mut modulus, len);
-//        Fp::from_bytes(&result).unwrap()
-        Fp::one()
-/*        let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
+        let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
         let (t1, carry) = mac(0, self.0[0], rhs.0[1], carry);
         let (t2, carry) = mac(0, self.0[0], rhs.0[2], carry);
         let (t3, carry) = mac(0, self.0[0], rhs.0[3], carry);
@@ -589,10 +587,11 @@ impl Fp {
         let (t9, carry) = mac(t9, self.0[5], rhs.0[4], carry);
         let (t10, t11) = mac(t10, self.0[5], rhs.0[5], carry);
 
-        Self::montgomery_reduce(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)*/
+        Self::montgomery_reduce(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)
     }
 
     /// Squares this element.
+    #[inline]
     pub const fn square(&self) -> Self {
         let (t1, carry) = mac(0, self.0[0], self.0[1], 0);
         let (t2, carry) = mac(0, self.0[0], self.0[2], carry);

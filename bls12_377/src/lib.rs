@@ -8,7 +8,6 @@
 //! * This implementation does not require the Rust standard library.
 //! * All operations are constant time unless explicitly noted.
 
-#![feature(asm)]
 #![no_std]
 #![deny(missing_debug_implementations)]
 #![allow(clippy::too_many_arguments)]

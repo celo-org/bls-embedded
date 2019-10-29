@@ -532,7 +532,7 @@ impl ConstantTimeEq for G2Projective {
 }
 
 impl ConditionallySelectable for G2Projective {
-     
+    #[inline] 
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         G2Projective {
             x: Fp2::conditional_select(&a.x, &b.x, choice),
@@ -609,6 +609,7 @@ impl_binops_multiplicative_mixed!(G2Affine, Scalar, G2Projective);
 impl G2Projective {
     /// Returns the identity of the group: the point at infinity.
     
+    #[inline]
     pub fn identity() -> G2Projective {
         G2Projective {
             x: Fp2::zero(),
@@ -662,6 +663,7 @@ impl G2Projective {
     }
 
     /// Adds this point to another point.
+    #[inline(always)]
     pub fn add(&self, rhs: &G2Projective) -> G2Projective {
         // This Jacobian point addition technique is based on the implementation in libsecp256k1,
         // which assumes that rhs has z=1. Let's address the case of zero z-coordinates generally.
@@ -676,47 +678,47 @@ impl G2Projective {
         // If neither are the identity but x1 = x2 and y1 != y2, then return the identity
         let mut c = rhs.z.square();
         let mut d = self.x * c;
-        let mut e = c * rhs.z;
-        e = self.y * e;
+        c = c * rhs.z;
+        c = self.y * c;
         let mut f = self.z.square();
-        let u2 = rhs.x * f;
+        let mut u2 = rhs.x * f;
         f = f * self.z;
         f = rhs.y * f;
-        let mut g = d.ct_eq(&u2) & (!e.ct_eq(&f));
+        let mut g = d.ct_eq(&u2) & (!c.ct_eq(&f));
         res =
             G2Projective::conditional_select(&res, &G2Projective::identity(), (!a) & (!b) & g);
 
         let t = d + u2;
-        let m = e + f;
-        let rr = t.square();
-        let m_alt = -u2;
-        let tt = d * m_alt;
-        let rr = rr + tt;
+        f = c + f;
+        let mut rr = t.square();
+        u2 = -u2;
+        let tt = d * u2;
+        rr = rr + tt;
 
         // Correct for x1 != x2 but y1 = -y2, which can occur because p - 1 is divisible by 3.
         // libsecp256k1 does this by substituting in an alternative (defined) expression for lambda.
-        let degenerate = m.is_zero() & rr.is_zero();
-        let rr_alt = e + e;
-        let m_alt = m_alt + d;
-        let rr_alt = Fp2::conditional_select(&rr_alt, &rr, !degenerate);
-        let m_alt = Fp2::conditional_select(&m_alt, &m, !degenerate);
+        let degenerate = f.is_zero() & rr.is_zero();
+        let mut rr_alt = c + c;
+        let mut m_alt = u2 + d;
+        rr_alt = Fp2::conditional_select(&rr_alt, &rr, !degenerate);
+        m_alt = Fp2::conditional_select(&m_alt, &f, !degenerate);
 
-        let n = m_alt.square();
-        let q = n * t;
+        u2 = m_alt.square();
+        d = u2 * t;
 
-        let n = n.square();
-        let n = Fp2::conditional_select(&n, &m, degenerate);
-        let t = rr_alt.square();
+        u2 = u2.square();
+        u2 = Fp2::conditional_select(&u2, &f, degenerate);
+        rr = rr_alt.square();
         let z3 = m_alt * self.z * rhs.z; // We allow rhs.z != 1, so we must account for this.
         let z3 = z3 + z3;
-        let q = -q;
-        let t = t + q;
-        let x3 = t;
-        let t = t + t;
-        let t = t + q;
-        let t = t * rr_alt;
-        let t = t + n;
-        let y3 = -t;
+        let q = -d;
+        rr = rr + q;
+        let x3 = rr;
+        rr = rr + rr;
+        rr = rr + q;
+        rr = rr * rr_alt;
+        rr = rr + u2;
+        let y3 = -rr;
         let x3 = x3 + x3;
         let x3 = x3 + x3;
         let y3 = y3 + y3;
@@ -729,7 +731,7 @@ impl G2Projective {
         };
 
         G2Projective::conditional_select(&res, &tmp, (!a) & (!b) & (!g))
-        //G2Projective::generator()
+     //   G2Projective::generator()
     }
 
     /// Adds this point to another point in the affine model.
@@ -809,17 +811,18 @@ impl G2Projective {
         //
         // We skip the leading bit because it's always unset for Fq
         // elements.
-        for bit in by
+    /*    for bit in by
             .iter()
             .rev()
             .flat_map(|byte| (0..8).rev().map(move |i| Choice::from((byte >> i) & 1u8)))
             .skip(1)
         {
             acc = acc.double();
-          //  acc = G2Projective::conditional_select(&acc, &(acc + self), bit);
-        }
+    //        acc = G2Projective::conditional_select(&acc, &(acc + self), bit);
+        }*/
 
-        acc
+        let result = acc + acc;
+        result
     }
 
     /// Converts a batch of `G2Projective` elements into `G2Affine` elements. This
@@ -863,6 +866,7 @@ impl G2Projective {
     }
 
     /// Returns true if this element is the identity (the point at infinity).
+    #[inline]
     pub fn is_identity(&self) -> Choice {
         self.z.is_zero()
     }

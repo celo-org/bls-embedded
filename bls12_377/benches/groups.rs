@@ -1,20 +1,12 @@
 #[macro_use]
 extern crate criterion;
 
-extern crate bls12_381;
-use bls12_381::*;
+extern crate bls12_377;
+use bls12_377::*;
 
 use criterion::{black_box, Criterion};
 
 fn criterion_benchmark(c: &mut Criterion) {
-    // Pairings
-    {
-        let g = G1Affine::generator();
-        let h = G2Affine::generator();
-        c.bench_function("full pairing", move |b| {
-            b.iter(|| pairing(black_box(&g), black_box(&h)))
-        });
-    }
     // G1Affine
     {
         let name = "G1Affine";
@@ -34,10 +26,6 @@ fn criterion_benchmark(c: &mut Criterion) {
         c.bench_function(&format!("{} subgroup check", name), move |b| {
             b.iter(|| black_box(a).is_torsion_free())
         });
-        c.bench_function(
-            &format!("{} deserialize compressed point", name),
-            move |b| b.iter(|| G1Affine::from_compressed(black_box(&compressed))),
-        );
         c.bench_function(
             &format!("{} deserialize uncompressed point", name),
             move |b| b.iter(|| G1Affine::from_uncompressed(black_box(&uncompressed))),
@@ -103,10 +91,6 @@ fn criterion_benchmark(c: &mut Criterion) {
         c.bench_function(&format!("{} subgroup check", name), move |b| {
             b.iter(|| black_box(a).is_torsion_free())
         });
-        c.bench_function(
-            &format!("{} deserialize compressed point", name),
-            move |b| b.iter(|| G2Affine::from_compressed(black_box(&compressed))),
-        );
         c.bench_function(
             &format!("{} deserialize uncompressed point", name),
             move |b| b.iter(|| G2Affine::from_uncompressed(black_box(&uncompressed))),

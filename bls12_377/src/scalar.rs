@@ -543,6 +543,7 @@ fn test_inv() {
     // Compute -(q^{-1} mod 2^64) mod 2^64 by exponentiating
     // by totient(2**64) - 1
 
+    let true_inv = inv();
     let mut inv = 1u64;
     for _ in 0..63 {
         inv = inv.wrapping_mul(inv);
@@ -550,7 +551,7 @@ fn test_inv() {
     }
     inv = inv.wrapping_neg();
 
-    assert_eq!(inv, inv());
+    assert_eq!(inv, true_inv);
 }
 
 #[cfg(feature = "std")]
@@ -565,7 +566,7 @@ fn test_debug() {
         "0x0000000000000000000000000000000000000000000000000000000000000001"
     );
     assert_eq!(
-        format!("{:?}", r2()),
+        format!("{:?}", r_squared()),
         "0x1824b159acc5056f998c4fefecbc4ff55884b7fa0003480200000001fffffffe"
     );
 }
@@ -574,10 +575,10 @@ fn test_debug() {
 fn test_equality() {
     assert_eq!(Scalar::zero(), Scalar::zero());
     assert_eq!(Scalar::one(), Scalar::one());
-    assert_eq!(r2(), r2());
+    assert_eq!(r_squared(), r_squared());
 
     assert!(Scalar::zero() != Scalar::one());
-    assert!(Scalar::one() != r2());
+    assert!(Scalar::one() != r_squared());
 }
 
 #[test]
@@ -599,7 +600,7 @@ fn test_to_bytes() {
     );
 
     assert_eq!(
-        R2.to_bytes(),
+        r_squared().to_bytes(),
         [
             243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
             44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13
@@ -641,7 +642,7 @@ fn test_from_bytes() {
             44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13
         ])
         .unwrap(),
-        R2
+        r_squared()
     );
 
     // -1 should work
@@ -698,6 +699,7 @@ fn test_from_bytes() {
 
 #[test]
 fn test_from_u512_zero() {
+    let modulus = modulus();
     assert_eq!(
         Scalar::zero(),
         Scalar::from_u512([
@@ -907,7 +909,7 @@ fn test_from_raw() {
 
     assert_eq!(Scalar::from_raw(modulus().0), Scalar::zero());
 
-    assert_eq!(Scalar::from_raw([1, 0, 0, 0]), R);
+    assert_eq!(Scalar::from_raw([1, 0, 0, 0]), r());
 }
 
 #[test]
