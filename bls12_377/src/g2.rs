@@ -709,25 +709,25 @@ impl G2Projective {
         u2 = u2.square();
         u2 = Fp2::conditional_select(&u2, &f, degenerate);
         rr = rr_alt.square();
-        let z3 = m_alt * self.z * rhs.z; // We allow rhs.z != 1, so we must account for this.
-        let z3 = z3 + z3;
-        let q = -d;
-        rr = rr + q;
-        let x3 = rr;
+        f = m_alt * self.z * rhs.z; // We allow rhs.z != 1, so we must account for this.
+        m_alt = f + f;
+        f = -d;
+        rr = rr + f;
+        d = rr;
         rr = rr + rr;
-        rr = rr + q;
+        rr = rr + f;
         rr = rr * rr_alt;
         rr = rr + u2;
-        let y3 = -rr;
-        let x3 = x3 + x3;
-        let x3 = x3 + x3;
-        let y3 = y3 + y3;
-        let y3 = y3 + y3;
+        rr_alt = -rr;
+        d = d + d;
+        d = d + d;
+        rr_alt = rr_alt + rr_alt;
+        rr_alt = rr_alt + rr_alt;
 
         let tmp = G2Projective {
-            x: x3,
-            y: y3,
-            z: z3,
+            x: d,
+            y: rr_alt,
+            z: m_alt,
         };
 
         G2Projective::conditional_select(&res, &tmp, (!a) & (!b) & (!g))
