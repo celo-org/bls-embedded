@@ -63,7 +63,7 @@ impl ConditionallySelectable for Fp {
 }
 
 /// p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177
-#[inline]
+#[inline(always)]
 pub const fn modulus() -> [u64; 6] {
     [
         0x8508c00000000001,
@@ -147,7 +147,7 @@ const fn modulus_minus_one_div_two() -> [u64; 6] {
 impl<'a> Neg for &'a Fp {
     type Output = Fp;
 
-    #[inline]
+    #[inline(always)]
     fn neg(self) -> Fp {
         self.neg()
     }
@@ -156,7 +156,7 @@ impl<'a> Neg for &'a Fp {
 impl Neg for Fp {
     type Output = Fp;
 
-    #[inline]
+    #[inline(always)]
     fn neg(self) -> Fp {
         -&self
     }
@@ -174,7 +174,7 @@ impl<'a, 'b> Sub<&'b Fp> for &'a Fp {
 impl<'a, 'b> Add<&'b Fp> for &'a Fp {
     type Output = Fp;
 
-    #[inline]
+    #[inline(always)]
     fn add(self, rhs: &'b Fp) -> Fp {
         self.add(rhs)
     }
@@ -299,6 +299,7 @@ impl Fp {
 
     /// Constructs an element of `Fp` without checking that it is
     /// canonical.
+    #[inline(always)]
     pub const fn from_raw_unchecked(v: [u64; 6]) -> Fp {
         Fp(v)
     }
@@ -396,7 +397,7 @@ impl Fp {
         CtOption::new(t, !self.is_zero())
     }
 
-    #[inline]
+    #[inline(always)]
     const fn subtract_p(&self) -> Fp {
         let modulus = modulus();
         let (r0, borrow) = sbb(self.0[0], modulus[0], 0);
@@ -418,7 +419,7 @@ impl Fp {
         Fp([r0, r1, r2, r3, r4, r5])
     }
 
-    #[inline]
+    #[inline(always)]
     pub const fn add(&self, rhs: &Fp) -> Fp {
         let (d0, carry) = adc(self.0[0], rhs.0[0], 0);
         let (d1, carry) = adc(self.0[1], rhs.0[1], carry);
@@ -432,7 +433,7 @@ impl Fp {
         (&Fp([d0, d1, d2, d3, d4, d5])).subtract_p()
     }
 
-    #[inline]
+    #[inline(always)]
     pub const fn neg(&self) -> Fp {
         let modulus = modulus();
         let (d0, borrow) = sbb(modulus[0], self.0[0], 0);
@@ -543,7 +544,7 @@ impl Fp {
         (&Fp([r6, r7, r8, r9, r10, r11])).subtract_p()
     }
 
-    #[inline(always)]
+//    #[inline(always)]
     pub fn mul(&self, rhs: &Fp) -> Fp {
         let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
         let (t1, carry) = mac(0, self.0[0], rhs.0[1], carry);

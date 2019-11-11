@@ -3,6 +3,7 @@ extern crate criterion;
 
 extern crate bls12_377;
 use bls12_377::*;
+use bls12_377::fp::Fp;
 
 use criterion::{black_box, Criterion};
 
@@ -126,7 +127,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         c.bench_function(&format!("{} mixed addition", name), move |b| {
             b.iter(|| black_box(a).add_mixed(&a_affine))
         });
-        c.bench_function(&format!("{} scalar multiplication", name), move |b| {
+        c.bench_function(&format!("{}_scalar_multiplication", name), move |b| {
             b.iter(|| black_box(a) * black_box(s))
         });
         c.bench_function(&format!("{} batch to affine n={}", name, N), move |b| {
@@ -135,6 +136,19 @@ fn criterion_benchmark(c: &mut Criterion) {
                 black_box(&q)[0]
             })
         });
+    }
+    // Fp Arithmetic
+    {
+       let x = Fp::one();
+       let y = Fp::one();
+       c.bench_function("Fp_multiplication",  
+           move |b| {
+               b.iter(|| black_box(x) * black_box(y))
+           });
+       c.bench_function("Fp_inverse",
+           move |b| {
+               b.iter(|| black_box(x).invert())
+           });
     }
 }
 

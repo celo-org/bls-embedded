@@ -13,9 +13,6 @@ libc = "0.2"
 version = "2.1"
 default-features = false
 
-[build-dependencies]
-cbindgen = "^0.6.0"
-
 [lib]
 name = "bls_embedded"
 path = "src/lib.rs"
@@ -29,4 +26,5 @@ gen_header = []
 panic= "abort"
 
 [profile.release]
+opt-level = "3"
 panic= "abort"

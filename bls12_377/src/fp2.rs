@@ -10,7 +10,7 @@ use crate::util::LegendreSymbol;
 
 
 /// beta = -5
-#[inline]
+#[inline(always)]
 const fn nonresidue() -> Fp {
     Fp::from_raw_unchecked([
         0xfc0b8000000002fa,
@@ -223,9 +223,9 @@ impl Fp2 {
         let v0 = (&self.c0).mul(&rhs.c0);
         let v1 = (&self.c1).mul(&rhs.c1);
         let c0 = (&v0).add(&(&nonresidue()).mul(&v1));
-        let c1 = (&(&self.c0).add(&self.c1)).mul(&(&rhs.c0).add(&rhs.c1));
-        let c1 = (&c1).sub(&v0);
-        let c1 = (&c1).sub(&v1);
+        let mut c1 = (&(&self.c0).add(&self.c1)).mul(&(&rhs.c0).add(&rhs.c1));
+        c1 = (&c1).sub(&v0);
+        c1 = (&c1).sub(&v1);
 
         Fp2 { c0, c1 }
     }

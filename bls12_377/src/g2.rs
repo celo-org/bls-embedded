@@ -572,6 +572,7 @@ impl Neg for G2Projective {
 impl<'a, 'b> Add<&'b G2Projective> for &'a G2Projective {
     type Output = G2Projective;
 
+    #[inline(always)]
     fn add(self, rhs: &'b G2Projective) -> G2Projective {
         self.add(rhs)
     }
@@ -588,7 +589,7 @@ impl<'a, 'b> Sub<&'b G2Projective> for &'a G2Projective {
 impl<'a, 'b> Mul<&'b Scalar> for &'a G2Projective {
     type Output = G2Projective;
 
-    #[inline]
+    #[inline(always)]
     fn mul(self, other: &'b Scalar) -> Self::Output {
         self.multiply(&other.to_bytes())
     }
@@ -673,7 +674,7 @@ impl G2Projective {
         // f1
         let mut a = self.is_identity();
         let mut res = G2Projective::conditional_select(self, rhs, a);
-        let b = rhs.is_identity();
+        let mut b = rhs.is_identity();
 
         // If neither are the identity but x1 = x2 and y1 != y2, then return the identity
         let mut c = rhs.z.square();
@@ -686,7 +687,8 @@ impl G2Projective {
         f = rhs.y * f;
         let mut g = d.ct_eq(&u2) & (!c.ct_eq(&f));
         res =
-            G2Projective::conditional_select(&res, &G2Projective::identity(), (!a) & (!b) & g);
+            G2Projective::conditional_select(&res, &G2Projective::identity(), (!a) & (!b) & (d.ct_eq(&u2) & (!c.ct_eq(&f))));
+        a = (!a) & (!b) & !((d.ct_eq(&u2) & (!c.ct_eq(&f))));
 
         let t = d + u2;
         f = c + f;
@@ -697,28 +699,28 @@ impl G2Projective {
 
         // Correct for x1 != x2 but y1 = -y2, which can occur because p - 1 is divisible by 3.
         // libsecp256k1 does this by substituting in an alternative (defined) expression for lambda.
-        let degenerate = f.is_zero() & rr.is_zero();
-        let mut rr_alt = c + c;
-        let mut m_alt = u2 + d;
-        rr_alt = Fp2::conditional_select(&rr_alt, &rr, !degenerate);
-        m_alt = Fp2::conditional_select(&m_alt, &f, !degenerate);
+        b = f.is_zero() & rr.is_zero();
+        let mut rr_alt = c.add(c);
+        let mut m_alt = u2.add(d);
+        rr_alt = Fp2::conditional_select(&rr_alt, &rr, !b);
+        m_alt = Fp2::conditional_select(&m_alt, &f, !b);
 
         u2 = m_alt.square();
-        d = u2 * t;
+        d = u2.mul(t);
 
         u2 = u2.square();
-        u2 = Fp2::conditional_select(&u2, &f, degenerate);
+        u2 = Fp2::conditional_select(&u2, &f, b);
         rr = rr_alt.square();
         f = m_alt * self.z * rhs.z; // We allow rhs.z != 1, so we must account for this.
         m_alt = f + f;
-        f = -d;
+        f = d.neg();
         rr = rr + f;
         d = rr;
         rr = rr + rr;
         rr = rr + f;
         rr = rr * rr_alt;
         rr = rr + u2;
-        rr_alt = -rr;
+        rr_alt = rr.neg();
         d = d + d;
         d = d + d;
         rr_alt = rr_alt + rr_alt;
@@ -730,8 +732,8 @@ impl G2Projective {
             z: m_alt,
         };
 
-        G2Projective::conditional_select(&res, &tmp, (!a) & (!b) & (!g))
-     //   G2Projective::generator()
+        G2Projective::conditional_select(&res, &tmp, a)
+      //  G2Projective::generator()
     }
 
     /// Adds this point to another point in the affine model.
@@ -801,7 +803,7 @@ impl G2Projective {
         G2Projective::conditional_select(&res, &tmp, (!f1) & (!f2) & (!f3))
     }
 
-    #[inline]
+    #[inline(always)]
     fn multiply(&self, by: &[u8; 32]) -> G2Projective {
         let mut acc = G2Projective::identity();
 
@@ -811,18 +813,17 @@ impl G2Projective {
         //
         // We skip the leading bit because it's always unset for Fq
         // elements.
-    /*    for bit in by
+        for bit in by
             .iter()
             .rev()
             .flat_map(|byte| (0..8).rev().map(move |i| Choice::from((byte >> i) & 1u8)))
             .skip(1)
         {
             acc = acc.double();
-    //        acc = G2Projective::conditional_select(&acc, &(acc + self), bit);
-        }*/
+            acc = G2Projective::conditional_select(&acc, &(acc + self), bit);
+        }
 
-        let result = acc + acc;
-        result
+        acc
     }
 
     /// Converts a batch of `G2Projective` elements into `G2Affine` elements. This

@@ -23,12 +23,12 @@ impl PrivateKey {
         PublicKey::from_pk(&(G1Projective::generator() * &self.sk))
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn sign(&self, message: &[u8], extra_data: &[u8], hash: &G2Projective) -> Result<Signature, ErrorCode> {
         self.sign_message(PRF_KEY, SIG_DOMAIN, message, extra_data, hash)
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn sign_message(&self, key: &[u8], domain: &[u8], message: &[u8], extra_data: &[u8], hash: &G2Projective) -> Result<Signature, ErrorCode> {
         Ok(Signature::from_sig(&hash.mul(&self.sk)))
     }
@@ -53,6 +53,7 @@ impl Signature {
        Self { sig: G2Projective::generator() }  
     }
 
+    #[inline(always)]
     pub fn from_sig(sig: &G2Projective) -> Signature {
         Signature { sig: sig.clone() }
     }
