@@ -26,6 +26,11 @@ default-features = false
 version = "1"
 default-features = false
 
+[dependencies.gmp-mpfr-sys]
+version = "1.1.14"
+default-features = false
+features = []
+
 [features]
 default = ["groups", "pairings"]
 groups = []

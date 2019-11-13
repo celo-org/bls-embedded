@@ -1,5 +1,9 @@
 //! This module provides an implementation of the BLS12-377 base field `GF(p)` where `p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177`
 
+use core::ptr;
+use core::mem;
+use gmp_mpfr_sys::gmp;
+
 use core::fmt;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -546,6 +550,14 @@ impl Fp {
 
 //    #[inline(always)]
     pub fn mul(&self, rhs: &Fp) -> Fp {
+	unsafe {
+	    // let mut z = gmp::mpz_t{alloc: 0, size: 0, d: ptr::null_mut()};
+	    let mut z = mem::uninitialized();
+	    gmp::mpz_init(&mut z);
+	    gmp::mpz_set_ui(&mut z, 15);
+	    gmp::mpz_clear(&mut z);
+	}
+
         let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
         let (t1, carry) = mac(0, self.0[0], rhs.0[1], carry);
         let (t2, carry) = mac(0, self.0[0], rhs.0[2], carry);
