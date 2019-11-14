@@ -4,11 +4,20 @@
 
 #define MAX 12
 #define BITS 32
-//#define ARM
+
+typedef union { 
+    uint64_t as64;
+    struct
+    {
+        uint32_t lo;
+        uint32_t hi;
+    };
+} u64; 
+
 
 inline
 void m(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c) {
-#ifdef ARM
+#if __arm__
     uint32_t RdLo, RdHi;
     asm (
         "UMULL %[RdLo], %[RdHi], %[Rn], %[Rm]"
@@ -18,46 +27,49 @@ void m(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c) {
     *out = RdLo;
     *out_carry = RdHi;
 #else
-    uint64_t ret = (uint64_t) b * (uint64_t) c;
-    *out = (uint32_t) ret;
-    *out_carry = (uint32_t)(ret >> BITS);
+    u64 rv;
+    rv.as64 = (uint64_t) b * (uint64_t) c;
+    *out = rv.lo;
+    *out_carry = rv.hi;
 #endif
 }
 
+
 inline
 void ma(uint32_t* out, uint32_t* out_carry, uint32_t a, uint32_t b, uint32_t c) {
-#ifdef ARM
+#if __arm__
     uint32_t RdLo=a, RdHi=0;
     asm (
-        "UMLAL %[RdLo], %[RdHi], %[Rn], %[Rm]"
+        "UMAAL %[RdLo], %[RdHi], %[Rn], %[Rm]"
         : [RdLo] "+r" (RdLo), [RdHi] "+r" (RdHi)
         : [Rn] "r" (b), [Rm] "r" (c)
     );
     *out = RdLo;
     *out_carry = RdHi;
 #else
-   uint64_t ret = (uint64_t) a + ((uint64_t) b * (uint64_t) c);
-   *out = (uint32_t) ret;
-   *out_carry = (uint32_t)(ret >> BITS);
+   u64 rv;
+   rv.as64 = ((uint64_t) b * (uint64_t) c) + (uint64_t) a;
+   *out = rv.lo;
+   *out_carry = rv.hi;
 #endif
 }
 
 inline
 void mac(uint32_t* out, uint32_t* out_carry, uint32_t a, uint32_t b, uint32_t c, uint32_t carry) {
-#ifdef ARM
-    uint64_t t = (uint64_t)a + (uint64_t)carry;
-    uint32_t RdLo=(uint32_t)t, RdHi=(uint32_t)(t>>BITS);
+#if __arm__
+    uint32_t RdLo=(uint32_t)a, RdHi=(uint32_t)carry;
     asm (
-        "UMLAL %[RdLo], %[RdHi], %[Rn], %[Rm];"
+        "UMAAL %[RdLo], %[RdHi], %[Rn], %[Rm];"
         : [RdLo] "+r" (RdLo), [RdHi] "+r" (RdHi)
         : [Rn] "r" (b), [Rm] "r" (c)
     );
     *out = RdLo;
     *out_carry = RdHi;
 #else
-    uint64_t ret = (uint64_t) a + ((uint64_t) b * (uint64_t) c) + (uint64_t) carry;
-    *out = (uint32_t) ret;
-    *out_carry = (uint32_t)(ret >> BITS);
+    u64 rv;
+    rv.as64 = ((uint64_t) b * (uint64_t) c) + (uint64_t) a + (uint64_t) carry;
+    *out = rv.lo;
+    *out_carry = rv.hi;
 #endif
 }
 
@@ -73,11 +85,6 @@ uint64_t add(uint32_t* output, const uint32_t* left, const uint32_t* right, int 
 }
 
 inline
-void add_carry(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
-    output[n] = add(output, left, right, n);
-}
-
-inline
 void sub(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
     uint64_t borrow = 0;
     for(int i=0; i<n; i++){
@@ -85,6 +92,82 @@ void sub(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
         output[i] = (uint32_t) borrow;
         borrow = borrow >> BITS;
     }
+}
+
+inline
+uint32_t add12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+#if __arm__
+    uint32_t carry = 0, t0, t1;
+    asm (
+        "LDR %[t0], [ %[l], #0 ]\n\t"
+        "LDR %[t1], [ %[r], #0 ]\n\t"
+        "ADDS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #0 ]\n\t"
+
+        "LDR %[t0], [ %[l], #4 ]\n\t"
+        "LDR %[t1], [ %[r], #4 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #4 ]\n\t"
+
+        "LDR %[t0], [ %[l], #8 ]\n\t"
+        "LDR %[t1], [ %[r], #8 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #8 ]\n\t"
+
+        "LDR %[t0], [ %[l], #12 ]\n\t"
+        "LDR %[t1], [ %[r], #12 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #12 ]\n\t"
+
+        "LDR %[t0], [ %[l], #16 ]\n\t"
+        "LDR %[t1], [ %[r], #16 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #16 ]\n\t"
+
+        "LDR %[t0], [ %[l], #20 ]\n\t"
+        "LDR %[t1], [ %[r], #20 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #20 ]\n\t"
+
+        "LDR %[t0], [ %[l], #24 ]\n\t"
+        "LDR %[t1], [ %[r], #24 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #24 ]\n\t"
+
+        "LDR %[t0], [ %[l], #28 ]\n\t"
+        "LDR %[t1], [ %[r], #28 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #28 ]\n\t"
+
+        "LDR %[t0], [ %[l], #32 ]\n\t"
+        "LDR %[t1], [ %[r], #32 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #32 ]\n\t"
+
+        "LDR %[t0], [ %[l], #36 ]\n\t"
+        "LDR %[t1], [ %[r], #36 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #36 ]\n\t"
+
+        "LDR %[t0], [ %[l], #40 ]\n\t"
+        "LDR %[t1], [ %[r], #40 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #40 ]\n\t"
+
+        "LDR %[t0], [ %[l], #44 ]\n\t"
+        "LDR %[t1], [ %[r], #44 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #44 ]\n\t"
+
+        "ADC %[carry], %[carry], #0"
+        : [carry] "+r" (carry), [t0] "+r" (t0), [t1] "+r" (t1)
+        : [o] "r" (output), [l] "r" (left), [r] "r" (right)
+        : "memory"
+    );
+    return carry;
+#else
+    return add(output, left, right, 12);
+#endif
 }
 
 inline
@@ -171,16 +254,15 @@ void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     // add_carry(output + k, output + k, bb, 2*s2);
 
     mul6(tmp, left, right + k);
-    add_carry(output + k, output + k, tmp, n);
+    output[k + 12] = add12(output + k, output + k, tmp);
 
-    tmp[n] = 0;
     mul6(tmp, left + k, right);
-    add(output + k, output + k, tmp, n + 1);
+    output[k + 12] += add12(output + k, output + k, tmp);
 
     mul6(tmp, left + k, right + k);
-    add(output + n, output + n, tmp, n);
+    add12(output + n, output + n, tmp);
 }
 
-extern "C" void c_mul(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+void c_mul(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     mul12(output, left, right);
 }

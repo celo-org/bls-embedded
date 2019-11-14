@@ -1,9 +1,9 @@
 
 .PHONY: libfpc.a
 
-libfpc.a: src/fpc.cpp
+libfpc.a: src/fpc.c
 	rm -f libfpc.a fpc.o
-	gcc -O2 -c src/fpc.cpp
+	gcc -march=native -O2 -c src/fpc.c
 	ar -rsc libfpc.a fpc.o
 	rm -f fpc.o
 	touch src/fp.rs
