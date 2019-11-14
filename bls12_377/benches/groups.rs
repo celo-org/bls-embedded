@@ -141,9 +141,13 @@ fn criterion_benchmark(c: &mut Criterion) {
     {
        let x = Fp::one();
        let y = Fp::one();
-       c.bench_function("Fp_multiplication",  
+       c.bench_function("Fp_multiplication_new",  
            move |b| {
-               b.iter(|| black_box(x) * black_box(y))
+               b.iter(|| black_box(x).mul(&black_box(y)))
+           });
+       c.bench_function("Fp_multiplication_old",  
+           move |b| {
+               b.iter(|| black_box(x).mul_old(&black_box(y)))
            });
        c.bench_function("Fp_inverse",
            move |b| {

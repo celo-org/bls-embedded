@@ -12,6 +12,15 @@ use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 use crate::util::{adc, mac, sbb, LegendreSymbol};
 
+#[link(name="fpc", kind="static")]
+extern {
+    fn c_mul(
+        output: *mut u64,
+        left: *const u64,
+        right: *const u64
+    ) -> ();
+}
+
 // The internal representation of this type is six 64-bit unsigned
 // integers in little-endian order. `Fp` values are always in
 // Montgomery form; i.e., Scalar(a) = aR mod p, with R = 2^384.
@@ -548,27 +557,7 @@ impl Fp {
         (&Fp([r6, r7, r8, r9, r10, r11])).subtract_p()
     }
 
-//    #[inline(always)]
-    pub fn mul(&self, rhs: &Fp) -> Fp {
-        let mut res: [u64; 12] = [0; 12];
-        let mut cnt: usize = 12;
-        unsafe {
-            // let mut z = gmp::mpz_t{alloc: 0, size: 0, d: ptr::null_mut()};
-            let mut left = mem::uninitialized();
-            let mut right = mem::uninitialized();
-            let mut result = mem::uninitialized();
-            gmp::mpz_init(&mut left);
-            gmp::mpz_init(&mut right);
-            gmp::mpz_init(&mut result);
-            gmp::mpz_import(&mut left, 6, 1, 8, -1, 0, self.0.as_ptr() as *mut c_void);
-            gmp::mpz_import(&mut right, 6, 1, 8, -1, 0, rhs.0.as_ptr() as *mut c_void);
-            gmp::mpz_mul(&mut result, &left, &right);
-            gmp::mpz_export(res.as_ptr() as *mut c_void, &mut cnt, 1, 8, -1, 0, &result);
-            gmp::mpz_clear(&mut left);
-            gmp::mpz_clear(&mut right);
-            gmp::mpz_clear(&mut result);
-        }
-
+    pub fn mul_old(&self, rhs: &Fp) -> Fp {
         let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
         let (t1, carry) = mac(0, self.0[0], rhs.0[1], carry);
         let (t2, carry) = mac(0, self.0[0], rhs.0[2], carry);
@@ -610,8 +599,28 @@ impl Fp {
         let (t8, carry) = mac(t8, self.0[5], rhs.0[3], carry);
         let (t9, carry) = mac(t9, self.0[5], rhs.0[4], carry);
         let (t10, t11) = mac(t10, self.0[5], rhs.0[5], carry);
-
+        
         Self::montgomery_reduce(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)
+    }
+
+    pub fn mul(&self, rhs: &Fp) -> Fp {
+        let mut res: [u64; 12] = [0; 12];
+        unsafe {
+            c_mul(res.as_ptr() as *mut u64, self.0.as_ptr(), rhs.0.as_ptr());
+        }
+        Self::montgomery_reduce(
+            res[0],
+            res[1],
+            res[2],
+            res[3],
+            res[4],
+            res[5],
+            res[6],
+            res[7],
+            res[8],
+            res[9],
+            res[10],
+            res[11])
     }
 
     /// Squares this element.
@@ -945,6 +954,37 @@ fn test_inversion() {
 
     assert_eq!(a.invert().unwrap(), b);
     assert!(Fp::zero().invert().is_none().unwrap_u8() == 1);
+}
+
+#[test]
+fn test_multiply() {
+    let a = Fp([
+        0x43b43a5078ac2076,
+        0x1ce0763046f8962b,
+        0x724a5276486d735c,
+        0x6f05c2a6282d48fd,
+        0x2095bd5bb4ca9331,
+        0x3b35b3894b0f7da,
+    ]);
+    let b = Fp([
+        0x46e62daa07fc3fba,
+        0x7a3ba1598ea4f941, 
+        0x675f586198cad5e3, 
+        0xd3c06c64199ca906, 
+        0x61617cc7f1012816, 
+        0xefb2f069ef448e,
+    ]);
+    let c = Fp([
+        0x46e62daa07fc3fba,
+        0x7a3ba1598ea4f941, 
+        0x675f586198cad5e3, 
+        0xd3c06c64199ca906, 
+        0x61617cc7f1012816, 
+        0xefb2f069ef448e,
+    ]);
+    assert_eq!(a.mul(&b), a.mul_old(&b));
+    assert_eq!(a.mul(&c), a.mul_old(&c));
+    assert_eq!(b.mul(&c), b.mul_old(&c));
 }
 
 #[test]
