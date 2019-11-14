@@ -72,6 +72,64 @@ void basecase3(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     mac(&output[4], &output[5], t4, left[2], right[2], carry);
 }
 
+void basecase4(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+    uint32_t carry, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10;
+
+    m(&output[0], &carry, left[0], right[0]);
+    ma(&t1, &carry, carry, left[0], right[1]);
+    ma(&t2, &carry, carry, left[0], right[2]);
+    ma(&t3, &t4, carry, left[0], right[3]);
+
+    ma(&output[1], &carry, t1, left[1], right[0]);
+    mac(&t2, &carry, t2, left[1], right[1], carry);
+    mac(&t3, &carry, t3, left[1], right[2], carry);
+    mac(&t4, &t5, t4, left[1], right[3], carry);
+
+    ma(&output[2], &carry, t2, left[2], right[0]);
+    mac(&t3, &carry, t3, left[2], right[1], carry);
+    mac(&t4, &carry, t4, left[2], right[2], carry);
+    mac(&t5, &t6, t5, left[2], right[3], carry);
+
+    ma(&output[3], &carry, t3, left[3], right[0]);
+    mac(&output[4], &carry, t4, left[3], right[1], carry);
+    mac(&output[5], &carry, t5, left[3], right[2], carry);
+    mac(&output[6], &output[7], t6, left[3], right[3], carry);
+}
+
+void basecase5(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+    uint32_t carry, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10;
+
+    m(&output[0], &carry, left[0], right[0]);
+    ma(&t1, &carry, carry, left[0], right[1]);
+    ma(&t2, &carry, carry, left[0], right[2]);
+    ma(&t3, &carry, carry, left[0], right[3]);
+    ma(&t4, &t5, carry, left[0], right[4]);
+
+    ma(&output[1], &carry, t1, left[1], right[0]);
+    mac(&t2, &carry, t2, left[1], right[1], carry);
+    mac(&t3, &carry, t3, left[1], right[2], carry);
+    mac(&t4, &carry, t4, left[1], right[3], carry);
+    mac(&t5, &t6, t5, left[1], right[4], carry);
+
+    ma(&output[2], &carry, t2, left[2], right[0]);
+    mac(&t3, &carry, t3, left[2], right[1], carry);
+    mac(&t4, &carry, t4, left[2], right[2], carry);
+    mac(&t5, &carry, t5, left[2], right[3], carry);
+    mac(&t6, &t7, t6, left[2], right[4], carry);
+
+    ma(&output[3], &carry, t3, left[3], right[0]);
+    mac(&t4, &carry, t4, left[3], right[1], carry);
+    mac(&t5, &carry, t5, left[3], right[2], carry);
+    mac(&t6, &carry, t6, left[3], right[3], carry);
+    mac(&t7, &t8, t7, left[3], right[4], carry);
+
+    ma(&output[4], &carry, t4, left[4], right[0]);
+    mac(&output[5], &carry, t5, left[4], right[1], carry);
+    mac(&output[6], &carry, t6, left[4], right[2], carry);
+    mac(&output[7], &carry, t7, left[4], right[3], carry);
+    mac(&output[8], &output[9], t8, left[4], right[4], carry);
+}
+
 void basecase6(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     uint32_t carry, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10;
 
@@ -118,33 +176,16 @@ void basecase6(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     mac(&output[10], &output[11], t10, left[5], right[5], carry);
 }
 
-void karatsuba(uint32_t* output, const uint32_t* left, const uint32_t* right, unsigned int n) {
-    if(n==1){
-        ma(output, output+1, 0, left[0], right[0]);
-        return;
-    }
-    if(n==2){
-        basecase2(output, left, right);
-        return;
-    }
-    if(n==3){
-        basecase3(output, left, right);
-        return;
-    }
-    if(n==6){
-        basecase6(output, left, right);
-        return;
-    }
+void karatsuba(uint32_t* output, const uint32_t* left, const uint32_t* right, unsigned int n);
 
-    uint32_t left_low[MAX/2] = {0};
-    uint32_t left_high[MAX/2] = {0};
-    uint32_t right_low[MAX/2] = {0};
-    uint32_t right_high[MAX/2] = {0};
-    uint32_t ll[MAX + 2] = {0};
-    uint32_t hh[MAX + 2] = {0};
-    uint32_t bb[MAX + 2] = {0};
-    // uint32_t lh[MAX];
-    // uint32_t hl[MAX];
+void karatsuba_large(uint32_t* output, const uint32_t* left, const uint32_t* right, unsigned int n) {
+    uint32_t left_low[MAX/2 + 1] = {0};
+    uint32_t left_high[MAX/2];
+    uint32_t right_low[MAX/2 + 1] = {0};
+    uint32_t right_high[MAX/2];
+    uint32_t ll[MAX + 1] = {0};
+    uint32_t hh[MAX + 1] = {0};
+    uint32_t bb[MAX + 2];
 
     const unsigned int k = n / 2;
     const unsigned int s2 = n - k;
@@ -155,27 +196,44 @@ void karatsuba(uint32_t* output, const uint32_t* left, const uint32_t* right, un
     memcpy(right_high, right + k, s2 * sizeof(uint32_t));
 
     karatsuba(ll, left_low, right_low, k);
-    // karatsuba(lh, left_low, right_high, s2);
-    // karatsuba(hl, left_high, right_low, s2);
     karatsuba(hh, left_high, right_high, s2);
 
-    uint32_t left_both[MAX/2 + 1];
-    uint32_t right_both[MAX/2 + 1];
-    add(left_both, left_low, left_high, s2, true);
-    add(right_both, right_low, right_high, s2, true);
-    karatsuba(bb, left_both, right_both, s2 + 1);
-    sub(bb, bb, ll, 2*s2+2);
-    sub(bb, bb, hh, 2*s2+2);
+    add(left_low, left_low, left_high, s2, true);
+    add(right_low, right_low, right_high, s2, true);
+    karatsuba(bb, left_low, right_low, s2 + 1);
+    sub(bb, bb, ll, 2*s2+1);
+    sub(bb, bb, hh, 2*s2+1);
 
     memset(output, 0, 2 * n * sizeof(uint32_t));
     memcpy(output, ll, 2 * k * sizeof(uint32_t));
-
-    // add(output + k, output + k, lh, 2*s2, true);
-    // add(output + k, output + k, hl, 2*s2, true);
-
-    add(output + k, output + k, bb, 2*s2+2, true);
-
+    add(output + k, output + k, bb, 2*s2, true);
     add(output + 2*k, output + 2*k, hh, 2*n - 2*k, false);
+}
+
+void karatsuba(uint32_t* output, const uint32_t* left, const uint32_t* right, unsigned int n) {
+    switch (n) {
+    case 1:
+        ma(output, output+1, 0, left[0], right[0]);
+        return;
+    case 2:
+        basecase2(output, left, right);
+        return;
+    case 3:
+        basecase3(output, left, right);
+        return;
+    case 4:
+        basecase4(output, left, right);
+        return;
+    case 5:
+        basecase4(output, left, right);
+        return;
+  // case 6:
+  //     basecase6(output, left, right);
+  //     return;
+    default:
+        karatsuba_large(output, left, right, n);
+        return;
+    }
 }
 
 extern "C" void c_mul(uint32_t* output, const uint32_t* left, const uint32_t* right) {
