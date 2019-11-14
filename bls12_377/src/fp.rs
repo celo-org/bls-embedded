@@ -1,9 +1,5 @@
 //! This module provides an implementation of the BLS12-377 base field `GF(p)` where `p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177`
 
-use core::mem;
-use core::ffi::c_void;
-use gmp_mpfr_sys::gmp;
-
 use core::fmt;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 

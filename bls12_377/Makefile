@@ -14,3 +14,9 @@ test: libfpc.a
 bench: libfpc.a
 	RUSTFLAGS="-L `pwd`" cargo bench -- Fp_m
 
+both: libfpc.a
+	RUSTFLAGS="-L `pwd`" cargo test
+	RUSTFLAGS="-L `pwd`" cargo bench -- Fp_m
+
+rsync:
+	rsync -ar --progress --exclude=target --exclude='*.a' . tinkerboard:bls-embedded/bls12_377
