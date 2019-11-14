@@ -23,17 +23,18 @@ void mac(uint32_t* out, uint32_t* out_carry, uint32_t a, uint32_t b, uint32_t c,
     *out_carry = (uint32_t)(ret >> BITS);
 }
 
-void add(uint32_t* output, const uint32_t* left, const uint32_t* right,
-         int n, bool do_carry) {
+uint64_t add(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
     uint64_t carry = 0;
     for(int i=0; i<n; i++){
         carry += (uint64_t)left[i] + (uint64_t)right[i];
         output[i] = (uint32_t) carry;
         carry = carry >> BITS;
     }
-    if(do_carry) {
-        output[n] = carry;
-    }
+    return carry;
+}
+
+void add_carry(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
+    output[n] = add(output, left, right, n);
 }
 
 void sub(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
@@ -178,14 +179,14 @@ void basecase6(uint32_t* output, const uint32_t* left, const uint32_t* right) {
 
 void karatsuba(uint32_t* output, const uint32_t* left, const uint32_t* right, unsigned int n);
 
-void karatsuba_large(uint32_t* output, const uint32_t* left, const uint32_t* right, unsigned int n) {
+void karatsuba_inner(uint32_t* output, const uint32_t* left, const uint32_t* right, unsigned int n) {
     uint32_t left_low[MAX/2 + 1] = {0};
-    uint32_t left_high[MAX/2];
+    uint32_t left_high[MAX/2] = {0};
     uint32_t right_low[MAX/2 + 1] = {0};
     uint32_t right_high[MAX/2];
     uint32_t ll[MAX + 1] = {0};
     uint32_t hh[MAX + 1] = {0};
-    uint32_t bb[MAX + 2];
+    uint32_t bb[MAX + 2] = {0};
 
     const unsigned int k = n / 2;
     const unsigned int s2 = n - k;
@@ -198,16 +199,16 @@ void karatsuba_large(uint32_t* output, const uint32_t* left, const uint32_t* rig
     karatsuba(ll, left_low, right_low, k);
     karatsuba(hh, left_high, right_high, s2);
 
-    add(left_low, left_low, left_high, s2, true);
-    add(right_low, right_low, right_high, s2, true);
+    add_carry(left_low, left_low, left_high, s2);
+    add_carry(right_low, right_low, right_high, s2);
     karatsuba(bb, left_low, right_low, s2 + 1);
-    sub(bb, bb, ll, 2*s2+1);
-    sub(bb, bb, hh, 2*s2+1);
+    sub(bb, bb, ll, 2*s2);
+    sub(bb, bb, hh, 2*s2);
 
     memset(output, 0, 2 * n * sizeof(uint32_t));
     memcpy(output, ll, 2 * k * sizeof(uint32_t));
-    add(output + k, output + k, bb, 2*s2, true);
-    add(output + 2*k, output + 2*k, hh, 2*n - 2*k, false);
+    add_carry(output + k, output + k, bb, 2*s2);
+    add(output + 2*k, output + 2*k, hh, 2*n - 2*k);
 }
 
 void karatsuba(uint32_t* output, const uint32_t* left, const uint32_t* right, unsigned int n) {
@@ -225,17 +226,17 @@ void karatsuba(uint32_t* output, const uint32_t* left, const uint32_t* right, un
         basecase4(output, left, right);
         return;
     case 5:
-        basecase4(output, left, right);
+        basecase5(output, left, right);
         return;
-  // case 6:
-  //     basecase6(output, left, right);
-  //     return;
+    case 6:
+        basecase6(output, left, right);
+        return;
     default:
-        karatsuba_large(output, left, right, n);
+        karatsuba_inner(output, left, right, n);
         return;
     }
 }
 
 extern "C" void c_mul(uint32_t* output, const uint32_t* left, const uint32_t* right) {
-    karatsuba(output, left, right, 12);
+    karatsuba_inner(output, left, right, 12);
 }
