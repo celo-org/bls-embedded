@@ -16,44 +16,69 @@ void ma(uint64_t* out, uint64_t* out_carry, uint64_t a, uint64_t b, uint64_t c) 
     *out_carry = (uint64_t)(ret >> 64);
 }
 
-void add_carry(uint64_t* output, const uint64_t* left, const uint64_t* right, int n) {
-    uint128_t carry = 0;
-    while(n-- > 0) {
-        carry = carry + (uint128_t) *left + (uint128_t) *right;
-        *output = (uint64_t) carry;
-        carry = carry >> 64;
-        output++;
-        left++;
-        right++;
-    }
-    *output = carry;
-}
-
-void add(uint64_t* output, const uint64_t* left, const uint64_t* right, int n) {
+void add(uint64_t* output, const uint64_t* left, const uint64_t* right,
+         int n, bool do_carry) {
     uint128_t carry = 0;
     for(int i=0; i<n; i++){
         carry += (uint128_t)left[i] + (uint128_t)right[i];
         output[i] = (uint64_t) carry;
         carry = carry >> 64;
     }
+    if(do_carry) {
+        output[n] = carry;
+    }
+}
+
+void karatsuba_base2(uint64_t* output, const uint64_t* left, const uint64_t* right) {
+    uint64_t t1, t2, t3;
+    ma(&output[0], &t1, 0, left[0], right[0]);
+    ma(&t1, &t2, t1, left[0], right[1]);
+    ma(&output[1], &t3, t1, left[1], right[0]);
+    mac(&output[2], &output[3], t2, left[1], right[1], t3);
+}
+
+void karatsuba_base3(uint64_t* output, const uint64_t* left, const uint64_t* right) {
+    uint64_t t1;
+    uint64_t t2;
+    uint64_t t3;
+    uint64_t t4;
+    uint64_t carry;
+
+    ma(&output[0], &carry, 0, left[0], right[0]);
+    mac(&t1, &carry, 0, left[0], right[1], carry);
+    mac(&t2, &t3, 0, left[0], right[2], carry);
+
+    ma(&output[1], &carry, t1, left[1], right[0]);
+    mac(&t2, &carry, t2, left[1], right[1], carry);
+    mac(&t3, &t4, t3, left[1], right[2], carry);
+
+    ma(&output[2], &carry, t2, left[2], right[0]);
+    mac(&output[3], &carry, t3, left[2], right[1], carry);
+    mac(&output[4], &output[5], t4, left[2], right[2], carry);
 }
 
 void karatsuba(uint64_t* output, const uint64_t* left, const uint64_t* right, unsigned int n) {
     if(n==1){
-        uint128_t ret = (uint128_t) left[0] * (uint128_t) right[0];
-        output[0] = (uint64_t) ret;
-        output[1] = (uint64_t)(ret >> 64);
+        ma(output, output+1, 0, left[0], right[0]);
+        return;
+    }
+    if(n==2){
+        karatsuba_base2(output, left, right);
+        return;
+    }
+    if(n==3){
+        karatsuba_base3(output, left, right);
         return;
     }
 
-    uint64_t left_low[6] = {0};
-    uint64_t left_high[6] = {0};
-    uint64_t right_low[6] = {0};
-    uint64_t right_high[6] = {0};
-    uint64_t ll[12] = {0};
-    uint64_t lh[12] = {0};
-    uint64_t hl[12] = {0};
-    uint64_t hh[12] = {0};
+    uint64_t left_low[3] = {0};
+    uint64_t left_high[3] = {0};
+    uint64_t right_low[3] = {0};
+    uint64_t right_high[3] = {0};
+    uint64_t ll[6] = {0};
+    uint64_t lh[6] = {0};
+    uint64_t hl[6] = {0};
+    uint64_t hh[6] = {0};
 
     const unsigned int k = n / 2;
     const unsigned int s2 = n - k;
@@ -70,9 +95,9 @@ void karatsuba(uint64_t* output, const uint64_t* left, const uint64_t* right, un
 
     memset(output, 0, 2 * n * sizeof(uint64_t));
     memcpy(output, ll, 2 * k * sizeof(uint64_t));
-    add(output + k, output + k, lh, 2*n - k);
-    add(output + k, output + k, hl, 2*n - k);
-    add(output + 2*k, output + 2*k, hh, 2*n - 2*k);
+    add(output + k, output + k, lh, 2*s2, true);
+    add(output + k, output + k, hl, 2*s2, true);
+    add(output + 2*k, output + 2*k, hh, 2*n - 2*k, false);
 }
 
 extern "C" void c_mul(uint64_t* output, const uint64_t* left, const uint64_t* right) {
