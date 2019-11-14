@@ -136,14 +136,15 @@ void karatsuba(uint32_t* output, const uint32_t* left, const uint32_t* right, un
         return;
     }
 
-    uint32_t left_low[MAX/2];
-    uint32_t left_high[MAX/2];
-    uint32_t right_low[MAX/2];
-    uint32_t right_high[MAX/2];
-    uint32_t ll[MAX];
-    uint32_t lh[MAX];
-    uint32_t hl[MAX];
-    uint32_t hh[MAX];
+    uint32_t left_low[MAX/2] = {0};
+    uint32_t left_high[MAX/2] = {0};
+    uint32_t right_low[MAX/2] = {0};
+    uint32_t right_high[MAX/2] = {0};
+    uint32_t ll[MAX + 2] = {0};
+    uint32_t hh[MAX + 2] = {0};
+    uint32_t bb[MAX + 2] = {0};
+    // uint32_t lh[MAX];
+    // uint32_t hl[MAX];
 
     const unsigned int k = n / 2;
     const unsigned int s2 = n - k;
@@ -154,14 +155,26 @@ void karatsuba(uint32_t* output, const uint32_t* left, const uint32_t* right, un
     memcpy(right_high, right + k, s2 * sizeof(uint32_t));
 
     karatsuba(ll, left_low, right_low, k);
-    karatsuba(lh, left_low, right_high, s2);
-    karatsuba(hl, left_high, right_low, s2);
+    // karatsuba(lh, left_low, right_high, s2);
+    // karatsuba(hl, left_high, right_low, s2);
     karatsuba(hh, left_high, right_high, s2);
+
+    uint32_t left_both[MAX/2 + 1];
+    uint32_t right_both[MAX/2 + 1];
+    add(left_both, left_low, left_high, s2, true);
+    add(right_both, right_low, right_high, s2, true);
+    karatsuba(bb, left_both, right_both, s2 + 1);
+    sub(bb, bb, ll, 2*s2+2);
+    sub(bb, bb, hh, 2*s2+2);
 
     memset(output, 0, 2 * n * sizeof(uint32_t));
     memcpy(output, ll, 2 * k * sizeof(uint32_t));
-    add(output + k, output + k, lh, 2*s2, true);
-    add(output + k, output + k, hl, 2*s2, true);
+
+    // add(output + k, output + k, lh, 2*s2, true);
+    // add(output + k, output + k, hl, 2*s2, true);
+
+    add(output + k, output + k, bb, 2*s2+2, true);
+
     add(output + 2*k, output + 2*k, hh, 2*n - 2*k, false);
 }
 
