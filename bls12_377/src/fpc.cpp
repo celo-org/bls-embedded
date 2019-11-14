@@ -4,7 +4,7 @@
 
 #define MAX 12
 #define BITS 32
-#define ARM
+//#define ARM
 
 inline
 void m(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c) {
@@ -77,6 +77,7 @@ void add_carry(uint32_t* output, const uint32_t* left, const uint32_t* right, in
     output[n] = add(output, left, right, n);
 }
 
+inline
 void sub(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
     uint64_t borrow = 0;
     for(int i=0; i<n; i++){
@@ -133,6 +134,7 @@ void mul6(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     mac(&output[10], &output[11], t10, left[5], right[5], carry);
 }
 
+inline
 void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     // uint32_t left_low[MAX/2];
     // uint32_t left_high[MAX/2];
@@ -142,14 +144,16 @@ void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     //uint32_t hh[MAX];
     //uint32_t lh[MAX];
     //uint32_t hl[MAX];
-    uint32_t tmp[MAX];
+
+    const unsigned int n = 12;
+    const unsigned int k = 6;
+
+    uint32_t tmp[n + 1];
 
 
     // uint32_t bb[MAX + 2] = {0};
 
-    const unsigned int n = 12;
-    const unsigned int k = 6;
-    memset(output, 0, 2 * n * sizeof(uint32_t));
+    memset(output + n, 0, n * sizeof(uint32_t));
     // const unsigned int s2 = n - k;
 
     // memcpy(left_low, left, k * sizeof(uint32_t));
@@ -167,13 +171,14 @@ void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     // add_carry(output + k, output + k, bb, 2*s2);
 
     mul6(tmp, left, right + k);
-    add_carry(output + k, output + k, tmp, 2*k);
+    add_carry(output + k, output + k, tmp, n);
 
+    tmp[n] = 0;
     mul6(tmp, left + k, right);
-    add_carry(output + k, output + k, tmp, 2*k);
+    add(output + k, output + k, tmp, n + 1);
 
     mul6(tmp, left + k, right + k);
-    add(output + 2*k, output + 2*k, tmp, n);
+    add(output + n, output + n, tmp, n);
 }
 
 extern "C" void c_mul(uint32_t* output, const uint32_t* left, const uint32_t* right) {
