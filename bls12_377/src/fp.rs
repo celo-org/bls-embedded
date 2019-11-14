@@ -1,7 +1,7 @@
 //! This module provides an implementation of the BLS12-377 base field `GF(p)` where `p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177`
 
-use core::ptr;
 use core::mem;
+use core::ffi::c_void;
 use gmp_mpfr_sys::gmp;
 
 use core::fmt;
@@ -550,13 +550,24 @@ impl Fp {
 
 //    #[inline(always)]
     pub fn mul(&self, rhs: &Fp) -> Fp {
-	unsafe {
-	    // let mut z = gmp::mpz_t{alloc: 0, size: 0, d: ptr::null_mut()};
-	    let mut z = mem::uninitialized();
-	    gmp::mpz_init(&mut z);
-	    gmp::mpz_set_ui(&mut z, 15);
-	    gmp::mpz_clear(&mut z);
-	}
+        let mut res: [u64; 12] = [0; 12];
+        let mut cnt: usize = 12;
+        unsafe {
+            // let mut z = gmp::mpz_t{alloc: 0, size: 0, d: ptr::null_mut()};
+            let mut left = mem::uninitialized();
+            let mut right = mem::uninitialized();
+            let mut result = mem::uninitialized();
+            gmp::mpz_init(&mut left);
+            gmp::mpz_init(&mut right);
+            gmp::mpz_init(&mut result);
+            gmp::mpz_import(&mut left, 6, 1, 8, -1, 0, self.0.as_ptr() as *mut c_void);
+            gmp::mpz_import(&mut right, 6, 1, 8, -1, 0, rhs.0.as_ptr() as *mut c_void);
+            gmp::mpz_mul(&mut result, &left, &right);
+            gmp::mpz_export(res.as_ptr() as *mut c_void, &mut cnt, 1, 8, -1, 0, &result);
+            gmp::mpz_clear(&mut left);
+            gmp::mpz_clear(&mut right);
+            gmp::mpz_clear(&mut result);
+        }
 
         let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
         let (t1, carry) = mac(0, self.0[0], rhs.0[1], carry);

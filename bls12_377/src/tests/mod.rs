@@ -27,6 +27,7 @@ macro_rules! test_vectors {
     };
 }
 
+/*
 #[test]
 fn g1_uncompressed_valid_test_vectors() {
     let bytes: &'static [u8] = include_bytes!("g1_uncompressed_valid_test_vectors.dat");
@@ -74,3 +75,4 @@ fn g2_compressed_valid_test_vectors() {
         bytes
     );
 }
+*/
