@@ -334,37 +334,32 @@ void mul_add64(uint64_t* out,
     uint32_t a1 = (uint32_t) (a >> 32);
     uint32_t b0 = (uint32_t) b;
     uint32_t b1 = (uint32_t) (b >> 32);
-    uint32_t c0 = (uint32_t) c;
-    uint32_t c1 = (uint32_t) (c >> 32);
-    uint32_t d0 = (uint32_t) d;
-    uint32_t d1 = (uint32_t) (d >> 32);
-    uint32_t o0 = 0;
-    uint32_t o1 = 0;
+    uint32_t o0;
+    uint32_t o1;
     uint32_t o2 = 0;
     uint32_t o3 = 0;
-    uint32_t t1 = 0;
-    uint32_t t2 = 0;
 
     asm volatile (
         "UMULL %[o0], %[o1], %[a0], %[b0]\n\t"
         "UMLAL %[o1], %[o2], %[a0], %[b1]\n\t"
-        "UMLAL %[o2], %[o3], %[a1], %[b1]\n\t"
+        "UMLAL %[o2], %[o3], %[a1], %[b1]"
+        : [o0] "+r" (o0),
+          [o1] "+r" (o1),
+          [o2] "+r" (o2),
+          [o3] "+r" (o3)
+        : [a0] "r" (a0),
+          [a1] "r" (a1),
+          [b0] "r" (b0),
+          [b1] "r" (b1)
+    );
 
+    uint32_t t1;
+    uint32_t t2;
+    asm volatile (
         "UMULL %[t1], %[t2], %[a1], %[b0]\n\t"
         "ADDS %[o1], %[o1], %[t1]\n\t"
         "ADCS %[o2], %[o2], %[t2]\n\t"
         "ADC  %[o3], %[o3], #0\n\t"
-        
-        "ADDS %[o0], %[o0], %[c0]\n\t"
-        "ADCS %[o1], %[o1], %[c1]\n\t"
-        "ADCS %[o2], %[o2], #0\n\t"
-        "ADC  %[o3], %[o3], #0\n\t"
-
-        "ADDS %[o0], %[o0], %[d0]\n\t"
-        "ADCS %[o1], %[o1], %[d1]\n\t"
-        "ADCS %[o2], %[o2], #0\n\t"
-        "ADC  %[o3], %[o3], #0\n\t"
-
         : [o0] "+r" (o0),
           [o1] "+r" (o1),
           [o2] "+r" (o2),
@@ -374,10 +369,36 @@ void mul_add64(uint64_t* out,
         : [a0] "r" (a0),
           [a1] "r" (a1),
           [b0] "r" (b0),
-          [b1] "r" (b1),
-          [c0] "r" (c0),
-          [c1] "r" (c1),
-          [d0] "r" (d0),
+          [b1] "r" (b1)
+    );
+        
+    uint32_t c0 = (uint32_t) c;
+    uint32_t c1 = (uint32_t) (c >> 32);
+    asm volatile (
+        "ADDS %[o0], %[o0], %[c0]\n\t"
+        "ADCS %[o1], %[o1], %[c1]\n\t"
+        "ADCS %[o2], %[o2], #0\n\t"
+        "ADC  %[o3], %[o3], #0\n\t"
+        : [o0] "+r" (o0),
+          [o1] "+r" (o1),
+          [o2] "+r" (o2),
+          [o3] "+r" (o3)
+        : [c0] "r" (c0),
+          [c1] "r" (c1)
+    );
+
+    uint32_t d0 = (uint32_t) d;
+    uint32_t d1 = (uint32_t) (d >> 32);
+    asm volatile (
+        "ADDS %[o0], %[o0], %[d0]\n\t"
+        "ADCS %[o1], %[o1], %[d1]\n\t"
+        "ADCS %[o2], %[o2], #0\n\t"
+        "ADC  %[o3], %[o3], #0\n\t"
+        : [o0] "+r" (o0),
+          [o1] "+r" (o1),
+          [o2] "+r" (o2),
+          [o3] "+r" (o3)
+        : [d0] "r" (d0),
           [d1] "r" (d1)
     );
 
