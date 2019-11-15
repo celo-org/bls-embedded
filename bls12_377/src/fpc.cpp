@@ -13,7 +13,7 @@ typedef union {
         uint32_t lo;
         uint32_t hi;
     };
-} u64; 
+} u64;
 
 
 inline
@@ -508,8 +508,67 @@ void montgomery_reduce(uint64_t* output, const uint64_t* t) {
     montgomery_step(output - 1, r + 5, t[11]);
 }
 
+/*
+// 64bit version ~30% slower
+void multiply(uint64_t* output, const uint64_t* left, const uint64_t* right) {
+    uint64_t t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, carry;
+
+    mul_add64(&t0,  &carry, left[0], right[0],  0,  0);
+    mul_add64(&t1,  &carry, left[0], right[1],  0,  carry);
+    mul_add64(&t2,  &carry, left[0], right[2],  0,  carry);
+    mul_add64(&t3,  &carry, left[0], right[3],  0,  carry);
+    mul_add64(&t4,  &carry, left[0], right[4],  0,  carry);
+    mul_add64(&t5,  &t6   , left[0], right[5],  0,  carry);
+    mul_add64(&t1,  &carry, left[1], right[0],  t1, 0);
+    mul_add64(&t2,  &carry, left[1], right[1],  t2, carry);
+    mul_add64(&t3,  &carry, left[1], right[2],  t3, carry);
+    mul_add64(&t4,  &carry, left[1], right[3],  t4, carry);
+    mul_add64(&t5,  &carry, left[1], right[4],  t5, carry);
+    mul_add64(&t6,  &t7   , left[1], right[5],  t6, carry);
+    mul_add64(&t2,  &carry, left[2], right[0],  t2, 0);
+    mul_add64(&t3,  &carry, left[2], right[1],  t3, carry);
+    mul_add64(&t4,  &carry, left[2], right[2],  t4, carry);
+    mul_add64(&t5,  &carry, left[2], right[3],  t5, carry);
+    mul_add64(&t6,  &carry, left[2], right[4],  t6, carry);
+    mul_add64(&t7,  &t8   , left[2], right[5],  t7, carry);
+    mul_add64(&t3,  &carry, left[3], right[0],  t3, 0);
+    mul_add64(&t4,  &carry, left[3], right[1],  t4, carry);
+    mul_add64(&t5,  &carry, left[3], right[2],  t5, carry);
+    mul_add64(&t6,  &carry, left[3], right[3],  t6, carry);
+    mul_add64(&t7,  &carry, left[3], right[4],  t7, carry);
+    mul_add64(&t8,  &t9,    left[3], right[5],  t8, carry);
+    mul_add64(&t4,  &carry, left[4], right[0],  t4, 0);
+    mul_add64(&t5,  &carry, left[4], right[1],  t5, carry);
+    mul_add64(&t6,  &carry, left[4], right[2],  t6, carry);
+    mul_add64(&t7,  &carry, left[4], right[3],  t7, carry);
+    mul_add64(&t8,  &carry, left[4], right[4],  t8, carry);
+    mul_add64(&t9,  &t10  , left[4], right[5],  t9, carry);
+    mul_add64(&t5,  &carry, left[5], right[0],  t5, 0);
+    mul_add64(&t6,  &carry, left[5], right[1],  t6, carry);
+    mul_add64(&t7,  &carry, left[5], right[2],  t7, carry);
+    mul_add64(&t8,  &carry, left[5], right[3],  t8, carry);
+    mul_add64(&t9,  &carry, left[5], right[4],  t9, carry);
+    mul_add64(&t10, &t11  , left[5], right[5], t10, carry);
+
+    output[0] = t0;
+    output[1] = t1;
+    output[2] = t2;
+    output[3] = t3;
+    output[4] = t4;
+    output[5] = t5;
+    output[6] = t6;
+    output[7] = t7;
+    output[8] = t8;
+    output[9] = t9;
+    output[10] = t10;
+    output[11] = t11;
+} */
+
 extern "C" void c_mul(uint64_t* output, const uint64_t* left, const uint64_t* right) {
-    uint64_t tmp[24];
+    uint64_t tmp[12];
+
+    // cast down to 32 bit mode, which is ~30% faster than on arm32
     mul12((uint32_t*)tmp, (const uint32_t*)left, (const uint32_t*)right);
+
     montgomery_reduce(output, tmp);
 }
