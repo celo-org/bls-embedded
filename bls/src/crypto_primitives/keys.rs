@@ -7,7 +7,7 @@ static SIG_DOMAIN: &'static [u8] = b"ULforprf";
 static POP_DOMAIN: &'static [u8] = b"ULforpop";
 
 pub struct PrivateKey {
-    sk: Scalar,
+    pub sk: Scalar,
 }
 
 impl PrivateKey {
@@ -29,7 +29,7 @@ impl PrivateKey {
 }
 
 pub struct PublicKey {
-    pk: G1Projective,
+    pub pk: G1Projective,
 }
 
 impl PublicKey {
@@ -38,8 +38,9 @@ impl PublicKey {
     }
 }
 
+#[derive(Clone, Eq, PartialEq)]
 pub struct Signature {
-    sig: G2Projective,
+    pub sig: G2Projective,
 }
 
 impl Signature {

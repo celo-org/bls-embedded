@@ -1,5 +1,5 @@
-//! This module provides an implementation of the BLS12-381 scalar field $\mathbb{F}_q$
-//! where `q = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001`
+//! This module provides an implementation of the BLS12-377 scalar field $\mathbb{F}_q$
+//! where `q = 8444461749428370424248824938781546531375899335154063827935233455917409239041`
 
 use core::fmt;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -62,8 +62,7 @@ impl ConditionallySelectable for Scalar {
 }
 
 /// Constant representing the modulus
-/// TODO: Put actual modulus value
-/// q =! 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+/// q = 8444461749428370424248824938781546531375899335154063827935233455917409239041
 const MODULUS: Scalar = Scalar([
     725501752471715841u64,
     6461107452199829505u64,

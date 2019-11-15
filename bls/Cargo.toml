@@ -15,7 +15,7 @@ cbindgen = "^0.6.0"
 [lib]
 name = "bls_embedded"
 path = "src/lib.rs"
-crate-type = ["staticlib"]
+crate-type = ["staticlib", "rlib"]
 lto = true
 opt-level = "s"
 

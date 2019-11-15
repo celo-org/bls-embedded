@@ -1,23 +1,23 @@
-#![cfg_attr(not(gen_header), no_std)]
+//#![cfg_attr(not(gen_header), no_std)]
 extern crate libc;
 //extern crate rand;
 //extern crate blake2s_simd;
 
-pub mod bls;
+pub mod crypto_primitives;
 //pub mod hash;
 pub mod error;
 
 use bls12_377::G2Projective;
-use crate::bls::keys::{PublicKey, PrivateKey, Signature};
+use crate::crypto_primitives::keys::{PublicKey, PrivateKey, Signature};
 use crate::error::ErrorCode;
 
 use core::slice;
 
-#[cfg(not(gen_header))]
+/*#[cfg(not(gen_header))]
 #[panic_handler]
 fn my_panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
-}
+}*/
 
 fn convert_result_to_bool<T, E, F: Fn() -> Result<T, E>>(f: F) -> bool {
     match f() {
