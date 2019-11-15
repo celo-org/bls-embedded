@@ -685,7 +685,7 @@ impl G2Projective {
         let mut u2 = rhs.x * f;
         f = f * self.z;
         f = rhs.y * f;
-        let mut g = d.ct_eq(&u2) & (!c.ct_eq(&f));
+        let g = d.ct_eq(&u2) & (!c.ct_eq(&f));
         res =
             G2Projective::conditional_select(&res, &G2Projective::identity(), (!a) & (!b) & (d.ct_eq(&u2) & (!c.ct_eq(&f))));
         a = (!a) & (!b) & !((d.ct_eq(&u2) & (!c.ct_eq(&f))));

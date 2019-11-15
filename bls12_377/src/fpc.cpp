@@ -497,3 +497,25 @@ extern "C" void c_mul(uint64_t* output, const uint64_t* left, const uint64_t* ri
 
     montgomery_reduce(output, tmp);
 }
+
+extern "C" void c_montgomry(uint64_t* output, uint64_t* tmp) {
+    montgomery_reduce(output, tmp);
+}
+
+extern "C" void c_muladdadd(uint64_t* out,
+                              uint64_t a,
+                              uint64_t b,
+                              uint64_t c,
+                              uint64_t d
+                              )
+{
+    mul_add64(out, out + 1, a, b, c, d);
+}
+
+extern "C" void c_addadd(uint64_t* out,
+                         uint64_t a,
+                         uint64_t b,
+                         uint64_t c)
+{
+    add64(out, out + 1, a, b, c);
+}

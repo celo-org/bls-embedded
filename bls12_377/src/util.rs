@@ -55,26 +55,57 @@ pub fn os_multm(result: &mut [u8], left: &mut [u8], right: &mut [u8], modulus: &
     ()
 }*/
 
+extern {
+
+    fn c_muladdadd(
+        output: *mut u64,
+        a: u64,
+        b: u64,
+        c: u64,
+        d: u64
+    ) -> ();
+
+    fn c_addadd(
+        output: *mut u64,
+        a: u64,
+        b: u64,
+        c: u64
+    ) -> ();
+
+}
+
+
+
 /// Compute a + b + carry, returning the result and the new carry over.
 #[inline(always)]
-pub const fn adc(a: u64, b: u64, carry: u64) -> (u64, u64) {
+pub fn adc(a: u64, b: u64, carry: u64) -> (u64, u64) {
     let ret = (a as u128) + (b as u128) + (carry as u128);
     (ret as u64, (ret >> 64) as u64)
+    // unsafe {
+    //     let mut res: [u64; 2] = [0; 2];
+    //     c_addadd(res.as_mut_ptr(), a, b, carry);
+    //     (res[0], res[1])
+    // }
 }
 
 /// Compute a - (b + borrow), returning the result and the new borrow.
 #[inline(always)]
-pub const fn sbb(a: u64, b: u64, borrow: u64) -> (u64, u64) {
+pub fn sbb(a: u64, b: u64, borrow: u64) -> (u64, u64) {
     let ret = (a as u128).wrapping_sub((b as u128) + ((borrow >> 63) as u128));
     (ret as u64, (ret >> 64) as u64)
 }
 
 /// Compute a + (b * c) + carry, returning the result and the new carry over.
-//#[inline(always)]
-#[no_mangle]
-pub const fn mac(a: u64, b: u64, c: u64, carry: u64) -> (u64, u64) {
-    let ret = (a as u128) + ((b as u128) * (c as u128)) + (carry as u128);
-    (ret as u64, (ret >> 64) as u64)
+//#[no_mangle]
+#[inline(always)]
+pub fn mac(a: u64, b: u64, c: u64, carry: u64) -> (u64, u64) {
+    unsafe {
+        let mut res: [u64; 2] = [0; 2];
+        c_muladdadd(res.as_mut_ptr(), b, c, a, carry);
+        (res[0], res[1])
+    }
+    // let ret = (a as u128) + ((b as u128) * (c as u128)) + (carry as u128);
+    // (ret as u64, (ret >> 64) as u64)
 }
 
 macro_rules! impl_add_binop_specify_output {

@@ -15,6 +15,11 @@ extern {
         left: *const u64,
         right: *const u64
     ) -> ();
+
+    fn c_montgomry(
+        output: *mut u64,
+        tmp: *const u64,
+    ) -> ();
 }
 
 // The internal representation of this type is six 64-bit unsigned
@@ -407,7 +412,7 @@ impl Fp {
     }
 
     #[inline(always)]
-    const fn subtract_p(&self) -> Fp {
+    fn subtract_p(&self) -> Fp {
         let modulus = modulus();
         let (r0, borrow) = sbb(self.0[0], modulus[0], 0);
         let (r1, borrow) = sbb(self.0[1], modulus[1], borrow);
@@ -429,7 +434,7 @@ impl Fp {
     }
 
     #[inline(always)]
-    pub const fn add(&self, rhs: &Fp) -> Fp {
+    pub fn add(&self, rhs: &Fp) -> Fp {
         let (d0, carry) = adc(self.0[0], rhs.0[0], 0);
         let (d1, carry) = adc(self.0[1], rhs.0[1], carry);
         let (d2, carry) = adc(self.0[2], rhs.0[2], carry);
@@ -443,7 +448,7 @@ impl Fp {
     }
 
     #[inline(always)]
-    pub const fn neg(&self) -> Fp {
+    pub fn neg(&self) -> Fp {
         let modulus = modulus();
         let (d0, borrow) = sbb(modulus[0], self.0[0], 0);
         let (d1, borrow) = sbb(modulus[1], self.0[1], borrow);
@@ -469,12 +474,35 @@ impl Fp {
     }
 
     #[inline]
-    pub const fn sub(&self, rhs: &Fp) -> Fp {
+    pub fn sub(&self, rhs: &Fp) -> Fp {
         (&rhs.neg()).add(self)
     }
 
     #[inline(always)]
-    const fn montgomery_reduce(
+    fn montgomery_reduce(
+        t0: u64,
+        t1: u64,
+        t2: u64,
+        t3: u64,
+        t4: u64,
+        t5: u64,
+        t6: u64,
+        t7: u64,
+        t8: u64,
+        t9: u64,
+        t10: u64,
+        t11: u64,
+    ) -> Self {
+        unsafe {
+            let mut res: [u64; 6] = [0; 6];
+            let tmp: [u64; 12] = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11];
+            c_montgomry(res.as_mut_ptr(), tmp.as_ptr());
+            (&Fp(res)).subtract_p()
+        }
+    }
+
+    #[inline(always)]
+    fn montgomery_reduce_old(
         t0: u64,
         t1: u64,
         t2: u64,
@@ -596,66 +624,21 @@ impl Fp {
         let (t9, carry) = mac(t9, self.0[5], rhs.0[4], carry);
         let (t10, t11) = mac(t10, self.0[5], rhs.0[5], carry);
         
-        Self::montgomery_reduce(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)
+        Self::montgomery_reduce_old(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)
     }
 
     pub fn mul(&self, rhs: &Fp) -> Fp {
-        let mut res: [u64; 6] = [0; 6];
         unsafe {
-            c_mul(res.as_ptr() as *mut u64, self.0.as_ptr(), rhs.0.as_ptr());
+            let mut res: [u64; 6] = [0; 6];
+            c_mul(res.as_mut_ptr(), self.0.as_ptr(), rhs.0.as_ptr());
+            (&Fp(res)).subtract_p()
         }
-        Fp(res).subtract_p()
     }
 
     /// Squares this element.
     #[inline]
-    pub const fn square(&self) -> Self {
-        let (t1, carry) = mac(0, self.0[0], self.0[1], 0);
-        let (t2, carry) = mac(0, self.0[0], self.0[2], carry);
-        let (t3, carry) = mac(0, self.0[0], self.0[3], carry);
-        let (t4, carry) = mac(0, self.0[0], self.0[4], carry);
-        let (t5, t6) = mac(0, self.0[0], self.0[5], carry);
-
-        let (t3, carry) = mac(t3, self.0[1], self.0[2], 0);
-        let (t4, carry) = mac(t4, self.0[1], self.0[3], carry);
-        let (t5, carry) = mac(t5, self.0[1], self.0[4], carry);
-        let (t6, t7) = mac(t6, self.0[1], self.0[5], carry);
-
-        let (t5, carry) = mac(t5, self.0[2], self.0[3], 0);
-        let (t6, carry) = mac(t6, self.0[2], self.0[4], carry);
-        let (t7, t8) = mac(t7, self.0[2], self.0[5], carry);
-
-        let (t7, carry) = mac(t7, self.0[3], self.0[4], 0);
-        let (t8, t9) = mac(t8, self.0[3], self.0[5], carry);
-
-        let (t9, t10) = mac(t9, self.0[4], self.0[5], 0);
-
-        let t11 = t10 >> 63;
-        let t10 = (t10 << 1) | (t9 >> 63);
-        let t9 = (t9 << 1) | (t8 >> 63);
-        let t8 = (t8 << 1) | (t7 >> 63);
-        let t7 = (t7 << 1) | (t6 >> 63);
-        let t6 = (t6 << 1) | (t5 >> 63);
-        let t5 = (t5 << 1) | (t4 >> 63);
-        let t4 = (t4 << 1) | (t3 >> 63);
-        let t3 = (t3 << 1) | (t2 >> 63);
-        let t2 = (t2 << 1) | (t1 >> 63);
-        let t1 = t1 << 1;
-
-        let (t0, carry) = mac(0, self.0[0], self.0[0], 0);
-        let (t1, carry) = adc(t1, 0, carry);
-        let (t2, carry) = mac(t2, self.0[1], self.0[1], carry);
-        let (t3, carry) = adc(t3, 0, carry);
-        let (t4, carry) = mac(t4, self.0[2], self.0[2], carry);
-        let (t5, carry) = adc(t5, 0, carry);
-        let (t6, carry) = mac(t6, self.0[3], self.0[3], carry);
-        let (t7, carry) = adc(t7, 0, carry);
-        let (t8, carry) = mac(t8, self.0[4], self.0[4], carry);
-        let (t9, carry) = adc(t9, 0, carry);
-        let (t10, carry) = mac(t10, self.0[5], self.0[5], carry);
-        let (t11, _) = adc(t11, 0, carry);
-
-        Self::montgomery_reduce(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)
+    pub fn square(&self) -> Self {
+        self * self
     }
 }
 

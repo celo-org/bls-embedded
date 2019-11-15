@@ -189,7 +189,7 @@ impl Scalar {
     }
 
     /// Doubles this field element.
-    pub const fn double(&self) -> Scalar {
+    pub fn double(&self) -> Scalar {
         // TODO: This can be achieved more efficiently with a bitshift.
         self.add(self)
     }
@@ -277,7 +277,7 @@ impl Scalar {
     /// Converts from an integer represented in little endian
     /// into its (congruent) `Scalar` representation.
     #[inline]
-    pub const fn from_raw(val: [u64; 4]) -> Self {
+    pub fn from_raw(val: [u64; 4]) -> Self {
         let r0 = 0x25D577BAB861857B;
         let r1 = 0xCC2C27B58860591F;
         let r2 = 0xA7CC008FE5DC8593;
@@ -288,7 +288,7 @@ impl Scalar {
     }
 
     /// Squares this element.
-    pub const fn square(&self) -> Scalar {
+    pub fn square(&self) -> Scalar {
         let (r1, carry) = mac(0, self.0[0], self.0[1], 0);
         let (r2, carry) = mac(0, self.0[0], self.0[2], carry);
         let (r3, r4) = mac(0, self.0[0], self.0[3], carry);
@@ -405,7 +405,7 @@ impl Scalar {
     }
 
     #[inline]
-    const fn montgomery_reduce(
+    fn montgomery_reduce(
         r0: u64,
         r1: u64,
         r2: u64,
@@ -456,7 +456,7 @@ impl Scalar {
 
     /// Multiplies `rhs` by `self`, returning the result.
     #[inline]
-    pub const fn mul(&self, rhs: &Self) -> Self {
+    pub fn mul(&self, rhs: &Self) -> Self {
         // Schoolbook multiplication
 
         let (r0, carry) = mac(0, self.0[0], rhs.0[0], 0);
@@ -484,7 +484,7 @@ impl Scalar {
     }
 
     /// Subtracts `rhs` from `self`, returning the result.
-    pub const fn sub(&self, rhs: &Self) -> Self {
+    pub fn sub(&self, rhs: &Self) -> Self {
         let modulus = modulus();
         let (d0, borrow) = sbb(self.0[0], rhs.0[0], 0);
         let (d1, borrow) = sbb(self.0[1], rhs.0[1], borrow);
@@ -502,7 +502,7 @@ impl Scalar {
     }
 
     /// Adds `rhs` to `self`, returning the result.
-    pub const fn add(&self, rhs: &Self) -> Self {
+    pub fn add(&self, rhs: &Self) -> Self {
         let (d0, carry) = adc(self.0[0], rhs.0[0], 0);
         let (d1, carry) = adc(self.0[1], rhs.0[1], carry);
         let (d2, carry) = adc(self.0[2], rhs.0[2], carry);
@@ -514,7 +514,7 @@ impl Scalar {
     }
 
     /// Negates `self`.
-    pub const fn neg(&self) -> Self {
+    pub fn neg(&self) -> Self {
         // Subtract `self` from `MODULUS` to negate. Ignore the final
         // borrow because it cannot underflow; self is guaranteed to
         // be in the field.
