@@ -600,23 +600,11 @@ impl Fp {
     }
 
     pub fn mul(&self, rhs: &Fp) -> Fp {
-        let mut res: [u64; 12] = [0; 12];
+        let mut res: [u64; 6] = [0; 6];
         unsafe {
             c_mul(res.as_ptr() as *mut u64, self.0.as_ptr(), rhs.0.as_ptr());
         }
-        Self::montgomery_reduce(
-            res[0],
-            res[1],
-            res[2],
-            res[3],
-            res[4],
-            res[5],
-            res[6],
-            res[7],
-            res[8],
-            res[9],
-            res[10],
-            res[11])
+        Fp(res).subtract_p()
     }
 
     /// Squares this element.
