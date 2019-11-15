@@ -86,13 +86,14 @@ uint64_t add(uint32_t* output, const uint32_t* left, const uint32_t* right, int 
 }
 
 inline
-void sub(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
+uint32_t sub(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
     uint64_t borrow = 0;
     for(int i=0; i<n; i++){
         borrow = (uint64_t)left[i] - ((uint64_t)right[i] + (borrow >> (BITS-1)));
         output[i] = (uint32_t) borrow;
         borrow = borrow >> BITS;
     }
+    return (uint32_t) borrow;
 }
 
 inline
@@ -102,62 +103,62 @@ uint32_t add12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     asm volatile (
         "LDR %[t0], [ %[l], #0 ]\n\t"
         "LDR %[t1], [ %[r], #0 ]\n\t"
-        "ADDS %[t0], %[t1]\n\t"
+        "ADDS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #0 ]\n\t"
 
         "LDR %[t0], [ %[l], #4 ]\n\t"
         "LDR %[t1], [ %[r], #4 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #4 ]\n\t"
 
         "LDR %[t0], [ %[l], #8 ]\n\t"
         "LDR %[t1], [ %[r], #8 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #8 ]\n\t"
 
         "LDR %[t0], [ %[l], #12 ]\n\t"
         "LDR %[t1], [ %[r], #12 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #12 ]\n\t"
 
         "LDR %[t0], [ %[l], #16 ]\n\t"
         "LDR %[t1], [ %[r], #16 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #16 ]\n\t"
 
         "LDR %[t0], [ %[l], #20 ]\n\t"
         "LDR %[t1], [ %[r], #20 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #20 ]\n\t"
 
         "LDR %[t0], [ %[l], #24 ]\n\t"
         "LDR %[t1], [ %[r], #24 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #24 ]\n\t"
 
         "LDR %[t0], [ %[l], #28 ]\n\t"
         "LDR %[t1], [ %[r], #28 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #28 ]\n\t"
 
         "LDR %[t0], [ %[l], #32 ]\n\t"
         "LDR %[t1], [ %[r], #32 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #32 ]\n\t"
 
         "LDR %[t0], [ %[l], #36 ]\n\t"
         "LDR %[t1], [ %[r], #36 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #36 ]\n\t"
 
         "LDR %[t0], [ %[l], #40 ]\n\t"
         "LDR %[t1], [ %[r], #40 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #40 ]\n\t"
 
         "LDR %[t0], [ %[l], #44 ]\n\t"
         "LDR %[t1], [ %[r], #44 ]\n\t"
-        "ADCS %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #44 ]\n\t"
 
         "ADC %[carry], %[carry], #0"
@@ -220,13 +221,30 @@ void mul6(uint32_t* output, const uint32_t* left, const uint32_t* right) {
 
 inline
 void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+    // uint32_t left_low[MAX/2];
+    // uint32_t left_high[MAX/2];
+    // uint32_t right_low[MAX/2];
+    // uint32_t right_high[MAX/2];
+    //uint32_t ll[MAX];
+    //uint32_t hh[MAX];
+    //uint32_t lh[MAX];
+    //uint32_t hl[MAX];
+
     const unsigned int n = 12;
     const unsigned int k = 6;
 
     uint32_t tmp[n + 1];
 
 
+    // uint32_t bb[MAX + 2] = {0};
+
     memset(output + n, 0, n * sizeof(uint32_t));
+    // const unsigned int s2 = n - k;
+
+    // memcpy(left_low, left, k * sizeof(uint32_t));
+    // memcpy(left_high, left + k, s2 * sizeof(uint32_t));
+    // memcpy(right_low, right, k * sizeof(uint32_t));
+    // memcpy(right_high, right + k, s2 * sizeof(uint32_t));
 
     mul6(output, left, right);
 
@@ -238,14 +256,72 @@ void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     // add_carry(output + k, output + k, bb, 2*s2);
 
     mul6(tmp, left, right + k);
-    output[k + n] = add12(output + k, output + k, tmp);
+    output[k + 12] = add12(output + k, output + k, tmp);
 
     mul6(tmp, left + k, right);
-    output[k + n] += add12(output + k, output + k, tmp);
+    output[k + 12] += add12(output + k, output + k, tmp);
 
     mul6(tmp, left + k, right + k);
     add12(output + n, output + n, tmp);
 }
+
+inline
+void mul_add32(uint32_t* out,
+               uint32_t* out_carry,
+               uint32_t a,
+               uint32_t b,
+               uint32_t c,
+               uint32_t d) {
+    uint64_t ret = ((uint64_t)a * (uint64_t)b) + (uint64_t)c + (uint64_t)d;
+    *out = (uint64_t)ret;
+    *out_carry = (uint64_t)(ret >> 32);
+}
+
+inline
+void mul_add32(uint32_t* out,
+               uint32_t* out_carry,
+               uint32_t a,
+               uint32_t b,
+               uint32_t c) {
+    uint64_t ret = ((uint64_t)a * (uint64_t)b) + (uint64_t)c;
+    *out = (uint64_t)ret;
+    *out_carry = (uint64_t)(ret >> 32);
+}
+
+inline
+void mul32(uint32_t* out,
+           uint32_t* out_carry,
+           uint32_t a,
+           uint32_t b,
+           uint32_t c) {
+    uint64_t ret = ((uint64_t)a * (uint64_t)b);
+    *out = (uint64_t)ret;
+    *out_carry = (uint64_t)(ret >> 32);
+}
+
+inline
+void add32(uint32_t* out,
+           uint32_t* out_carry,
+           uint32_t a,
+           uint32_t b,
+           uint32_t c) {
+    uint64_t ret = (uint64_t)a + (uint64_t)b + (uint64_t)c;
+    *out = (uint32_t)ret;
+    *out_carry = (uint32_t)(ret >> 32);
+}
+
+inline
+void add32(uint32_t* out,
+           uint32_t* out_carry,
+           uint32_t a,
+           uint32_t b,
+           uint32_t c,
+           uint32_t d) {
+    uint64_t ret = (uint64_t)a + (uint64_t)b + (uint64_t)c + (uint64_t)d;
+    *out = (uint32_t)ret;
+    *out_carry = (uint32_t)(ret >> 32);
+}
+
 
 inline
 void mul_add64(uint64_t* out,
@@ -282,9 +358,9 @@ void mul_add64(uint64_t* out,
     uint32_t t2;
     asm volatile (
         "UMULL %[t1], %[t2], %[a1], %[b0]\n\t"
-        "ADDS %[o1], %[t1]\n\t"
-        "ADCS %[o2], %[t2]\n\t"
-        "ADC  %[o3], #0\n\t"
+        "ADDS %[o1], %[o1], %[t1]\n\t"
+        "ADCS %[o2], %[o2], %[t2]\n\t"
+        "ADC  %[o3], %[o3], #0\n\t"
         : [o0] "+r" (o0),
           [o1] "+r" (o1),
           [o2] "+r" (o2),
@@ -300,10 +376,10 @@ void mul_add64(uint64_t* out,
     uint32_t c0 = (uint32_t) c;
     uint32_t c1 = (uint32_t) (c >> 32);
     asm volatile (
-        "ADDS %[o0], %[c0]\n\t"
-        "ADCS %[o1], %[c1]\n\t"
-        "ADCS %[o2], #0\n\t"
-        "ADC  %[o3], #0\n\t"
+        "ADDS %[o0], %[o0], %[c0]\n\t"
+        "ADCS %[o1], %[o1], %[c1]\n\t"
+        "ADCS %[o2], %[o2], #0\n\t"
+        "ADC  %[o3], %[o3], #0\n\t"
         : [o0] "+r" (o0),
           [o1] "+r" (o1),
           [o2] "+r" (o2),
@@ -315,10 +391,10 @@ void mul_add64(uint64_t* out,
     uint32_t d0 = (uint32_t) d;
     uint32_t d1 = (uint32_t) (d >> 32);
     asm volatile (
-        "ADDS %[o0], %[d0]\n\t"
-        "ADCS %[o1], %[d1]\n\t"
-        "ADCS %[o2], #0\n\t"
-        "ADC  %[o3], #0\n\t"
+        "ADDS %[o0], %[o0], %[d0]\n\t"
+        "ADCS %[o1], %[o1], %[d1]\n\t"
+        "ADCS %[o2], %[o2], #0\n\t"
+        "ADC  %[o3], %[o3], #0\n\t"
         : [o0] "+r" (o0),
           [o1] "+r" (o1),
           [o2] "+r" (o2),
@@ -341,20 +417,20 @@ void add64(uint64_t* out,
            uint64_t* out_carry,
            uint64_t a,
            uint64_t b,
-           uint64_t c)
-{
+           uint64_t c) {
 #if __arm__
-    uint32_t o0;
-    uint32_t o1;
-    uint32_t o2 = 0;
     uint32_t a0 = (uint32_t) a;
     uint32_t a1 = (uint32_t) (a >> 32);
     uint32_t b0 = (uint32_t) b;
     uint32_t b1 = (uint32_t) (b >> 32);
+    uint32_t o0;
+    uint32_t o1;
+    uint32_t o2 = 0;
+
     asm volatile (
         "ADDS %[o0], %[a0], %[b0]\n\t"
         "ADCS %[o1], %[a1], %[b1]\n\t"
-        "ADC  %[o2], #0\n\t"
+        "ADC  %[o2], %[o2], #0\n\t"
         : [o0] "+r" (o0),
           [o1] "+r" (o1),
           [o2] "+r" (o2)
@@ -363,13 +439,13 @@ void add64(uint64_t* out,
           [b0] "r" (b0),
           [b1] "r" (b1)
     );
-
+ 
     uint32_t c0 = (uint32_t) c;
     uint32_t c1 = (uint32_t) (c >> 32);
     asm volatile (
-        "ADDS %[o0], %[c0]\n\t"
-        "ADCS %[o1], %[c1]\n\t"
-        "ADC  %[o2], #0\n\t"
+        "ADDS %[o0], %[o0], %[c0]\n\t"
+        "ADCS %[o1], %[o1], %[c1]\n\t"
+        "ADC  %[o2], %[o2], #0\n\t"
         : [o0] "+r" (o0),
           [o1] "+r" (o1),
           [o2] "+r" (o2)
@@ -380,9 +456,21 @@ void add64(uint64_t* out,
     *out = ((uint64_t)o1 << 32) + (uint64_t)o0;
     *out_carry = o2;
 #else
-    uint128_t ret = (uint128_t)a + (uint128_t)b + (uint128_t)c;
-    *out = (uint64_t)ret;
-    *out_carry = (uint64_t)(ret >> 64);
+    uint32_t a0 = (uint32_t) a;
+    uint32_t a1 = (uint32_t) (a >> 32);
+    uint32_t b0 = (uint32_t) b;
+    uint32_t b1 = (uint32_t) (b >> 32);
+    uint32_t c0 = (uint32_t) c;
+    uint32_t c1 = (uint32_t) (c >> 32);
+    uint32_t o0;
+    uint32_t o1;
+    uint32_t o2;
+
+    add32(&o0, &o1, a0, b0, c0);
+    add32(&o1, &o2, o1, a1, b1, c1);
+
+    *out = ((uint64_t)o1 << 32) + (uint64_t)o0;
+    *out_carry = o2;
 #endif
 }
 
@@ -410,7 +498,6 @@ void montgomery_step(uint64_t* r, const uint64_t* t, uint64_t a)
     add64(&r[6], &r[7], a, t[6], carry);
 }
 
-inline
 void montgomery_reduce(uint64_t* output, const uint64_t* t) {
     uint64_t r[12];
     montgomery_step(r, t, 0);
