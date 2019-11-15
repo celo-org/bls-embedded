@@ -102,62 +102,62 @@ uint32_t add12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     asm volatile (
         "LDR %[t0], [ %[l], #0 ]\n\t"
         "LDR %[t1], [ %[r], #0 ]\n\t"
-        "ADDS %[t0], %[t0], %[t1]\n\t"
+        "ADDS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #0 ]\n\t"
 
         "LDR %[t0], [ %[l], #4 ]\n\t"
         "LDR %[t1], [ %[r], #4 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #4 ]\n\t"
 
         "LDR %[t0], [ %[l], #8 ]\n\t"
         "LDR %[t1], [ %[r], #8 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #8 ]\n\t"
 
         "LDR %[t0], [ %[l], #12 ]\n\t"
         "LDR %[t1], [ %[r], #12 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #12 ]\n\t"
 
         "LDR %[t0], [ %[l], #16 ]\n\t"
         "LDR %[t1], [ %[r], #16 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #16 ]\n\t"
 
         "LDR %[t0], [ %[l], #20 ]\n\t"
         "LDR %[t1], [ %[r], #20 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #20 ]\n\t"
 
         "LDR %[t0], [ %[l], #24 ]\n\t"
         "LDR %[t1], [ %[r], #24 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #24 ]\n\t"
 
         "LDR %[t0], [ %[l], #28 ]\n\t"
         "LDR %[t1], [ %[r], #28 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #28 ]\n\t"
 
         "LDR %[t0], [ %[l], #32 ]\n\t"
         "LDR %[t1], [ %[r], #32 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #32 ]\n\t"
 
         "LDR %[t0], [ %[l], #36 ]\n\t"
         "LDR %[t1], [ %[r], #36 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #36 ]\n\t"
 
         "LDR %[t0], [ %[l], #40 ]\n\t"
         "LDR %[t1], [ %[r], #40 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #40 ]\n\t"
 
         "LDR %[t0], [ %[l], #44 ]\n\t"
         "LDR %[t1], [ %[r], #44 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "ADCS %[t0], %[t1]\n\t"
         "STR %[t0], [ %[o], #44 ]\n\t"
 
         "ADC %[carry], %[carry], #0"
@@ -220,29 +220,13 @@ void mul6(uint32_t* output, const uint32_t* left, const uint32_t* right) {
 
 inline
 void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
-    // uint32_t left_low[MAX/2];
-    // uint32_t left_high[MAX/2];
-    // uint32_t right_low[MAX/2];
-    // uint32_t right_high[MAX/2];
-    //uint32_t ll[MAX];
-    //uint32_t hh[MAX];
-    //uint32_t lh[MAX];
-    //uint32_t hl[MAX];
-
     const unsigned int n = 12;
     const unsigned int k = 6;
 
     uint32_t tmp[n + 1];
 
-    // uint32_t bb[MAX + 2] = {0};
 
     memset(output + n, 0, n * sizeof(uint32_t));
-    // const unsigned int s2 = n - k;
-
-    // memcpy(left_low, left, k * sizeof(uint32_t));
-    // memcpy(left_high, left + k, s2 * sizeof(uint32_t));
-    // memcpy(right_low, right, k * sizeof(uint32_t));
-    // memcpy(right_high, right + k, s2 * sizeof(uint32_t));
 
     mul6(output, left, right);
 
@@ -254,10 +238,10 @@ void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     // add_carry(output + k, output + k, bb, 2*s2);
 
     mul6(tmp, left, right + k);
-    output[k + 12] = add12(output + k, output + k, tmp);
+    output[k + n] = add12(output + k, output + k, tmp);
 
     mul6(tmp, left + k, right);
-    output[k + 12] += add12(output + k, output + k, tmp);
+    output[k + n] += add12(output + k, output + k, tmp);
 
     mul6(tmp, left + k, right + k);
     add12(output + n, output + n, tmp);
