@@ -15,9 +15,8 @@ typedef union {
     };
 } u64;
 
-
 inline
-void m(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c) {
+void mul_add32(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c) {
 #if __arm__
     uint32_t RdLo, RdHi;
     asm (
@@ -37,7 +36,7 @@ void m(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c) {
 
 
 inline
-void ma(uint32_t* out, uint32_t* out_carry, uint32_t a, uint32_t b, uint32_t c) {
+void mul_add32(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c, uint32_t a) {
 #if __arm__
     uint32_t RdLo=a, RdHi=0;
     asm (
@@ -56,7 +55,7 @@ void ma(uint32_t* out, uint32_t* out_carry, uint32_t a, uint32_t b, uint32_t c) 
 }
 
 inline
-void mac(uint32_t* out, uint32_t* out_carry, uint32_t a, uint32_t b, uint32_t c, uint32_t carry) {
+void mul_add32(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c, uint32_t a, uint32_t carry) {
 #if __arm__
     uint32_t RdLo=(uint32_t)a, RdHi=(uint32_t)carry;
     asm (
@@ -72,6 +71,23 @@ void mac(uint32_t* out, uint32_t* out_carry, uint32_t a, uint32_t b, uint32_t c,
     *out = rv.lo;
     *out_carry = rv.hi;
 #endif
+}
+
+
+inline
+void m(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c) {
+    mul_add32(out, out_carry, b, c);
+}
+
+
+inline
+void ma(uint32_t* out, uint32_t* out_carry, uint32_t a, uint32_t b, uint32_t c) {
+    mul_add32(out, out_carry, b, c, a);
+}
+
+inline
+void mac(uint32_t* out, uint32_t* out_carry, uint32_t a, uint32_t b, uint32_t c, uint32_t carry) {
+    mul_add32(out, out_carry, b, c, a, carry);
 }
 
 inline
@@ -173,54 +189,164 @@ uint32_t add12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
 }
 
 inline
+uint32_t add6(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+#if __arm__
+    uint32_t carry = 0, t0, t1;
+    asm volatile (
+        "LDR %[t0], [ %[l], #0 ]\n\t"
+        "LDR %[t1], [ %[r], #0 ]\n\t"
+        "ADDS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #0 ]\n\t"
+
+        "LDR %[t0], [ %[l], #4 ]\n\t"
+        "LDR %[t1], [ %[r], #4 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #4 ]\n\t"
+
+        "LDR %[t0], [ %[l], #8 ]\n\t"
+        "LDR %[t1], [ %[r], #8 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #8 ]\n\t"
+
+        "LDR %[t0], [ %[l], #12 ]\n\t"
+        "LDR %[t1], [ %[r], #12 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #12 ]\n\t"
+
+        "LDR %[t0], [ %[l], #16 ]\n\t"
+        "LDR %[t1], [ %[r], #16 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #16 ]\n\t"
+
+        "LDR %[t0], [ %[l], #20 ]\n\t"
+        "LDR %[t1], [ %[r], #20 ]\n\t"
+        "ADCS %[t0], %[t0], %[t1]\n\t"
+        "STR %[t0], [ %[o], #20 ]\n\t"
+
+        "ADC %[carry], %[carry], #0"
+        : [carry] "+r" (carry), [t0] "+r" (t0), [t1] "+r" (t1)
+        : [o] "r" (output), [l] "r" (left), [r] "r" (right)
+        : "memory"
+    );
+    return carry;
+#else
+    return add(output, left, right, 6);
+#endif
+}
+
+/*
 void mul6(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+    uint32_t t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, carry;
+
+    mul_add32(&t0,  &carry, left[0], right[0],  0,  0);
+    mul_add32(&t1,  &carry, left[0], right[1],  0,  carry);
+    mul_add32(&t2,  &carry, left[0], right[2],  0,  carry);
+    mul_add32(&t3,  &carry, left[0], right[3],  0,  carry);
+    mul_add32(&t4,  &carry, left[0], right[4],  0,  carry);
+    mul_add32(&t5,  &t6   , left[0], right[5],  0,  carry);
+    mul_add32(&t1,  &carry, left[1], right[0],  t1, 0);
+    mul_add32(&t2,  &carry, left[1], right[1],  t2, carry);
+    mul_add32(&t3,  &carry, left[1], right[2],  t3, carry);
+    mul_add32(&t4,  &carry, left[1], right[3],  t4, carry);
+    mul_add32(&t5,  &carry, left[1], right[4],  t5, carry);
+    mul_add32(&t6,  &t7   , left[1], right[5],  t6, carry);
+    mul_add32(&t2,  &carry, left[2], right[0],  t2, 0);
+    mul_add32(&t3,  &carry, left[2], right[1],  t3, carry);
+    mul_add32(&t4,  &carry, left[2], right[2],  t4, carry);
+    mul_add32(&t5,  &carry, left[2], right[3],  t5, carry);
+    mul_add32(&t6,  &carry, left[2], right[4],  t6, carry);
+    mul_add32(&t7,  &t8   , left[2], right[5],  t7, carry);
+    mul_add32(&t3,  &carry, left[3], right[0],  t3, 0);
+    mul_add32(&t4,  &carry, left[3], right[1],  t4, carry);
+    mul_add32(&t5,  &carry, left[3], right[2],  t5, carry);
+    mul_add32(&t6,  &carry, left[3], right[3],  t6, carry);
+    mul_add32(&t7,  &carry, left[3], right[4],  t7, carry);
+    mul_add32(&t8,  &t9,    left[3], right[5],  t8, carry);
+    mul_add32(&t4,  &carry, left[4], right[0],  t4, 0);
+    mul_add32(&t5,  &carry, left[4], right[1],  t5, carry);
+    mul_add32(&t6,  &carry, left[4], right[2],  t6, carry);
+    mul_add32(&t7,  &carry, left[4], right[3],  t7, carry);
+    mul_add32(&t8,  &carry, left[4], right[4],  t8, carry);
+    mul_add32(&t9,  &t10  , left[4], right[5],  t9, carry);
+    mul_add32(&t5,  &carry, left[5], right[0],  t5, 0);
+    mul_add32(&t6,  &carry, left[5], right[1],  t6, carry);
+    mul_add32(&t7,  &carry, left[5], right[2],  t7, carry);
+    mul_add32(&t8,  &carry, left[5], right[3],  t8, carry);
+    mul_add32(&t9,  &carry, left[5], right[4],  t9, carry);
+    mul_add32(&t10, &t11  , left[5], right[5], t10, carry);
+
+    output[0] = t0;
+    output[1] = t1;
+    output[2] = t2;
+    output[3] = t3;
+    output[4] = t4;
+    output[5] = t5;
+    output[6] = t6;
+    output[7] = t7;
+    output[8] = t8;
+    output[9] = t9;
+    output[10] = t10;
+    output[11] = t11;
+} */
+
+inline
+void mul3(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     uint32_t carry, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10;
 
     m(&output[0], &carry, left[0], right[0]);
     ma(&t1, &carry, carry, left[0], right[1]);
-    ma(&t2, &carry, carry, left[0], right[2]);
-    ma(&t3, &carry, carry, left[0], right[3]);
-    ma(&t4, &carry, carry, left[0], right[4]);
-    ma(&t5, &t6, carry, left[0], right[5]);
+    ma(&t2, &t3, carry, left[0], right[2]);
 
     ma(&output[1], &carry, t1, left[1], right[0]);
     mac(&t2, &carry, t2, left[1], right[1], carry);
-    mac(&t3, &carry, t3, left[1], right[2], carry);
-    mac(&t4, &carry, t4, left[1], right[3], carry);
-    mac(&t5, &carry, t5, left[1], right[4], carry);
-    mac(&t6, &t7, t6, left[1], right[5], carry);
+    mac(&t3, &t4, t3, left[1], right[2], carry);
 
     ma(&output[2], &carry, t2, left[2], right[0]);
-    mac(&t3, &carry, t3, left[2], right[1], carry);
-    mac(&t4, &carry, t4, left[2], right[2], carry);
-    mac(&t5, &carry, t5, left[2], right[3], carry);
-    mac(&t6, &carry, t6, left[2], right[4], carry);
-    mac(&t7, &t8, t7, left[2], right[5], carry);
-
-    ma(&output[3], &carry, t3, left[3], right[0]);
-    mac(&t4, &carry, t4, left[3], right[1], carry);
-    mac(&t5, &carry, t5, left[3], right[2], carry);
-    mac(&t6, &carry, t6, left[3], right[3], carry);
-    mac(&t7, &carry, t7, left[3], right[4], carry);
-    mac(&t8, &t9, t8, left[3], right[5], carry);
-
-    ma(&output[4], &carry, t4, left[4], right[0]);
-    mac(&t5, &carry, t5, left[4], right[1], carry);
-    mac(&t6, &carry, t6, left[4], right[2], carry);
-    mac(&t7, &carry, t7, left[4], right[3], carry);
-    mac(&t8, &carry, t8, left[4], right[4], carry);
-    mac(&t9, &t10, t9, left[4], right[5], carry);
-
-    ma(&output[5], &carry, t5, left[5], right[0]);
-    mac(&output[6], &carry, t6, left[5], right[1], carry);
-    mac(&output[7], &carry, t7, left[5], right[2], carry);
-    mac(&output[8], &carry, t8, left[5], right[3], carry);
-    mac(&output[9], &carry, t9, left[5], right[4], carry);
-    mac(&output[10], &output[11], t10, left[5], right[5], carry);
+    mac(&output[3], &carry, t3, left[2], right[1], carry);
+    mac(&output[4], &output[5], t4, left[2], right[2], carry);
 }
 
 inline
-void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+void mul32_x6_rec(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+    const unsigned int n = 6;
+    const unsigned int k = 3;
+    uint32_t tmp[n + 1];
+
+    memset(output + n, 0, n * sizeof(uint32_t));
+    mul3(output, left, right);
+
+    mul3(tmp, left, right + k);
+    output[k + n] = add6(output + k, output + k, tmp);
+
+    mul3(tmp, left + k, right);
+    output[k + n] += add6(output + k, output + k, tmp);
+
+    mul3(tmp, left + k, right + k);
+    add6(output + n, output + n, tmp);
+}
+
+void mul32_x6(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+    uint32_t carry;
+
+    mul_add32(&output[0],  &carry,     left[0], right[0]);
+    mul_add32(&output[1],  &carry,     left[0], right[1], carry);
+    mul_add32(&output[2],  &carry,     left[0], right[2], carry);
+    mul_add32(&output[3],  &carry,     left[0], right[3], carry);
+    mul_add32(&output[4],  &carry,     left[0], right[4], carry);
+    mul_add32(&output[5],  &output[6], left[0], right[5], carry);
+
+    for(int i=1; i<6; ++i) {
+        mul_add32(&output[i],      &carry,         left[i], right[0], output[i]);
+        mul_add32(&output[i + 1],  &carry,         left[i], right[1], output[i + 1], carry);
+        mul_add32(&output[i + 2],  &carry,         left[i], right[2], output[i + 2], carry);
+        mul_add32(&output[i + 3],  &carry,         left[i], right[3], output[i + 3], carry);
+        mul_add32(&output[i + 4],  &carry,         left[i], right[4], output[i + 4], carry);
+        mul_add32(&output[i + 5],  &output[i + 6], left[i], right[5], output[i + 5], carry);
+    }
+}
+
+inline
+void mul32_x12_rec(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     // uint32_t left_low[MAX/2];
     // uint32_t left_high[MAX/2];
     // uint32_t right_low[MAX/2];
@@ -246,7 +372,7 @@ void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     // memcpy(right_low, right, k * sizeof(uint32_t));
     // memcpy(right_high, right + k, s2 * sizeof(uint32_t));
 
-    mul6(output, left, right);
+    mul32_x6(output, left, right);
 
     // add_carry(left_low, left_low, left_high, s2);
     // add_carry(right_low, right_low, right_high, s2);
@@ -255,48 +381,47 @@ void mul12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
     // sub(bb, bb, hh, 2*s2);
     // add_carry(output + k, output + k, bb, 2*s2);
 
-    mul6(tmp, left, right + k);
-    output[k + 12] = add12(output + k, output + k, tmp);
+    mul32_x6(tmp, left, right + k);
+    output[k + n] = add12(output + k, output + k, tmp);
 
-    mul6(tmp, left + k, right);
-    output[k + 12] += add12(output + k, output + k, tmp);
+    mul32_x6(tmp, left + k, right);
+    output[k + n] += add12(output + k, output + k, tmp);
 
-    mul6(tmp, left + k, right + k);
+    mul32_x6(tmp, left + k, right + k);
     add12(output + n, output + n, tmp);
 }
 
-inline
-void mul_add32(uint32_t* out,
-               uint32_t* out_carry,
-               uint32_t a,
-               uint32_t b,
-               uint32_t c,
-               uint32_t d) {
-    uint64_t ret = ((uint64_t)a * (uint64_t)b) + (uint64_t)c + (uint64_t)d;
-    *out = (uint64_t)ret;
-    *out_carry = (uint64_t)(ret >> 32);
-}
 
-inline
-void mul_add32(uint32_t* out,
-               uint32_t* out_carry,
-               uint32_t a,
-               uint32_t b,
-               uint32_t c) {
-    uint64_t ret = ((uint64_t)a * (uint64_t)b) + (uint64_t)c;
-    *out = (uint64_t)ret;
-    *out_carry = (uint64_t)(ret >> 32);
-}
+void mul32_x12(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+    uint32_t carry;
 
-inline
-void mul32(uint32_t* out,
-           uint32_t* out_carry,
-           uint32_t a,
-           uint32_t b,
-           uint32_t c) {
-    uint64_t ret = ((uint64_t)a * (uint64_t)b);
-    *out = (uint64_t)ret;
-    *out_carry = (uint64_t)(ret >> 32);
+    mul_add32(&output[0],  &carry,      left[0], right[0]);
+    mul_add32(&output[1],  &carry,      left[0], right[1],  carry);
+    mul_add32(&output[2],  &carry,      left[0], right[2],  carry);
+    mul_add32(&output[3],  &carry,      left[0], right[3],  carry);
+    mul_add32(&output[4],  &carry,      left[0], right[4],  carry);
+    mul_add32(&output[5],  &carry,      left[0], right[5],  carry);
+    mul_add32(&output[6],  &carry,      left[0], right[6],  carry);
+    mul_add32(&output[7],  &carry,      left[0], right[7],  carry);
+    mul_add32(&output[8],  &carry,      left[0], right[8],  carry);
+    mul_add32(&output[9],  &carry,      left[0], right[9],  carry);
+    mul_add32(&output[10], &carry,      left[0], right[10], carry);
+    mul_add32(&output[11], &output[12], left[0], right[11], carry);
+
+    for(int i=1; i<12; ++i) {
+        mul_add32(&output[i],      &carry,          left[i], right[0],  output[i]);
+        mul_add32(&output[i + 1],  &carry,          left[i], right[1],  output[i + 1], carry);
+        mul_add32(&output[i + 2],  &carry,          left[i], right[2],  output[i + 2], carry);
+        mul_add32(&output[i + 3],  &carry,          left[i], right[3],  output[i + 3], carry);
+        mul_add32(&output[i + 4],  &carry,          left[i], right[4],  output[i + 4], carry);
+        mul_add32(&output[i + 5],  &carry,          left[i], right[5],  output[i + 5], carry);
+        mul_add32(&output[i + 6],  &carry,          left[i], right[6],  output[i + 6], carry);
+        mul_add32(&output[i + 7],  &carry,          left[i], right[7],  output[i + 7], carry);
+        mul_add32(&output[i + 8],  &carry,          left[i], right[8],  output[i + 8], carry);
+        mul_add32(&output[i + 9],  &carry,          left[i], right[9],  output[i + 9], carry);
+        mul_add32(&output[i + 10], &carry,          left[i], right[10], output[i + 10], carry);
+        mul_add32(&output[i + 11], &output[i + 12], left[i], right[11], output[i + 11], carry);
+    }
 }
 
 inline
@@ -508,67 +633,11 @@ void montgomery_reduce(uint64_t* output, const uint64_t* t) {
     montgomery_step(output - 1, r + 5, t[11]);
 }
 
-/*
-// 64bit version ~30% slower
-void multiply(uint64_t* output, const uint64_t* left, const uint64_t* right) {
-    uint64_t t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, carry;
-
-    mul_add64(&t0,  &carry, left[0], right[0],  0,  0);
-    mul_add64(&t1,  &carry, left[0], right[1],  0,  carry);
-    mul_add64(&t2,  &carry, left[0], right[2],  0,  carry);
-    mul_add64(&t3,  &carry, left[0], right[3],  0,  carry);
-    mul_add64(&t4,  &carry, left[0], right[4],  0,  carry);
-    mul_add64(&t5,  &t6   , left[0], right[5],  0,  carry);
-    mul_add64(&t1,  &carry, left[1], right[0],  t1, 0);
-    mul_add64(&t2,  &carry, left[1], right[1],  t2, carry);
-    mul_add64(&t3,  &carry, left[1], right[2],  t3, carry);
-    mul_add64(&t4,  &carry, left[1], right[3],  t4, carry);
-    mul_add64(&t5,  &carry, left[1], right[4],  t5, carry);
-    mul_add64(&t6,  &t7   , left[1], right[5],  t6, carry);
-    mul_add64(&t2,  &carry, left[2], right[0],  t2, 0);
-    mul_add64(&t3,  &carry, left[2], right[1],  t3, carry);
-    mul_add64(&t4,  &carry, left[2], right[2],  t4, carry);
-    mul_add64(&t5,  &carry, left[2], right[3],  t5, carry);
-    mul_add64(&t6,  &carry, left[2], right[4],  t6, carry);
-    mul_add64(&t7,  &t8   , left[2], right[5],  t7, carry);
-    mul_add64(&t3,  &carry, left[3], right[0],  t3, 0);
-    mul_add64(&t4,  &carry, left[3], right[1],  t4, carry);
-    mul_add64(&t5,  &carry, left[3], right[2],  t5, carry);
-    mul_add64(&t6,  &carry, left[3], right[3],  t6, carry);
-    mul_add64(&t7,  &carry, left[3], right[4],  t7, carry);
-    mul_add64(&t8,  &t9,    left[3], right[5],  t8, carry);
-    mul_add64(&t4,  &carry, left[4], right[0],  t4, 0);
-    mul_add64(&t5,  &carry, left[4], right[1],  t5, carry);
-    mul_add64(&t6,  &carry, left[4], right[2],  t6, carry);
-    mul_add64(&t7,  &carry, left[4], right[3],  t7, carry);
-    mul_add64(&t8,  &carry, left[4], right[4],  t8, carry);
-    mul_add64(&t9,  &t10  , left[4], right[5],  t9, carry);
-    mul_add64(&t5,  &carry, left[5], right[0],  t5, 0);
-    mul_add64(&t6,  &carry, left[5], right[1],  t6, carry);
-    mul_add64(&t7,  &carry, left[5], right[2],  t7, carry);
-    mul_add64(&t8,  &carry, left[5], right[3],  t8, carry);
-    mul_add64(&t9,  &carry, left[5], right[4],  t9, carry);
-    mul_add64(&t10, &t11  , left[5], right[5], t10, carry);
-
-    output[0] = t0;
-    output[1] = t1;
-    output[2] = t2;
-    output[3] = t3;
-    output[4] = t4;
-    output[5] = t5;
-    output[6] = t6;
-    output[7] = t7;
-    output[8] = t8;
-    output[9] = t9;
-    output[10] = t10;
-    output[11] = t11;
-} */
-
 extern "C" void c_mul(uint64_t* output, const uint64_t* left, const uint64_t* right) {
     uint64_t tmp[12];
 
     // cast down to 32 bit mode, which is ~30% faster than on arm32
-    mul12((uint32_t*)tmp, (const uint32_t*)left, (const uint32_t*)right);
+    mul32_x12((uint32_t*)tmp, (const uint32_t*)left, (const uint32_t*)right);
 
     montgomery_reduce(output, tmp);
 }
