@@ -416,23 +416,56 @@ void add64(uint64_t* out,
            uint64_t* out_carry,
            uint64_t a,
            uint64_t b,
-           uint64_t c) {
+           uint64_t c)
+{
+    uint32_t o0;
+    uint32_t o1;
+    uint32_t o2 = 0;
+
+#if __asm__
+    uint32_t a0 = (uint32_t) a;
+    uint32_t a1 = (uint32_t) (a >> 32);
+    uint32_t b0 = (uint32_t) b;
+    uint32_t b1 = (uint32_t) (b >> 32);
+    uint32_t z = 0;
+    asm volatile (
+        "ADDS %[o0], %[a0], %[b0]\n\t"
+        "ADCS %[o1], %[a1], %[b1]\n\t"
+        "ADC  %[o2], %[o2], #0\n\t"
+        : [o0] "=r" (o0),
+          [o1] "=r" (o1),
+          [o2] "+r" (o2)
+        : [a0] "r" (a0),
+          [a1] "r" (a1),
+          [b0] "r" (b0),
+          [b1] "r" (b1)
+    );
+
+    uint32_t c0 = (uint32_t) c;
+    uint32_t c1 = (uint32_t) (c >> 32);
+    asm volatile (
+        "ADDS %[o0], %[o0], %[c0]\n\t"
+        "ADCS %[o1], %[o1], %[c1]\n\t"
+        "ADC  %[o2], %[o2], #0\n\t"
+        : [o0] "+r" (o0),
+          [o1] "+r" (o1),
+          [o2] "+r" (o2)
+        : [c0] "r" (c0),
+          [c1] "r" (c1)
+    );
+#else
     uint32_t a0 = (uint32_t) a;
     uint32_t a1 = (uint32_t) (a >> 32);
     uint32_t b0 = (uint32_t) b;
     uint32_t b1 = (uint32_t) (b >> 32);
     uint32_t c0 = (uint32_t) c;
     uint32_t c1 = (uint32_t) (c >> 32);
-    uint32_t o0 = 0;
-    uint32_t o1 = 0;
-    uint32_t o2 = 0;
-
     add32(&o0, &o1, a0, b0, c0);
     add32(&o1, &o2, o1, a1, b1, c1);
+#endif
 
     *out = ((uint64_t)o1 << 32) + (uint64_t)o0;
     *out_carry = o2;
-    return;
 }
 
 
