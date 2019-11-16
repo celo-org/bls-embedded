@@ -9,13 +9,13 @@ libfpc.a: src/fpc.cpp
 	touch src/fp.rs
 
 test: libfpc.a
-	RUSTFLAGS="-L `pwd`" cargo test
+	RUSTFLAGS="-L `pwd` " cargo test
 
 bench: libfpc.a
-	RUSTFLAGS="-L `pwd`" cargo bench -- Fp_m
+	RUSTFLAGS="-L `pwd` " cargo bench -- Fp_m
 
 bench2: libfpc.a
-	RUSTFLAGS="-L `pwd`" cargo bench -- G2Projective_s
+	RUSTFLAGS="-L `pwd` " cargo bench -- G2Projective_s
 
 rsync:
 	rsync -ar --progress --exclude=target --exclude='*.a' . tinkerboard:bls-embedded/bls12_377

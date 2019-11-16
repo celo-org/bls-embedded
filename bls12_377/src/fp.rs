@@ -478,8 +478,7 @@ impl Fp {
         (&rhs.neg()).add(self)
     }
 
-    #[inline(always)]
-    fn montgomery_reduce(
+    fn montgomery_reduce_new(
         t0: u64,
         t1: u64,
         t2: u64,
@@ -497,7 +496,7 @@ impl Fp {
             let mut res: [u64; 6] = [0; 6];
             let tmp: [u64; 12] = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11];
             c_montgomry(res.as_mut_ptr(), tmp.as_ptr());
-            (&Fp(res)).subtract_p()
+            Fp(res).subtract_p()
         }
     }
 
@@ -627,12 +626,49 @@ impl Fp {
         Self::montgomery_reduce_old(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)
     }
 
-    pub fn mul(&self, rhs: &Fp) -> Fp {
+    pub fn mul_new(&self, rhs: &Fp) -> Fp {
         unsafe {
             let mut res: [u64; 6] = [0; 6];
             c_mul(res.as_mut_ptr(), self.0.as_ptr(), rhs.0.as_ptr());
-            (&Fp(res)).subtract_p()
+            Fp(res).subtract_p()
         }
+    }
+
+
+    #[inline(always)]
+    fn montgomery_reduce(
+        t0: u64,
+        t1: u64,
+        t2: u64,
+        t3: u64,
+        t4: u64,
+        t5: u64,
+        t6: u64,
+        t7: u64,
+        t8: u64,
+        t9: u64,
+        t10: u64,
+        t11: u64,
+    ) -> Self {
+        Fp::montgomery_reduce_new(
+            t0,
+            t1,
+            t2,
+            t3,
+            t4,
+            t5,
+            t6,
+            t7,
+            t8,
+            t9,
+            t10,
+            t11
+        )
+    }
+
+    #[inline(always)]
+    pub fn mul(&self, rhs: &Fp) -> Fp {
+        self.mul_new(rhs)
     }
 
     /// Squares this element.
