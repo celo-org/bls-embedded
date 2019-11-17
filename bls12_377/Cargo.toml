@@ -7,15 +7,6 @@ repository = "https://github.com/zkcrypto/bls12_381"
 version = "0.0.0"
 edition = "2018"
 
-[profile.release]
-opt-level = 2
-debug = false
-rpath = false
-lto = true
-debug-assertions = false
-panic = "abort"
-overflow-checks = false
-
 [package.metadata.docs.rs]
 rustdoc-args = [ "--html-in-header", "katex-header.html" ]
 
