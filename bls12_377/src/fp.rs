@@ -473,31 +473,14 @@ impl Fp {
         ])
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn sub(&self, rhs: &Fp) -> Fp {
         (&rhs.neg()).add(self)
     }
 
-    fn montgomery_reduce_new(
-        t0: u64,
-        t1: u64,
-        t2: u64,
-        t3: u64,
-        t4: u64,
-        t5: u64,
-        t6: u64,
-        t7: u64,
-        t8: u64,
-        t9: u64,
-        t10: u64,
-        t11: u64,
-    ) -> Self {
-        unsafe {
-            let mut res: [u64; 6] = [0; 6];
-            let tmp: [u64; 12] = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11];
-            c_montgomry(res.as_mut_ptr(), tmp.as_ptr());
-            Fp(res).subtract_p()
-        }
+    #[inline(always)]
+    pub fn square(&self) -> Fp {
+        self * self
     }
 
     #[inline(always)]
@@ -580,6 +563,7 @@ impl Fp {
         (&Fp([r6, r7, r8, r9, r10, r11])).subtract_p()
     }
 
+    #[inline(always)]
     pub fn mul_old(&self, rhs: &Fp) -> Fp {
         let (t0, carry) = mac(0, self.0[0], rhs.0[0], 0);
         let (t1, carry) = mac(0, self.0[0], rhs.0[1], carry);
@@ -626,16 +610,6 @@ impl Fp {
         Self::montgomery_reduce_old(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11)
     }
 
-    pub fn mul_new(&self, rhs: &Fp) -> Fp {
-        unsafe {
-            let mut res: [u64; 6] = [0; 6];
-            c_mul(res.as_mut_ptr(), self.0.as_ptr(), rhs.0.as_ptr());
-            Fp(res).subtract_p()
-        }
-    }
-
-
-    #[inline(always)]
     fn montgomery_reduce(
         t0: u64,
         t1: u64,
@@ -650,31 +624,23 @@ impl Fp {
         t10: u64,
         t11: u64,
     ) -> Self {
-        Fp::montgomery_reduce_new(
-            t0,
-            t1,
-            t2,
-            t3,
-            t4,
-            t5,
-            t6,
-            t7,
-            t8,
-            t9,
-            t10,
-            t11
-        )
+        unsafe {
+            let mut res: [u64; 6] = [0; 6];
+            let tmp: [u64; 12] = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11];
+            c_montgomry(res.as_mut_ptr(), tmp.as_ptr());
+            Fp(res).subtract_p()
+        }
     }
 
-    #[inline(always)]
+    //#[inline(always)]
     pub fn mul(&self, rhs: &Fp) -> Fp {
-        self.mul_new(rhs)
-    }
-
-    /// Squares this element.
-    #[inline]
-    pub fn square(&self) -> Self {
-        self * self
+        unsafe {
+            let mut res: [u64; 6] = [0; 6];
+            let mut tmp: [u64; 12] = [0; 12];
+            c_mul(tmp.as_mut_ptr(), self.0.as_ptr(), rhs.0.as_ptr());
+            c_montgomry(res.as_mut_ptr(), tmp.as_ptr());
+            Fp(res).subtract_p()
+        }
     }
 }
 

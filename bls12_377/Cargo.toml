@@ -8,7 +8,7 @@ version = "0.0.0"
 edition = "2018"
 
 [profile.release]
-opt-level = 0
+opt-level = 2
 debug = false
 rpath = false
 lto = true

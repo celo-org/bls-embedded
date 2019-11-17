@@ -97,15 +97,15 @@ pub fn sbb(a: u64, b: u64, borrow: u64) -> (u64, u64) {
 
 /// Compute a + (b * c) + carry, returning the result and the new carry over.
 //#[no_mangle]
-#[inline(always)]
+//#[inline(always)]
 pub fn mac(a: u64, b: u64, c: u64, carry: u64) -> (u64, u64) {
-    // let ret = (a as u128) + ((b as u128) * (c as u128)) + (carry as u128);
-    // (ret as u64, (ret >> 64) as u64)
-    unsafe {
-        let mut res: [u64; 2] = [0; 2];
-        c_muladdadd(res.as_mut_ptr(), b, c, a, carry);
-        (res[0], res[1])
-    }
+    let ret = (a as u128) + ((b as u128) * (c as u128)) + (carry as u128);
+    (ret as u64, (ret >> 64) as u64)
+    // unsafe {
+    //     let mut res: [u64; 2] = [0; 2];
+    //     c_muladdadd(res.as_mut_ptr(), b, c, a, carry);
+    //     (res[0], res[1])
+    // }
 }
 
 macro_rules! impl_add_binop_specify_output {
