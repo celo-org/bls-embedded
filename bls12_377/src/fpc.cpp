@@ -3,9 +3,10 @@
 #include <string.h>
 
 #define uint128_t __uint128_t
+
 // #define restrict __restrict__
 #define restrict
-#define BITS 32
+
 
 
 /*
@@ -171,6 +172,7 @@ void umlal96(uint32_t& restrict o0,
 #endif
 }
 
+/*
 inline
 void mul_add64(uint64_t* restrict out,
                uint64_t* restrict out_carry,
@@ -259,6 +261,11 @@ void mul_add64(uint64_t* restrict out,
     *out_carry = (uint64_t)(ret >> 64);
 #endif
 }
+*/
+
+#if __arm__
+// not needed
+#else
 
 inline
 uint64_t add32(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
@@ -266,7 +273,7 @@ uint64_t add32(uint32_t* output, const uint32_t* left, const uint32_t* right, in
     for(int i=0; i<n; i++){
         carry += (uint64_t)left[i] + (uint64_t)right[i];
         output[i] = (uint32_t) carry;
-        carry = carry >> BITS;
+        carry = carry >> 32;
     }
     return carry;
 }
@@ -277,21 +284,25 @@ uint64_t add32(uint32_t* output, const uint32_t* a, const uint32_t* b, const uin
     for(int i=0; i<n; i++){
         carry += (uint64_t)a[i] + (uint64_t)b[i] + (uint64_t)c[i];
         output[i] = (uint32_t) carry;
-        carry = carry >> BITS;
+        carry = carry >> 32;
     }
     return carry;
 }
 
+#endif
+
+/*
 inline
 uint32_t sub32(uint32_t* output, const uint32_t* left, const uint32_t* right, int n) {
     uint64_t borrow = 0;
     for(int i=0; i<n; i++){
-        borrow = (uint64_t)left[i] - ((uint64_t)right[i] + (borrow >> (BITS-1)));
+        borrow = (uint64_t)left[i] - ((uint64_t)right[i] + (borrow >> 31));
         output[i] = (uint32_t) borrow;
-        borrow = borrow >> BITS;
+        borrow = borrow >> 32;
     }
     return (uint32_t) borrow;
 }
+*/
 
 inline
 uint32_t acc_2_2_1(uint32_t* restrict output, const uint32_t* restrict b, uint32_t c0) {
@@ -473,7 +484,8 @@ void montgomery_reduce(uint32_t* restrict output, uint32_t* t) {
          0x6ca1493b, 0xc63b05c0,
          0x17c510ea, 0x01ae3a46,
     };
-    uint32_t altcarry[2] = {0};
+    uint32_t altcarry = 0;
+
     for(int i=0; i<5; ++i){
         uint32_t* r = t + 2*i;
         uint64_t k = *(uint64_t*)r * inv;
@@ -492,7 +504,7 @@ void montgomery_reduce(uint32_t* restrict output, uint32_t* t) {
         umaal96(r[9],  carry[0], carry[1], modulus32[9],  k);
         umaal96(r[10], carry[0], carry[1], modulus32[10], k);
         umaal96(r[11], carry[0], carry[1], modulus32[11], k);
-        altcarry[0] = acc_2_2_1(&r[12], carry, altcarry[0]);
+        altcarry = acc_2_2_1(&r[12], carry, altcarry);
     }
 
     {
@@ -513,7 +525,7 @@ void montgomery_reduce(uint32_t* restrict output, uint32_t* t) {
         umaal96(output[7], carry[0], carry[1], modulus32[9],  k, r[9]);
         umaal96(output[8], carry[0], carry[1], modulus32[10], k, r[10]);
         umaal96(output[9], carry[0], carry[1], modulus32[11], k, r[11]);
-        add_2_2_1(&output[10], &r[12] , carry, altcarry[0]);
+        add_2_2_1(&output[10], &r[12], carry, altcarry);
     }
 }
 
@@ -525,6 +537,7 @@ extern "C" void c_montgomry(uint64_t* restrict output, uint64_t* restrict tmp) {
     montgomery_reduce((uint32_t*)output, (uint32_t*)tmp);
 }
 
+/*
 extern "C" void c_muladdadd(uint64_t* restrict out,
                             uint64_t a,
                             uint64_t b,
@@ -533,3 +546,4 @@ extern "C" void c_muladdadd(uint64_t* restrict out,
 {
     mul_add64(out, out + 1, a, b, c, d);
 }
+*/
