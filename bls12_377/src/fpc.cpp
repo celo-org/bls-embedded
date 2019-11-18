@@ -3,10 +3,12 @@
 #include <string.h>
 
 #define uint128_t __uint128_t
-#define MAX 12
+// #define restrict __restrict__
+#define restrict
 #define BITS 32
 
 
+/*
 typedef union { 
     uint64_t as64;
     struct
@@ -34,11 +36,12 @@ void mul_add32(uint32_t* out, uint32_t* out_carry, uint32_t b, uint32_t c, uint3
     *out_carry = rv.hi;
 #endif
 }
+*/
 
 inline
-void umaal96(uint32_t& o0,
-             uint32_t& o1,
-             uint32_t& o2,
+void umaal96(uint32_t& restrict o0,
+             uint32_t& restrict o1,
+             uint32_t& restrict o2,
              uint32_t a,
              uint64_t b) {
 // multiply a32 * b64 and accumulate in the 96 bit value stored in [o0, o1, o2]
@@ -71,9 +74,9 @@ void umaal96(uint32_t& o0,
 }
 
 inline
-void umaal96(uint32_t& o0,
-             uint32_t& o1,
-             uint32_t& o2,
+void umaal96(uint32_t& restrict o0,
+             uint32_t& restrict o1,
+             uint32_t& restrict o2,
              uint32_t a,
              uint64_t b, 
              uint32_t c)
@@ -84,9 +87,9 @@ void umaal96(uint32_t& o0,
 
 
 inline
-void umaal96(uint32_t& o0,
-             uint32_t& o1,
-             uint32_t& o2,
+void umaal96(uint32_t& restrict o0,
+             uint32_t& restrict o1,
+             uint32_t& restrict o2,
              uint32_t a,
              uint64_t b, 
              uint32_t c,
@@ -99,9 +102,9 @@ void umaal96(uint32_t& o0,
 }
 
 inline
-void umull96(uint32_t& o0,
-             uint32_t& o1,
-             uint32_t& o2,
+void umull96(uint32_t& restrict o0,
+             uint32_t& restrict o1,
+             uint32_t& restrict o2,
              uint32_t a,
              uint64_t b) {
 // multiply a32 * b64 and store in [o0, o1, o2]
@@ -134,9 +137,9 @@ void umull96(uint32_t& o0,
 
 
 inline
-void umlal96(uint32_t& o0,
-             uint32_t& o1,
-             uint32_t& o2,
+void umlal96(uint32_t& restrict o0,
+             uint32_t& restrict o1,
+             uint32_t& restrict o2,
              uint32_t a,
              uint64_t b) {
 // multiply a32 * b64 + o0 and store in [o0, o1, o2]
@@ -169,8 +172,8 @@ void umlal96(uint32_t& o0,
 }
 
 inline
-void mul_add64(uint64_t* out,
-               uint64_t* out_carry,
+void mul_add64(uint64_t* restrict out,
+               uint64_t* restrict out_carry,
                uint64_t a,
                uint64_t b,
                uint64_t c,
@@ -266,8 +269,6 @@ uint64_t add32(uint32_t* output, const uint32_t* left, const uint32_t* right, in
         carry = carry >> BITS;
     }
     return carry;
-
-
 }
 
 inline
@@ -275,17 +276,6 @@ uint64_t add32(uint32_t* output, const uint32_t* a, const uint32_t* b, const uin
     uint64_t carry = 0;
     for(int i=0; i<n; i++){
         carry += (uint64_t)a[i] + (uint64_t)b[i] + (uint64_t)c[i];
-        output[i] = (uint32_t) carry;
-        carry = carry >> BITS;
-    }
-    return carry;
-}
-
-inline
-uint64_t add32(uint32_t* output, const uint32_t* a, const uint32_t* b, const uint32_t* c, const uint32_t* d, int n) {
-    uint64_t carry = 0;
-    for(int i=0; i<n; i++){
-        carry += (uint64_t)a[i] + (uint64_t)b[i] + (uint64_t)c[i] + (uint64_t)d[i];
         output[i] = (uint32_t) carry;
         carry = carry >> BITS;
     }
@@ -303,77 +293,57 @@ uint32_t sub32(uint32_t* output, const uint32_t* left, const uint32_t* right, in
     return (uint32_t) borrow;
 }
 
-
 inline
-uint32_t add32x2(uint32_t* output, const uint32_t* left, const uint32_t* right) {
+uint32_t acc_2_2_1(uint32_t* restrict output, const uint32_t* restrict b, uint32_t c0) {
 #if __arm__
     uint32_t carry = 0;
-    uint32_t t0 = 0;
-    uint32_t t1 = 0;
-    uint32_t a0 = left[0];
-    uint32_t b0 = right[0];
-    uint32_t a1 = left[1];
-    uint32_t b1 = right[1];
+    uint32_t t0 = output[0];
+    uint32_t t1 = output[1];
+    uint32_t b0 = b[0];
+    uint32_t b1 = b[1];
     asm (
-        "ADDS %[t0], %[a0], %[b0]\n\t"
-        "ADCS %[t1], %[a1], %[b1]\n\t"
+        "ADDS %[t0], %[b0]\n\t"
+        "ADCS %[t1], %[b1]\n\t"
         "ADC %[carry], #0"
         : [carry] "+r" (carry),
           [t0] "+r" (t0),
           [t1] "+r" (t1)
-        : [a0] "r" (a0),
-          [a1] "r" (a1),
-          [b0] "r" (b0),
+        : [b0] "r" (b0),
           [b1] "r" (b1)
+    );
+    asm (
+        "ADDS %[t0], %[c0]\n\t"
+        "ADCS %[t1], #0\n\t"
+        "ADC %[carry], #0"
+        : [carry] "+r" (carry),
+          [t0] "+r" (t0),
+          [t1] "+r" (t1)
+        : [c0] "r" (c0)
     );
     output[0] = t0;
     output[1] = t1;
     return carry;
-
-    /*
-    asm volatile (
-        "LDR %[t0], [ %[l], #0 ]\n\t"
-        "LDR %[t1], [ %[r], #0 ]\n\t"
-        "ADDS %[t0], %[t0], %[t1]\n\t"
-        "STR %[t0], [ %[o], #0 ]\n\t"
-
-        "LDR %[t0], [ %[l], #4 ]\n\t"
-        "LDR %[t1], [ %[r], #4 ]\n\t"
-        "ADCS %[t0], %[t0], %[t1]\n\t"
-        "STR %[t0], [ %[o], #4 ]\n\t"
-
-        "ADC %[carry], %[carry], #0"
-        : [carry] "+r" (carry), [t0] "+r" (t0), [t1] "+r" (t1)
-        : [o] "r" (output), [l] "r" (left), [r] "r" (right)
-        : "memory"
-    );
-
-    return carry;
-    */
-
 #else
-    return add32(output, left, right, 2);
+    uint32_t _a[] = {output[0], output[1]};
+    uint32_t _b[] = {b[0], b[1]};
+    uint32_t _c[] = {c0, 0};
+    return add32(output, _a, _b, _c, 2);
 #endif
 }
 
 inline
-uint32_t add32x2(uint32_t* output, const uint32_t* a, const uint32_t* b, const uint32_t* c) {
+void add_2_2_1(uint32_t* restrict output, uint32_t* restrict a, const uint32_t* restrict b, uint32_t c0) {
 #if __arm__
-    uint32_t carry = 0;
     uint32_t t0 = 0;
     uint32_t t1 = 0;
     uint32_t a0 = a[0];
     uint32_t a1 = a[1];
     uint32_t b0 = b[0];
     uint32_t b1 = b[1];
-    uint32_t c0 = c[0];
-    uint32_t c1 = c[1];
     asm (
         "ADDS %[t0], %[a0], %[b0]\n\t"
-        "ADCS %[t1], %[a1], %[b1]\n\t"
-        "ADC %[carry], #0"
-        : [carry] "+r" (carry),
-          [t0] "+r" (t0),
+        "ADC %[t1], %[a1], %[b1]\n\t"
+        : [t0] "+r" (t0),
           [t1] "+r" (t1)
         : [a0] "r" (a0),
           [a1] "r" (a1),
@@ -381,24 +351,21 @@ uint32_t add32x2(uint32_t* output, const uint32_t* a, const uint32_t* b, const u
           [b1] "r" (b1)
     );
     asm (
-        "ADDS %[t0], %[t0], %[c0]\n\t"
-        "ADCS %[t1], %[t1], %[c1]\n\t"
-        "ADC %[carry], %[carry], #0"
-        : [carry] "+r" (carry),
-          [t0] "+r" (t0),
+        "ADDS %[t0], %[c0]\n\t"
+        "ADC  %[t1], #0 \n\t"
+        : [t0] "+r" (t0),
           [t1] "+r" (t1)
-        : [c0] "r" (c0),
-          [c1] "r" (c1)
+        : [c0] "r" (c0)
     );
     output[0] = t0;
     output[1] = t1;
-    return carry;
 #else
-    return add32(output, a, b, c, 2);
+    uint32_t _a[] = {a[0], a[1]};
+    uint32_t _b[] = {b[0], b[1]};
+    uint32_t _c[] = {c0, 0};
+    add32(output, _a, _b, _c, 2);
 #endif
 }
-
-
 
 /*
 inline
@@ -457,7 +424,7 @@ void mul64x6(uint64_t* output, const uint64_t* left, const uint64_t* right) {
 */
 
 inline
-void mul_hybrid(uint32_t* output, const uint64_t* left, const uint32_t* right) {
+void mul_hybrid(uint32_t* __restrict__ output, const uint64_t* __restrict__ left, const uint32_t* __restrict__ right) {
     uint32_t carry0;
     uint32_t carry1;
     uint64_t val = left[0];
@@ -496,7 +463,7 @@ void mul_hybrid(uint32_t* output, const uint64_t* left, const uint32_t* right) {
     }
 }
 
-void montgomery_reduce(uint32_t* output, uint32_t* t) {
+void montgomery_reduce(uint32_t* restrict output, uint32_t* t) {
     const static uint64_t inv = 9586122913090633727ull;
     const static uint64_t modulus32[12] = {
          0x00000001, 0x8508c000,
@@ -525,7 +492,7 @@ void montgomery_reduce(uint32_t* output, uint32_t* t) {
         umaal96(r[9],  carry[0], carry[1], modulus32[9],  k);
         umaal96(r[10], carry[0], carry[1], modulus32[10], k);
         umaal96(r[11], carry[0], carry[1], modulus32[11], k);
-        altcarry[0] = add32x2(&r[12], &r[12], carry, altcarry);
+        altcarry[0] = acc_2_2_1(&r[12], carry, altcarry[0]);
     }
 
     {
@@ -546,19 +513,19 @@ void montgomery_reduce(uint32_t* output, uint32_t* t) {
         umaal96(output[7], carry[0], carry[1], modulus32[9],  k, r[9]);
         umaal96(output[8], carry[0], carry[1], modulus32[10], k, r[10]);
         umaal96(output[9], carry[0], carry[1], modulus32[11], k, r[11]);
-        add32x2(&output[10], &r[12], carry, altcarry);
+        add_2_2_1(&output[10], &r[12] , carry, altcarry[0]);
     }
 }
 
-extern "C" void c_mul(uint64_t* output, const uint64_t* left, const uint64_t* right) {
+extern "C" void c_mul(uint64_t* restrict output, const uint64_t* restrict left, const uint64_t* restrict right) {
     mul_hybrid((uint32_t*)output, left, (const uint32_t*)right);
 }
 
-extern "C" void c_montgomry(uint64_t* output, uint64_t* tmp) {
+extern "C" void c_montgomry(uint64_t* restrict output, uint64_t* restrict tmp) {
     montgomery_reduce((uint32_t*)output, (uint32_t*)tmp);
 }
 
-extern "C" void c_muladdadd(uint64_t* out,
+extern "C" void c_muladdadd(uint64_t* restrict out,
                             uint64_t a,
                             uint64_t b,
                             uint64_t c,

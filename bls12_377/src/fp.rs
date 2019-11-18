@@ -626,8 +626,8 @@ impl Fp {
     ) -> Self {
         unsafe {
             let mut res: [u64; 6] = [0; 6];
-            let tmp: [u64; 12] = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11];
-            c_montgomry(res.as_mut_ptr(), tmp.as_ptr());
+            let mut tmp: [u64; 12] = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11];
+            c_montgomry(res.as_mut_ptr(), tmp.as_mut_ptr());
             Fp(res).subtract_p()
         }
     }
@@ -638,7 +638,7 @@ impl Fp {
             let mut res: [u64; 6] = [0; 6];
             let mut tmp: [u64; 12] = [0; 12];
             c_mul(tmp.as_mut_ptr(), self.0.as_ptr(), rhs.0.as_ptr());
-            c_montgomry(res.as_mut_ptr(), tmp.as_ptr());
+            c_montgomry(res.as_mut_ptr(), tmp.as_mut_ptr());
             Fp(res).subtract_p()
         }
     }
