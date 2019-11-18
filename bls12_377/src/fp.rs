@@ -1,5 +1,6 @@
 //! This module provides an implementation of the BLS12-377 base field `GF(p)` where `p = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177`
 
+use core::mem;
 use core::fmt;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -625,7 +626,7 @@ impl Fp {
         t11: u64,
     ) -> Self {
         unsafe {
-            let mut res: [u64; 6] = [0; 6];
+            let mut res: [u64; 6] = mem::uninitialized();
             let mut tmp: [u64; 12] = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11];
             c_montgomry(res.as_mut_ptr(), tmp.as_mut_ptr());
             Fp(res).subtract_p()
@@ -635,8 +636,8 @@ impl Fp {
     //#[inline(always)]
     pub fn mul(&self, rhs: &Fp) -> Fp {
         unsafe {
-            let mut res: [u64; 6] = [0; 6];
-            let mut tmp: [u64; 12] = [0; 12];
+            let mut res: [u64; 6] = mem::uninitialized();
+            let mut tmp: [u64; 12] = mem::uninitialized();
             c_mul(tmp.as_mut_ptr(), self.0.as_ptr(), rhs.0.as_ptr());
             c_montgomry(res.as_mut_ptr(), tmp.as_mut_ptr());
             Fp(res).subtract_p()

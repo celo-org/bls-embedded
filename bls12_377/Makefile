@@ -3,7 +3,7 @@
 
 libfpc.a: src/fpc.cpp
 	rm -f libfpc.a fpc.o
-	gcc -march=native -O2 -funroll-all-loops -c src/fpc.cpp
+	gcc -march=native -O2 -fno-exceptions -funroll-all-loops -c src/fpc.cpp
 	ar -rsc libfpc.a fpc.o
 	rm -f fpc.o
 	touch src/fp.rs
