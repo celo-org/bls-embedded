@@ -435,43 +435,140 @@ void mul64x6(uint64_t* output, const uint64_t* left, const uint64_t* right) {
 */
 
 inline
-void mul_hybrid(uint32_t* __restrict__ output, const uint64_t* __restrict__ left, const uint32_t* __restrict__ right) {
-    uint32_t carry0;
-    uint32_t carry1;
-    uint64_t val = left[0];
+void mul_hybrid(uint32_t* restrict output, const uint64_t* restrict left, const uint32_t* restrict right) {
+    register uint32_t carry0;
+    register uint32_t carry1;
+    uint32_t o0;
+    uint32_t o1;
+    uint32_t o2;
+    uint32_t o3;
+    uint32_t o4;
+    uint32_t o5;
+    uint32_t o6;
+    uint32_t o7;
+    uint32_t o8;
+    uint32_t o9;
+    uint32_t o10;
+    uint32_t o11;
 
-    umull96(output[0],  carry0, carry1, right[0],  val);
-    umaal96(output[1],  carry0, carry1, right[1],  val, 0);
-    umaal96(output[2],  carry0, carry1, right[2],  val, 0);
-    umaal96(output[3],  carry0, carry1, right[3],  val, 0);
-    umaal96(output[4],  carry0, carry1, right[4],  val, 0);
-    umaal96(output[5],  carry0, carry1, right[5],  val, 0);
-    umaal96(output[6],  carry0, carry1, right[6],  val, 0);
-    umaal96(output[7],  carry0, carry1, right[7],  val, 0);
-    umaal96(output[8],  carry0, carry1, right[8],  val, 0);
-    umaal96(output[9],  carry0, carry1, right[9],  val, 0);
-    umaal96(output[10], carry0, carry1, right[10], val, 0);
-    umaal96(output[11], carry0, carry1, right[11], val, 0);
-    output[12] = carry0;
-    output[13] = carry1;
+    register uint64_t val = left[0];
+    umull96(o0,  carry0, carry1, right[0],  val);
+    output[0] = o0;
+    umaal96(o1,  carry0, carry1, right[1],  val, 0);
+    output[1] = o1;
+    umaal96(o2,  carry0, carry1, right[2],  val, 0);
+    umaal96(o3,  carry0, carry1, right[3],  val, 0);
+    umaal96(o4,  carry0, carry1, right[4],  val, 0);
+    umaal96(o5,  carry0, carry1, right[5],  val, 0);
+    umaal96(o6,  carry0, carry1, right[6],  val, 0);
+    umaal96(o7,  carry0, carry1, right[7],  val, 0);
+    umaal96(o8,  carry0, carry1, right[8],  val, 0);
+    umaal96(o9,  carry0, carry1, right[9],  val, 0);
+    umaal96(o10, carry0, carry1, right[10], val, 0);
+    umaal96(o11, carry0, carry1, right[11], val, 0);
+    uint32_t o12 = carry0;
+    uint32_t o13 = carry1;
 
-    for(int i=2; i<12; i+=2) {
-        val = left[i/2];
-        umlal96(output[i+0],  carry0, carry1, right[0],  val);
-        umaal96(output[i+1],  carry0, carry1, right[1],  val);
-        umaal96(output[i+2],  carry0, carry1, right[2],  val);
-        umaal96(output[i+3],  carry0, carry1, right[3],  val);
-        umaal96(output[i+4],  carry0, carry1, right[4],  val);
-        umaal96(output[i+5],  carry0, carry1, right[5],  val);
-        umaal96(output[i+6],  carry0, carry1, right[6],  val);
-        umaal96(output[i+7],  carry0, carry1, right[7],  val);
-        umaal96(output[i+8],  carry0, carry1, right[8],  val);
-        umaal96(output[i+9],  carry0, carry1, right[9],  val);
-        umaal96(output[i+10], carry0, carry1, right[10], val);
-        umaal96(output[i+11], carry0, carry1, right[11], val);
-        output[i+12] = carry0;
-        output[i+13] = carry1;
-    }
+    val = left[1];
+    umlal96(o2,  carry0, carry1, right[0],  val);
+    output[2] = o2;
+    umaal96(o3,  carry0, carry1, right[1],  val);
+    output[3] = o3;
+    umaal96(o4,  carry0, carry1, right[2],  val);
+    umaal96(o5,  carry0, carry1, right[3],  val);
+    umaal96(o6,  carry0, carry1, right[4],  val);
+    umaal96(o7,  carry0, carry1, right[5],  val);
+    umaal96(o8,  carry0, carry1, right[6],  val);
+    umaal96(o9,  carry0, carry1, right[7],  val);
+    umaal96(o10, carry0, carry1, right[8],  val);
+    umaal96(o11, carry0, carry1, right[9],  val);
+    umaal96(o12, carry0, carry1, right[10], val);
+    umaal96(o13, carry0, carry1, right[11], val);
+    uint32_t o14 = carry0;
+    uint32_t o15 = carry1;
+
+    val = left[2];
+    umlal96(o4,  carry0, carry1, right[0],  val);
+    output[4] = o4;
+    umaal96(o5,  carry0, carry1, right[1],  val);
+    output[5] = o5;
+    umaal96(o6,  carry0, carry1, right[2],  val);
+    umaal96(o7,  carry0, carry1, right[3],  val);
+    umaal96(o8,  carry0, carry1, right[4],  val);
+    umaal96(o9,  carry0, carry1, right[5],  val);
+    umaal96(o10, carry0, carry1, right[6],  val);
+    umaal96(o11, carry0, carry1, right[7],  val);
+    umaal96(o12, carry0, carry1, right[8],  val);
+    umaal96(o13, carry0, carry1, right[9],  val);
+    umaal96(o14, carry0, carry1, right[10], val);
+    umaal96(o15, carry0, carry1, right[11], val);
+    uint32_t o16 = carry0;
+    uint32_t o17 = carry1;
+
+
+    val = left[3];
+    umlal96(o6,  carry0, carry1, right[0],  val);
+    output[6] = o6;
+    umaal96(o7,  carry0, carry1, right[1],  val);
+    output[7] = o7;
+    umaal96(o8,  carry0, carry1, right[2],  val);
+    umaal96(o9,  carry0, carry1, right[3],  val);
+    umaal96(o10, carry0, carry1, right[4],  val);
+    umaal96(o11, carry0, carry1, right[5],  val);
+    umaal96(o12, carry0, carry1, right[6],  val);
+    umaal96(o13, carry0, carry1, right[7],  val);
+    umaal96(o14, carry0, carry1, right[8],  val);
+    umaal96(o15, carry0, carry1, right[9],  val);
+    umaal96(o16, carry0, carry1, right[10], val);
+    umaal96(o17, carry0, carry1, right[11], val);
+    uint32_t o18 = carry0;
+    uint32_t o19 = carry1;
+
+    val = left[4];
+    umlal96(o8,  carry0, carry1, right[0],  val);
+    output[8] = o8;
+    umaal96(o9,  carry0, carry1, right[1],  val);
+    output[9] = o9;
+    umaal96(o10, carry0, carry1, right[2],  val);
+    umaal96(o11, carry0, carry1, right[3],  val);
+    umaal96(o12, carry0, carry1, right[4],  val);
+    umaal96(o13, carry0, carry1, right[5],  val);
+    umaal96(o14, carry0, carry1, right[6],  val);
+    umaal96(o15, carry0, carry1, right[7],  val);
+    umaal96(o16, carry0, carry1, right[8],  val);
+    umaal96(o17, carry0, carry1, right[9],  val);
+    umaal96(o18, carry0, carry1, right[10], val);
+    umaal96(o19, carry0, carry1, right[11], val);
+    uint32_t o20 = carry0;
+    uint32_t o21 = carry1;
+
+    val = left[5];
+    umlal96(o10, carry0, carry1, right[0],  val);
+    output[10] = o10;
+    umaal96(o11, carry0, carry1, right[1],  val);
+    output[11] = o11;
+    umaal96(o12, carry0, carry1, right[2],  val);
+    output[12] = o12;
+    umaal96(o13, carry0, carry1, right[3],  val);
+    output[13] = o13;
+    umaal96(o14, carry0, carry1, right[4],  val);
+    output[14] = o14;
+    umaal96(o15, carry0, carry1, right[5],  val);
+    output[15] = o15;
+    umaal96(o16, carry0, carry1, right[6],  val);
+    output[16] = o16;
+    umaal96(o17, carry0, carry1, right[7],  val);
+    output[17] = o17;
+    umaal96(o18, carry0, carry1, right[8],  val);
+    output[18] = o18;
+    umaal96(o19, carry0, carry1, right[9],  val);
+    output[19] = o19;
+    umaal96(o20, carry0, carry1, right[10], val);
+    output[20] = o20;
+    umaal96(o21, carry0, carry1, right[11], val);
+    output[21] = o21;
+    output[22] = carry0;
+    output[23] = carry1;
 }
 
 void montgomery_reduce(uint32_t* restrict output, uint32_t* t) {
@@ -484,12 +581,12 @@ void montgomery_reduce(uint32_t* restrict output, uint32_t* t) {
          0x6ca1493b, 0xc63b05c0,
          0x17c510ea, 0x01ae3a46,
     };
-    uint32_t altcarry = 0;
+    register uint32_t altcarry = 0;
 
     for(int i=0; i<5; ++i){
         uint32_t* r = t + 2*i;
-        uint64_t k = *(uint64_t*)r * inv;
-        uint32_t carry[2] = {0};
+        register uint64_t k = *(uint64_t*)r * inv;
+        register uint32_t carry[2] = {0};
         uint32_t _;
 
         umaal96(_,     carry[0], carry[1], modulus32[0],  k, r[0]);
