@@ -62,7 +62,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         c.bench_function(&format!("{} mixed addition", name), move |b| {
             b.iter(|| black_box(a).add_mixed(&a_affine))
         });
-        c.bench_function(&format!("{} scalar multiplication", name), move |b| {
+        c.bench_function(&format!("{}_scalar_multiplication", name), move |b| {
             b.iter(|| black_box(a) * black_box(s))
         });
         c.bench_function(&format!("{} batch to affine n={}", name, N), move |b| {
@@ -86,7 +86,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         c.bench_function(&format!("{} check equality", name), move |b| {
             b.iter(|| black_box(a) == black_box(a))
         });
-        c.bench_function(&format!("{} scalar multiplication", name), move |b| {
+        c.bench_function(&format!("{}_scalar_multiplication", name), move |b| {
             b.iter(|| black_box(a) * black_box(s))
         });
         c.bench_function(&format!("{} subgroup check", name), move |b| {
