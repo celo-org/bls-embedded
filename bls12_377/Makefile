@@ -19,5 +19,10 @@ bench: libfpc.a
 bench2: libfpc.a
 	RUSTFLAGS="-L `pwd`" cargo bench -- G2Projective_s
 
+bench1: libfpc.a
+	RUSTFLAGS="-L `pwd`" cargo bench -- G1Projective_s
+
+
+
 rsync:
 	rsync -ar --progress --exclude=target --exclude='*.a' . tinkerboard:bls-embedded/bls12_377

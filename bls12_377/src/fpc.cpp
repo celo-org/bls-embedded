@@ -127,32 +127,10 @@ void umull96(uint32_t& restrict o0,
              uint32_t& restrict o2,
              uint32_t a,
              uint64_t b) {
-// multiply a32 * b64 and store in [o0, o1, o2]
-#if __arm__
-    const uint32_t b0 = (uint32_t) b;
-    asm (
-        "UMULL %[o0], %[o1], %[a0], %[b0]"
-        : [o0] "+r" (o0),
-          [o1] "+r" (o1)
-        : [a0] "r" (a),
-          [b0] "r" (b0)
-    );
-
-    o2=0;
-    const uint32_t b1 = (uint32_t) (b>>32);
-    asm (
-        "UMAAL %[o1], %[o2], %[a0], %[b1]"
-        : [o1] "+r" (o1),
-          [o2] "+r" (o2)
-        : [a0] "r" (a),
-          [b1] "r" (b1)
-    );
-#else
     o0 = 0;
     o1 = 0;
     o2 = 0;
     umaal96(o0, o1, o2, a, b);
-#endif
 }
 
 
@@ -162,33 +140,9 @@ void umlal96(uint32_t& restrict o0,
              uint32_t& restrict o2,
              uint32_t a,
              uint64_t b) {
-// multiply a32 * b64 + o0 and store in [o0, o1, o2]
-#if __arm__
-    const uint32_t b0 = (uint32_t) b;
-    
-    o1 = 0;
-    asm (
-        "UMAAL %[o0], %[o1], %[a0], %[b0]"
-        : [o0] "+r" (o0),
-          [o1] "+r" (o1)
-        : [a0] "r" (a),
-          [b0] "r" (b0)
-    );
-
-    o2 = 0;
-    const uint32_t b1 = (uint32_t) (b>>32);
-    asm (
-        "UMAAL %[o1], %[o2], %[a0], %[b1]"
-        : [o1] "+r" (o1),
-          [o2] "+r" (o2)
-        : [a0] "r" (a),
-          [b1] "r" (b1)
-    );
-#else
     o1 = 0;
     o2 = 0;
     umaal96(o0, o1, o2, a, b);
-#endif
 }
 
 /*
