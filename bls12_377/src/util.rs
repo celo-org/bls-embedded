@@ -55,6 +55,7 @@ pub fn os_multm(result: &mut [u8], left: &mut [u8], right: &mut [u8], modulus: &
     ()
 }*/
 
+/*
 extern {
     fn c_muladdadd(
         output: *mut u64,
@@ -63,7 +64,7 @@ extern {
         c: u64,
         d: u64
     ) -> ();
-}
+}*/
 
 
 

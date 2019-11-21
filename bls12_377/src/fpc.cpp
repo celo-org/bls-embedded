@@ -7,6 +7,7 @@
 // #define restrict __restrict__
 #define restrict
 
+//#define HAVE_UMAAL
 
 
 /*
@@ -50,22 +51,40 @@ void umaal96(uint32_t& restrict o0,
 // o1,o2 is the 64 bit carry
 #if __arm__
     const uint32_t b0 = (uint32_t) b;
-    asm (
-        "UMAAL %[o0], %[o1], %[a0], %[b0]"
-        : [o0] "+r" (o0),
-          [o1] "+r" (o1)
-        : [a0] "r" (a),
-          [b0] "r" (b0)
-    );
-
     const uint32_t b1 = (uint32_t) (b>>32);
-    asm (
-        "UMAAL %[o1], %[o2], %[a0], %[b1]"
-        : [o1] "+r" (o1),
-          [o2] "+r" (o2)
-        : [a0] "r" (a),
-          [b1] "r" (b1)
-    );
+    #ifdef HAVE_UMAAL
+        asm (
+            "UMAAL %[o0], %[o1], %[a0], %[b0]"
+            : [o0] "+r" (o0),
+            [o1] "+r" (o1)
+            : [a0] "r" (a),
+            [b0] "r" (b0)
+        );
+
+        asm (
+            "UMAAL %[o1], %[o2], %[a0], %[b1]"
+            : [o1] "+r" (o1),
+            [o2] "+r" (o2)
+            : [a0] "r" (a),
+            [b1] "r" (b1)
+        );
+    #else
+        asm (
+            "ADDS %[o0], %[o1]\n\t"
+            "MOV  %[o1], #0\n\t"
+            "UMLAL %[o0], %[o1], %[a0], %[b0]\n\t"
+            "ADCS %[o1], %[o2]\n\t"
+            "MOV  %[o2], #0\n\t"
+            "ADC  %[o2], #0\n\t"
+            "UMLAL %[o1], %[o2], %[a0], %[b1]\n\t"
+            : [o0] "+r" (o0),
+              [o1] "+r" (o1),
+              [o2] "+r" (o2)
+            : [a0] "r" (a),
+              [b0] "r" (b0),
+              [b1] "r" (b1)
+        );
+    #endif
 #else
     uint128_t ret = ((uint128_t)a * (uint128_t)b) + (uint128_t)o0 + (uint128_t)o1 +  + (((uint128_t)o2)<<32);
     o0 = (uint32_t)ret;
