@@ -26,5 +26,5 @@ gen_header = []
 panic= "abort"
 
 [profile.release]
-opt-level = "3"
+opt-level = 3
 panic= "abort"
