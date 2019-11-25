@@ -1,5 +1,5 @@
-//! This module provides an implementation of the BLS12-381 scalar field $\mathbb{F}_q$
-//! where `q = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001`
+//! This module provides an implementation of the BLS12-377 scalar field $\mathbb{F}_q$
+//! where `q = 8444461749428370424248824938781546531375899335154063827935233455917409239041`
 
 use core::fmt;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -61,8 +61,7 @@ impl ConditionallySelectable for Scalar {
 }
 
 /// Constant representing the modulus
-/// TODO: Put actual modulus value
-/// q =! 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+/// q = 8444461749428370424248824938781546531375899335154063827935233455917409239041
 const fn modulus() -> Scalar {
     Scalar([
         725501752471715841u64,
@@ -448,8 +447,6 @@ impl Scalar {
         let (r5, carry) = mac(r5, k, modulus.0[2], carry);
         let (r6, carry) = mac(r6, k, modulus.0[3], carry);
         let (r7, _) = adc(r7, carry2, carry);
-//        Scalar::R2()
-//        Scalar([r4, r5, r6, r7])
         // Result may be within MODULUS of the correct value
         (&Scalar([r4, r5, r6, r7])).sub(&modulus)
     }
@@ -758,19 +755,6 @@ fn test_from_bytes_wide_negative_one() {
     );
 }
 
-/*#[test]
-fn test_from_bytes_wide_maximum() {
-    assert_eq!(
-        Scalar([
-            0xc62c1805439b73b1,
-            0xc2b9551e8ced218e,
-            0xda44ec81daf9a422,
-            0x5605aa601c162e79
-        ]),
-        Scalar::from_bytes_wide(&[0xff; 64])
-    );
-}*/
-
 #[test]
 fn test_zero() {
     assert_eq!(Scalar::zero(), -&Scalar::zero());
@@ -897,16 +881,6 @@ fn test_squaring() {
 
 #[test]
 fn test_from_raw() {
-    /*assert_eq!(
-        Scalar::from_raw([
-            0xD1C7FFFFFFFFFF2,
-            0x257F50F6FFFFFF27,
-            0x6D81575512C0FEE7,
-            0xD4BDA322BBB9A9D1,
-        ]),
-        Scalar::from_raw([0xffffffffffffffff; 4])
-    );*/
-
     assert_eq!(Scalar::from_raw(modulus().0), Scalar::zero());
 
     assert_eq!(Scalar::from_raw([1, 0, 0, 0]), r());

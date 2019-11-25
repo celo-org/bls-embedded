@@ -213,8 +213,7 @@ impl G2Affine {
         }
     }
 
-    /// Returns a fixed generator of the group. See [`notes::design`](notes/design/index.html#fixed-generators)
-    /// for how this generator is chosen.
+    /// Returns a fixed generator of the group. 
     pub fn generator() -> G2Affine {
         G2Affine {
             x: g2_generator_x(), 
@@ -223,8 +222,7 @@ impl G2Affine {
         }
     }
 
-    /// Serializes this element into compressed form. See [`notes::serialization`](crate::notes::serialization)
-    /// for details about how group elements are serialized.
+    /// Serializes this element into compressed form.
     // TODO: Add test coverage for point compression
     pub fn to_compressed(&self) -> [u8; 96] {
         // Strictly speaking, self.x is zero already when self.infinity is true, but
@@ -254,8 +252,7 @@ impl G2Affine {
         res
     }
 
-    /// Serializes this element into uncompressed form. See [`notes::serialization`](crate::notes::serialization)
-    /// for details about how group elements are serialized.
+    /// Serializes this element into uncompressed form.
     //  TODO: Test coverage for compression
      
     pub fn to_uncompressed(&self) -> [u8; 192] {
@@ -275,8 +272,7 @@ impl G2Affine {
         res
     }
 
-    /// Attempts to deserialize an uncompressed element. See [`notes::serialization`](crate::notes::serialization)
-    /// for details about how group elements are serialized.
+    /// Attempts to deserialize an uncompressed element. 
     
     pub fn from_uncompressed(bytes: &[u8; 192]) -> CtOption<Self> {
         Self::from_uncompressed_unchecked(bytes)
@@ -364,9 +360,7 @@ impl G2Affine {
         })
     }
 
-    /// Attempts to deserialize a compressed element. See [`notes::serialization`](crate::notes::serialization)
-    /// for details about how group elements are serialized.
-     
+    /// Attempts to deserialize a compressed element.
     pub fn from_compressed_vartime(bytes: &[u8; 96]) -> Option<Self> {
         // We already know the point is on the curve because this is established
         // by the y-coordinate recovery procedure in from_compressed_unchecked().
@@ -620,8 +614,7 @@ impl G2Projective {
         }
     }
 
-    /// Returns a fixed generator of the group. See [`notes::design`](notes/design/index.html#fixed-generators)
-    /// for how this generator is chosen.
+    /// Returns a fixed generator of the group. 
     pub fn generator() -> G2Projective {
         G2Projective {
             x: g2_generator_x(),  

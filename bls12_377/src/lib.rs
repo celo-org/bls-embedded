@@ -1,6 +1,6 @@
-//! # `bls12_381`
+//! # `bls12_377`
 //!
-//! This crate provides an implementation of the BLS12-381 pairing-friendly elliptic
+//! This crate provides an implementation of the BLS12-377 pairing-friendly elliptic
 //! curve construction.
 //!
 //! * **This implementation has not been reviewed or audited. Use at your own risk.**
@@ -23,18 +23,8 @@
 #[macro_use]
 extern crate std;
 
-#[cfg(test)]
-#[cfg(feature = "groups")]
-mod tests;
-
 #[macro_use]
 pub mod util;
-
-/// Notes about how the BLS12-381 elliptic curve is designed, specified
-/// and implemented by this library.
-pub mod notes {
-    pub mod design;
-}
 
 mod scalar;
 
