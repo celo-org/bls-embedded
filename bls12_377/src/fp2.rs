@@ -269,6 +269,7 @@ impl Fp2 {
 
     /// Algorithm 8, https://eprint.iacr.org/2012/685.pdf
     /// TODO: Investigate switching to algo 10
+    // TODO: Add sqrt test coverage
     pub fn sqrt_vartime(&self) -> Option<Self> {
         if self.c1 == Fp::zero() {
             return self.c0.sqrt_vartime().map(|c0| Self { c0, c1: Fp::zero() } )
@@ -694,107 +695,6 @@ fn test_negation() {
     assert_eq!(-a, b);
 }
 
-
-#[test]
-fn test_sqrt_vartime() {
-    /*let a = Fp2 {
-        c0: Fp::from_raw_unchecked([
-            0x2beed14627d7f9e9,
-            0xb6617e06660e5dce,
-            0x6c4cc7c2f91d42c,
-            0x996dc8474b7a63cc,
-            0xebaebc4c820d574e,
-            0x18865e12d93fd845,
-        ]),
-        c1: Fp::from_raw_unchecked([
-            0x7d828664baf4f566,
-            0xd17e663996ec7339,
-            0x679ead55cb4078d0,
-            0xfe3b2260e001ec28,
-            0x305993d043d91b68,
-            0x626f03c0489b72d,
-        ]),
-    };*/
-    let a = Fp2 {
-        c0: Fp::from_raw_unchecked([
-            0xa1e09175a4d2c1fe,
-            0x8b33acfc204eff12,
-            0xe24415a11b456e42,
-            0x61d996b1b6ee1936,
-            0x1164dbe8667c853c,
-            0x788557acc7d9c79,
-        ]),
-        c1: Fp::from_raw_unchecked([
-            0xda6a87cc6f48fa36,
-            0xfc7b488277c1903,
-            0x9445ac4adc448187,
-            0x2616d5bc9099209,
-            0xdbed46772db58d48,
-            0x11b94d5076c7b7b1,
-        ]),
-    };
-    
-
-    //assert_eq!(a.sqrt_vartime().unwrap().square(), a);
-
-    // b = 5, which is a generator of the p - 1 order
-    // multiplicative subgroup
-   /* let b = Fp2 {
-        c0: Fp::from_raw_unchecked([
-            0x6631000000105545,
-            0x211400400eec000d,
-            0x3fa7af30c820e316,
-            0xc52a8b8d6387695d,
-            0x9fb4e61d1e83eac5,
-            0x5cb922afe84dc7,
-        ]),
-        c1: Fp::zero(),
-    };
-
-    //assert_eq!(b.sqrt_vartime().unwrap().square(), b);
-
-    // c = 25, which is a generator of the (p - 1) / 2 order
-    // multiplicative subgroup
-    let c = Fp2 {
-        c0: Fp::from_raw_unchecked([
-            0x44f600000051ffae,
-            0x86b8014199480043,
-            0xd7159952f1f3794a,
-            0x755d6e3dfe1ffc12,
-            0xd36cd6db5547e905,
-            0x2f8c8ecbf1867bb,
-        ]),
-        c1: Fp::zero(),
-    };*/
-
-    //assert_eq!(c.sqrt_vartime().unwrap().square(), c);
-
-    // 2155129644831861015726826462986972654175647013268275306775721078997042729172900466542651176384766902407257452753362*u + 2796889544896299244102912275102369318775038861758288697415827248356648685135290329705805931514906495247464901062529
-    // is nonsquare.
-/*    assert!(bool::from(
-        Fp2 {
-            c0: Fp::from_raw_unchecked([
-                0xc5fa1bc8fd00d7f6,
-                0x3830ca454606003b,
-                0x2b287f1104b102da,
-                0xa7fb30f28230f23e,
-                0x339cdb9ee953dbf0,
-                0xd78ec51d989fc57
-            ]),
-            c1: Fp::from_raw_unchecked([
-                0x27ec4898cf87f613,
-                0x9de1394e1abb05a5,
-                0x947f85dc170fc14,
-                0x586fbc696b6114b7,
-                0x2b3475a4077d7169,
-                0x13e1c895cc4b6c22
-            ])
-        }
-        .sqrt_vartime()
-        .is_none()
-    ));*/
-}
-
 #[test]
 fn test_inversion() {
     let a = Fp2 {
@@ -837,8 +737,7 @@ fn test_inversion() {
 
     assert_eq!(a.invert().unwrap(), b);
 
-    //TODO: Fix invert error checking
-    //assert!(Fp2::zero().invert().is_none().unwrap_u8() == 1);
+    assert!(Fp2::zero().invert().is_none().unwrap_u8() == 1);
 }
 
 #[test]

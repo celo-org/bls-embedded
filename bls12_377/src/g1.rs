@@ -1,4 +1,4 @@
-//! This module provides an implementation of the $\mathbb{G}_1$ group of BLS12-381.
+//! This module provides an implementation of the $\mathbb{G}_1$ group of BLS12-377.
 
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -191,6 +191,7 @@ impl G1Affine {
 
     /// Serializes this element into compressed form. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
+    //  TODO: Test coverage for compression
     pub fn to_compressed(&self) -> [u8; 48] {
         // Strictly speaking, self.x is zero already when self.infinity is true, but
         // to guard against implementation mistakes we do not assume this.
@@ -216,6 +217,7 @@ impl G1Affine {
 
     /// Serializes this element into uncompressed form. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
+    //  TODO: Test coverage for compression
     pub fn to_uncompressed(&self) -> [u8; 96] {
         let mut res = [0; 96];
 
@@ -567,6 +569,7 @@ impl G1Projective {
     }
 
     /// Adds this point to another point.
+    /// TODO: Add test coverage for degenerate addition
     pub fn add(&self, rhs: &G1Projective) -> G1Projective {
         // This Jacobian point addition technique is based on the implementation in libsecp256k1,
         // which assumes that rhs has z=1. Let's address the case of zero z-coordinates generally.
@@ -636,6 +639,7 @@ impl G1Projective {
     }
 
     /// Adds this point to another point in the affine model.
+    //  TODO: Test coverage for degenerate addition
     pub fn add_mixed(&self, rhs: &G1Affine) -> G1Projective {
         // This Jacobian point addition technique is based on the implementation in libsecp256k1,
         // which assumes that rhs has z=1. Let's address the case of zero z-coordinates generally.
@@ -1039,58 +1043,6 @@ fn test_projective_addition() {
         assert!(bool::from(d.is_on_curve()));
         assert_eq!(c, d);
     }
-
-    // Degenerate case
-    // TODO: Adapt for bls-377
-    /*{
-        let beta = Fp::from_raw_unchecked([
-            0xcd03c9e48671f071,
-            0x5dab22461fcda5d2,
-            0x587042afd3851b95,
-            0x8eb60ebe01bacb9e,
-            0x3f97d6e83d050d2,
-            0x18f0206554638741,
-        ]);
-        let beta = beta.square();
-        /*let beta4 = beta.square();
-        let beta6 = beta * beta4;
-        assert_eq!(beta6, Fp::one());*/
-        
-        let a = G1Projective::generator().double().double();
-        let b = G1Projective {
-            x: a.x * beta,
-            y: -a.y,
-            z: a.z,
-        };
-        assert!(bool::from(a.is_on_curve()));
-        assert!(bool::from(b.is_on_curve()));
-
-        let c = a + b;
-        assert_eq!(
-            G1Affine::from(c),
-            G1Affine::from(G1Projective {
-                x: Fp::from_raw_unchecked([
-                    0x29e1e987ef68f2d0,
-                    0xc5f3ec531db03233,
-                    0xacd6c4b6ca19730f,
-                    0x18ad9e827bc2bab7,
-                    0x46e3b2c5785cc7a9,
-                    0x7e571d42d22ddd6
-                ]),
-                y: Fp::from_raw_unchecked([
-                    0x94d117a7e5a539e7,
-                    0x8e17ef673d4b5d22,
-                    0x9d746aaf508a33ea,
-                    0x8c6d883d2516c9a2,
-                    0xbc3b8d5fb0447f7,
-                    0x7bfa4c7210f4f44
-                ]),
-                z: Fp::one()
-            })
-        );
-        assert!(!bool::from(c.is_identity()));
-        assert!(bool::from(c.is_on_curve()));
-    }*/
 }
 
 #[test]
@@ -1165,55 +1117,6 @@ fn test_mixed_addition() {
         assert!(bool::from(d.is_on_curve()));
         assert_eq!(c, d);
     }
-
-    // Degenerate case
-    // TODO: Adapt for bls-377
-   /* {
-        let beta = Fp::from_raw_unchecked([
-            0xcd03c9e48671f071,
-            0x5dab22461fcda5d2,
-            0x587042afd3851b95,
-            0x8eb60ebe01bacb9e,
-            0x3f97d6e83d050d2,
-            0x18f0206554638741,
-        ]);
-        let beta = beta.square();
-        let a = G1Projective::generator().double().double();
-        let b = G1Projective {
-            x: a.x * beta,
-            y: -a.y,
-            z: a.z,
-        };
-        let a = G1Affine::from(a);
-        assert!(bool::from(a.is_on_curve()));
-        assert!(bool::from(b.is_on_curve()));
-
-        let c = a + b;
-        assert_eq!(
-            G1Affine::from(c),
-            G1Affine::from(G1Projective {
-                x: Fp::from_raw_unchecked([
-                    0x29e1e987ef68f2d0,
-                    0xc5f3ec531db03233,
-                    0xacd6c4b6ca19730f,
-                    0x18ad9e827bc2bab7,
-                    0x46e3b2c5785cc7a9,
-                    0x7e571d42d22ddd6
-                ]),
-                y: Fp::from_raw_unchecked([
-                    0x94d117a7e5a539e7,
-                    0x8e17ef673d4b5d22,
-                    0x9d746aaf508a33ea,
-                    0x8c6d883d2516c9a2,
-                    0xbc3b8d5fb0447f7,
-                    0x7bfa4c7210f4f44
-                ]),
-                z: Fp::one()
-            })
-        );
-        assert!(!bool::from(c.is_identity()));
-        assert!(bool::from(c.is_on_curve()));
-    }*/
 }
 
 #[test]

@@ -633,7 +633,6 @@ impl Fp {
         }
     }
 
-    //#[inline(always)]
     pub fn mul(&self, rhs: &Fp) -> Fp {
         unsafe {
             let mut res: [u64; 6] = mem::uninitialized();

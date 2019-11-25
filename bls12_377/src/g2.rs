@@ -1,4 +1,4 @@
-//! This module provides an implementation of the $\mathbb{G}_2$ group of BLS12-381.
+//! This module provides an implementation of the $\mathbb{G}_2$ group of BLS12-377
 
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -225,7 +225,7 @@ impl G2Affine {
 
     /// Serializes this element into compressed form. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
-    
+    // TODO: Add test coverage for point compression
     pub fn to_compressed(&self) -> [u8; 96] {
         // Strictly speaking, self.x is zero already when self.infinity is true, but
         // to guard against implementation mistakes we do not assume this.
@@ -256,6 +256,7 @@ impl G2Affine {
 
     /// Serializes this element into uncompressed form. See [`notes::serialization`](crate::notes::serialization)
     /// for details about how group elements are serialized.
+    //  TODO: Test coverage for compression
      
     pub fn to_uncompressed(&self) -> [u8; 192] {
         let mut res = [0; 192];
@@ -664,6 +665,7 @@ impl G2Projective {
     }
 
     /// Adds this point to another point.
+    // TODO: Test coverage for degenerate addition
     #[inline(always)]
     pub fn add(&self, rhs: &G2Projective) -> G2Projective {
         // This Jacobian point addition technique is based on the implementation in libsecp256k1,
@@ -733,10 +735,10 @@ impl G2Projective {
         };
 
         G2Projective::conditional_select(&res, &tmp, a)
-      //  G2Projective::generator()
     }
 
     /// Adds this point to another point in the affine model.
+    //  TODO: Test coverage for degenerate addition
     pub fn add_mixed(&self, rhs: &G2Affine) -> G2Projective {
         // This Jacobian point addition technique is based on the implementation in libsecp256k1,
         // which assumes that rhs has z=1. Let's address the case of zero z-coordinates generally.
@@ -822,7 +824,6 @@ impl G2Projective {
             acc = acc.double();
             acc = G2Projective::conditional_select(&acc, &(acc + self), bit);
         }
-
         acc
     }
 
@@ -1052,76 +1053,6 @@ fn test_projective_addition() {
         assert!(bool::from(d.is_on_curve()));
         assert_eq!(c, d);
     }
-
-    // Degenerate case
-   /* {
-        let beta = Fp2 {
-            c0: Fp::from_raw_unchecked([
-                0xcd03c9e48671f071,
-                0x5dab22461fcda5d2,
-                0x587042afd3851b95,
-                0x8eb60ebe01bacb9e,
-                0x3f97d6e83d050d2,
-                0x18f0206554638741,
-            ]),
-            c1: Fp::zero(),
-        };
-        let beta = beta.square();
-        let a = G2Projective::generator().double().double();
-        let b = G2Projective {
-            x: a.x * beta,
-            y: -a.y,
-            z: a.z,
-        };
-        assert!(bool::from(a.is_on_curve()));
-        assert!(bool::from(b.is_on_curve()));
-
-        let c = a + b;
-        assert_eq!(
-            G2Affine::from(c),
-            G2Affine::from(G2Projective {
-                x: Fp2 {
-                    c0: Fp::from_raw_unchecked([
-                        0x705abc799ca773d3,
-                        0xfe132292c1d4bf08,
-                        0xf37ece3e07b2b466,
-                        0x887e1c43f447e301,
-                        0x1e0970d033bc77e8,
-                        0x1985c81e20a693f2
-                    ]),
-                    c1: Fp::from_raw_unchecked([
-                        0x1d79b25db36ab924,
-                        0x23948e4d529639d3,
-                        0x471ba7fb0d006297,
-                        0x2c36d4b4465dc4c0,
-                        0x82bbc3cfec67f538,
-                        0x51d2728b67bf952
-                    ])
-                },
-                y: Fp2 {
-                    c0: Fp::from_raw_unchecked([
-                        0x41b1bbf6576c0abf,
-                        0xb6cc93713f7a0f9a,
-                        0x6b65b43e48f3f01f,
-                        0xfb7a4cfcaf81be4f,
-                        0x3e32dadc6ec22cb6,
-                        0xbb0fc49d79807e3
-                    ]),
-                    c1: Fp::from_raw_unchecked([
-                        0x7d1397788f5f2ddf,
-                        0xab2907144ff0d8e8,
-                        0x5b7573e0cdb91f92,
-                        0x4cb8932dd31daf28,
-                        0x62bbfac6db052a54,
-                        0x11f95c16d14c3bbe
-                    ])
-                },
-                z: Fp2::one()
-            })
-        );
-        assert!(!bool::from(c.is_identity()));
-        assert!(bool::from(c.is_on_curve()));
-    }*/
 }
 
 #[test]
@@ -1148,78 +1079,6 @@ fn test_mixed_addition() {
         assert!(bool::from(d.is_on_curve()));
         assert_eq!(c, d);
     }
-
-    // Degenerate case
-    // TODO: Adapt for bls-377
-   /* {
-        let beta = Fp2 {
-            c0: Fp::from_raw_unchecked([
-                0xcd03c9e48671f071,
-                0x5dab22461fcda5d2,
-                0x587042afd3851b95,
-                0x8eb60ebe01bacb9e,
-                0x3f97d6e83d050d2,
-                0x18f0206554638741,
-            ]),
-            c1: Fp::zero(),
-        };
-        let beta = beta.square();
-        let a = G2Projective::generator().double().double();
-        let b = G2Projective {
-            x: a.x * beta,
-            y: -a.y,
-            z: a.z,
-        };
-        let a = G2Affine::from(a);
-        assert!(bool::from(a.is_on_curve()));
-        assert!(bool::from(b.is_on_curve()));
-
-        let c = a + b;
-        assert_eq!(
-            G2Affine::from(c),
-            G2Affine::from(G2Projective {
-                x: Fp2 {
-                    c0: Fp::from_raw_unchecked([
-                        0x705abc799ca773d3,
-                        0xfe132292c1d4bf08,
-                        0xf37ece3e07b2b466,
-                        0x887e1c43f447e301,
-                        0x1e0970d033bc77e8,
-                        0x1985c81e20a693f2
-                    ]),
-                    c1: Fp::from_raw_unchecked([
-                        0x1d79b25db36ab924,
-                        0x23948e4d529639d3,
-                        0x471ba7fb0d006297,
-                        0x2c36d4b4465dc4c0,
-                        0x82bbc3cfec67f538,
-                        0x51d2728b67bf952
-                    ])
-                },
-                y: Fp2 {
-                    c0: Fp::from_raw_unchecked([
-                        0x41b1bbf6576c0abf,
-                        0xb6cc93713f7a0f9a,
-                        0x6b65b43e48f3f01f,
-                        0xfb7a4cfcaf81be4f,
-                        0x3e32dadc6ec22cb6,
-                        0xbb0fc49d79807e3
-                    ]),
-                    c1: Fp::from_raw_unchecked([
-                        0x7d1397788f5f2ddf,
-                        0xab2907144ff0d8e8,
-                        0x5b7573e0cdb91f92,
-                        0x4cb8932dd31daf28,
-                        0x62bbfac6db052a54,
-                        0x11f95c16d14c3bbe
-                    ])
-                },
-                z: Fp2::one()
-            })
-        );
-        assert!(!bool::from(c.is_identity()));
-        assert!(bool::from(c.is_on_curve()));
-    }*/
 }
 
 #[test]
