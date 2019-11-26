@@ -20,41 +20,41 @@ impl PrivateKey {
     }
 
     pub fn to_public(&self) -> PublicKey {
-        PublicKey::from_pk(&(G1Projective::generator() * &self.sk))
+        PublicKey::from_pk(&(G2Projective::generator() * &self.sk))
     }
 
     #[inline(always)]
-    pub fn sign(&self, message: &[u8], extra_data: &[u8], hash: &G2Projective) -> Result<Signature, ErrorCode> {
+    pub fn sign(&self, message: &[u8], extra_data: &[u8], hash: &G1Projective) -> Result<Signature, ErrorCode> {
         self.sign_message(PRF_KEY, SIG_DOMAIN, message, extra_data, hash)
     }
 
     #[inline(always)]
-    pub fn sign_message(&self, key: &[u8], domain: &[u8], message: &[u8], extra_data: &[u8], hash: &G2Projective) -> Result<Signature, ErrorCode> {
+    pub fn sign_message(&self, key: &[u8], domain: &[u8], message: &[u8], extra_data: &[u8], hash: &G1Projective) -> Result<Signature, ErrorCode> {
         Ok(Signature::from_sig(&hash.mul(&self.sk)))
     }
 }
 
 pub struct PublicKey {
-    pk: G1Projective,
+    pk: G2Projective,
 }
 
 impl PublicKey {
-    pub fn from_pk(pk: &G1Projective) -> PublicKey {
+    pub fn from_pk(pk: &G2Projective) -> PublicKey {
         PublicKey { pk: pk.clone() }
     }
 }
 
 pub struct Signature {
-    sig: G2Projective,
+    sig: G1Projective,
 }
 
 impl Signature {
     pub fn default() -> Self {
-       Self { sig: G2Projective::generator() }  
+       Self { sig: G1Projective::generator() }  
     }
 
     #[inline(always)]
-    pub fn from_sig(sig: &G2Projective) -> Signature {
+    pub fn from_sig(sig: &G1Projective) -> Signature {
         Signature { sig: sig.clone() }
     }
 }

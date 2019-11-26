@@ -8,7 +8,7 @@ pub mod bls;
 //pub mod hash;
 pub mod error;
 
-use bls12_377::{G2Projective, Scalar};
+use bls12_377::{G1Projective, G2Projective, Scalar};
 use crate::bls::keys::{PublicKey, PrivateKey, Signature};
 //use crate::error::ErrorCode;
 use subtle::CtOption;
@@ -117,7 +117,7 @@ pub extern "C" fn sign_message(
         let private_key = unsafe { PrivateKey::from_scalar(&Scalar::from_raw(*pk_array))  };
         let message = unsafe { slice::from_raw_parts(in_message, in_message_len as usize) };
         let extra_data = unsafe { slice::from_raw_parts(in_extra_data, in_extra_data_len as usize) };
-        let hash = G2Projective::generator();//unsafe { &*hash };
+        let hash = G1Projective::generator();//unsafe { &*hash };
         private_key.sign(message, extra_data, &hash);
 
         true
