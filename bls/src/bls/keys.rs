@@ -1,4 +1,4 @@
-use bls12_377::{Scalar, G1Projective, G2Projective};
+use bls12_377::{Scalar, G1Affine, G1Projective, G2Projective};
 use crate::error::ErrorCode;
 use core::ops::Mul;
 
@@ -31,6 +31,12 @@ impl PrivateKey {
     #[inline(always)]
     pub fn sign_message(&self, key: &[u8], domain: &[u8], message: &[u8], extra_data: &[u8], hash: &G1Projective) -> Result<Signature, ErrorCode> {
         Ok(Signature::from_sig(&hash.mul(&self.sk)))
+    }
+
+    #[inline(always)]
+    pub fn sign_hash(&self, hash: &[u8; 96]) -> Result<Signature, ErrorCode> {
+       let hash_elem = G1Affine::from_uncompressed(hash).unwrap(); 
+       Ok(Signature::from_sig(&hash_elem.mul(&self.sk)))
     }
 }
 

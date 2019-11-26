@@ -14,6 +14,7 @@ use crate::bls::keys::{PublicKey, PrivateKey, Signature};
 use subtle::CtOption;
 
 use core::slice;
+use core::convert::TryInto;
 
 #[cfg(not(gen_header))]
 #[panic_handler]
@@ -119,8 +120,21 @@ pub extern "C" fn sign_message(
         let extra_data = unsafe { slice::from_raw_parts(in_extra_data, in_extra_data_len as usize) };
         let hash = G1Projective::generator();//unsafe { &*hash };
         private_key.sign(message, extra_data, &hash);
-
         true
+}
+
+pub extern "C" fn sign_hash(
+    in_private_key: *mut u8,
+    in_hash: *mut u8,
+) -> bool {
+    let pk_array = in_private_key as *mut [u64; 4];
+    let pk = unsafe { &Scalar::from_raw(*pk_array) };
+    let private_key = unsafe { PrivateKey::from_scalar(&Scalar::from_raw(*pk_array)) };
+    let hash = unsafe { slice::from_raw_parts(in_hash, 96) };
+    let mut hash_arr: [u8; 96] = [0; 96];
+    hash_arr.copy_from_slice(&hash[0..96]);
+    private_key.sign_hash(&hash_arr);
+    true
 }
 
 #[no_mangle]
