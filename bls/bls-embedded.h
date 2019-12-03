@@ -9,8 +9,6 @@ typedef struct PublicKey PublicKey;
 
 typedef struct Signature Signature;
 
-typedef struct G2Projective G2Projective;
-
 bool aggregate_public_keys(const PublicKey *const *_in_public_keys,
                            int32_t _in_public_keys_len,
                            PublicKey **_out_public_key);
@@ -44,8 +42,6 @@ void destroy_signature(Signature *_signature);
 
 void free_vec(uint8_t *_bytes, int32_t _len);
 
-bool generate_hash(G2Projective **out_hash);
-
 bool generate_private_key(PrivateKey **out_private_key);
 
 bool generate_signature(Signature **out_signature);
@@ -62,6 +58,8 @@ bool serialize_public_key(const PublicKey *_in_public_key, uint8_t **_out_bytes,
 
 bool serialize_signature(const Signature *_in_signature, uint8_t **_out_bytes, int32_t *_out_len);
 
+bool sign_hash(uint64_t *in_private_key, uint8_t *in_hash);
+
 bool sign_message(uint64_t *in_private_key,
                   const uint8_t *in_message,
                   int32_t in_message_len,
@@ -70,8 +68,6 @@ bool sign_message(uint64_t *in_private_key,
                   bool should_use_composite);
 
 bool sign_pop(const PrivateKey *_in_private_key, Signature **_out_signature);
-
-void test_syscall(uint32_t exit_code);
 
 bool verify_pop(const PublicKey *_in_public_key,
                 const Signature *_in_signature,

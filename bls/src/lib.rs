@@ -65,14 +65,14 @@ pub extern "C" fn generate_signature(out_signature: *mut *mut Signature) -> bool
     true
 }
 
-#[no_mangle]
+/*#[no_mangle]
 pub extern "C" fn generate_hash(out_hash: *mut *mut G2Projective) -> bool {
     let mut hash = G2Projective::generator();
     unsafe {
         *out_hash = &mut hash;
     }
     true
-}
+}*/
 
 #[no_mangle]
 pub extern "C" fn deserialize_private_key(
@@ -123,8 +123,9 @@ pub extern "C" fn sign_message(
         true
 }
 
+#[no_mangle]
 pub extern "C" fn sign_hash(
-    in_private_key: *mut u8,
+    in_private_key: *mut u64,
     in_hash: *mut u8,
 ) -> bool {
     let pk_array = in_private_key as *mut [u64; 4];
