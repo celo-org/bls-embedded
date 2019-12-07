@@ -27,6 +27,7 @@ impl Default for G1Affine {
 }
 
 impl<'a> From<&'a G1Projective> for G1Affine {
+    #[inline(always)]
     fn from(p: &'a G1Projective) -> G1Affine {
         let zinv = p.z.invert().unwrap_or(Fp::zero());
         let zinv2 = zinv.square();
@@ -45,6 +46,7 @@ impl<'a> From<&'a G1Projective> for G1Affine {
 }
 
 impl From<G1Projective> for G1Affine {
+    #[inline(always)]
     fn from(p: G1Projective) -> G1Affine {
         G1Affine::from(&p)
     }
@@ -215,6 +217,7 @@ impl G1Affine {
 
     /// Serializes this element into uncompressed form.
     //  TODO: Test coverage for compression
+    #[inline(always)]
     pub fn to_uncompressed(&self) -> [u8; 96] {
         let mut res = [0; 96];
 

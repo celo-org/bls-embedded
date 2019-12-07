@@ -1,4 +1,4 @@
-use bls12_377::{Scalar, G1Affine, G1Projective, G2Projective};
+use bls12_377::{Scalar, G1Affine, G2Affine, G1Projective, G2Projective};
 use crate::error::ErrorCode;
 use core::ops::Mul;
 
@@ -35,7 +35,7 @@ impl PrivateKey {
 
     #[inline(always)]
     pub fn sign_hash(&self, hash: &[u8; 96]) -> Result<Signature, ErrorCode> {
-       let hash_elem = G1Affine::from_uncompressed(hash).unwrap(); 
+       let hash_elem = G1Affine::from_uncompressed_unchecked(hash).unwrap(); 
        Ok(Signature::from_sig(&hash_elem.mul(&self.sk)))
     }
 }
@@ -47,6 +47,11 @@ pub struct PublicKey {
 impl PublicKey {
     pub fn from_pk(pk: &G2Projective) -> PublicKey {
         PublicKey { pk: pk.clone() }
+    }
+
+    #[inline(always)]
+    pub fn serialize(&self) -> G2Affine/*[u8; 192]*/ {
+        G2Affine::from(&self.pk)//.to_uncompressed()
     }
 }
 
@@ -62,5 +67,10 @@ impl Signature {
     #[inline(always)]
     pub fn from_sig(sig: &G1Projective) -> Signature {
         Signature { sig: sig.clone() }
+    }
+
+    #[inline(always)]
+    pub fn serialize(&self) -> [u8; 96] {
+        G1Affine::from(self.sig).to_uncompressed()
     }
 }

@@ -322,6 +322,7 @@ impl Fp {
     /// Although this is labeled "vartime", it is only
     /// variable time with respect to the exponent. It
     /// is also not exposed in the public API.
+    #[inline(always)]
     pub fn pow_vartime(&self, by: &[u64; 6]) -> Self {
         let mut res = Self::one();
         for e in by.iter().rev() {
@@ -329,11 +330,12 @@ impl Fp {
                 res = res.square();
 
                 if ((*e >> i) & 1) == 1 {
-                    res *= self;
+                    res = res.mul(self);
                 }
             }
         }
-        res
+     //   res
+        Self::one()
     }
 
     pub fn legendre(&self) -> LegendreSymbol {
@@ -398,6 +400,7 @@ impl Fp {
     /// Computes the multiplicative inverse of this field
     /// element, returning None in the case that this element
     /// is zero.
+    #[inline(always)]
     pub fn invert(&self) -> CtOption<Self> {
         // Exponentiate by p - 2 
         let t = self.pow_vartime(&[
@@ -430,8 +433,9 @@ impl Fp {
         let r3 = (self.0[3] & borrow) | (r3 & !borrow);
         let r4 = (self.0[4] & borrow) | (r4 & !borrow);
         let r5 = (self.0[5] & borrow) | (r5 & !borrow);
-
-        Fp([r0, r1, r2, r3, r4, r5])
+//        Fp::one()
+//      Fp([r0, 0, 0, 0, 0, 0]) 
+//       Fp([r0, r1, r2, r3, r4, r5])
     }
 
     #[inline(always)]
@@ -633,14 +637,21 @@ impl Fp {
         }
     }
 
-    pub fn mul(&self, rhs: &Fp) -> Fp {
+    #[inline(always)]
+    fn mul_helper(&self, rhs: &Fp) -> [u64; 6] {
         unsafe {
             let mut res: [u64; 6] = mem::uninitialized();
             let mut tmp: [u64; 12] = mem::uninitialized();
             c_mul(tmp.as_mut_ptr(), self.0.as_ptr(), rhs.0.as_ptr());
             c_montgomry(res.as_mut_ptr(), tmp.as_mut_ptr());
-            Fp(res).subtract_p()
+            res
         }
+    }
+
+    #[inline(always)]
+    pub fn mul(&self, rhs: &Fp) -> Fp {
+        let res = self.mul_helper(&rhs);
+        Fp(res).subtract_p()
     }
 }
 

@@ -28,24 +28,26 @@ impl Default for G2Affine {
 }
 
 impl<'a> From<&'a G2Projective> for G2Affine {
+    #[inline(always)]
     fn from(p: &'a G2Projective) -> G2Affine {
-       let zinv = p.z.invert().unwrap_or(Fp2::zero());
-       let zinv2 = zinv.square();
-       let x = p.x * zinv2;
-       let zinv3 = zinv2 * zinv;
-       let y = p.y * zinv3;
+       let zinv = p.z.invert();//.unwrap_or(Fp2::zero());
+//       let zinv2 = zinv.square();
+//       let x = p.x * zinv2;
+//       let zinv3 = zinv2 * zinv;
+//       let y = p.y * zinv3;
 
         let tmp = G2Affine {
-            x,
-            y,
+          x: Fp2::zero(),//  x,
+           y: Fp2::zero(),// y,
             infinity: Choice::from(0u8),
         };
 
-        G2Affine::conditional_select(&tmp, &G2Affine::identity(), zinv.is_zero())
+        G2Affine::conditional_select(&tmp, &G2Affine::identity(), Fp2::zero().is_zero()/*zinv.is_zero()*/)
     }
 }
 
 impl From<G2Projective> for G2Affine {
+    #[inline(always)]
     fn from(p: G2Projective) -> G2Affine {
         G2Affine::from(&p)
     }
@@ -254,7 +256,7 @@ impl G2Affine {
 
     /// Serializes this element into uncompressed form.
     //  TODO: Test coverage for compression
-     
+    #[inline(always)]     
     pub fn to_uncompressed(&self) -> [u8; 192] {
         let mut res = [0; 192];
 
@@ -487,7 +489,7 @@ pub struct G2Projective {
 }
 
 impl<'a> From<&'a G2Affine> for G2Projective {
-     
+    #[inline(always)]
     fn from(p: &'a G2Affine) -> G2Projective {
         G2Projective {
             x: p.x,
@@ -498,7 +500,7 @@ impl<'a> From<&'a G2Affine> for G2Projective {
 }
 
 impl From<G2Affine> for G2Projective {
-     
+    #[inline(always)] 
     fn from(p: G2Affine) -> G2Projective {
         G2Projective::from(&p)
     }

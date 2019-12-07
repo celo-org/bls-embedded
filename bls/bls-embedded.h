@@ -46,6 +46,8 @@ bool generate_private_key(PrivateKey **out_private_key);
 
 bool generate_signature(Signature **out_signature);
 
+bool get_pubkey(uint64_t *in_private_key, uint8_t *out_public_key);
+
 bool is_valid_key(const uint8_t *in_private_key);
 
 bool private_key_to_public_key(const PrivateKey *in_private_key, PublicKey **out_public_key);
@@ -58,7 +60,7 @@ bool serialize_public_key(const PublicKey *_in_public_key, uint8_t **_out_bytes,
 
 bool serialize_signature(const Signature *_in_signature, uint8_t **_out_bytes, int32_t *_out_len);
 
-bool sign_hash(uint64_t *in_private_key, uint8_t *in_hash);
+bool sign_hash(uint64_t *in_private_key, uint8_t *in_hash, uint8_t *out_signature);
 
 bool sign_message(uint64_t *in_private_key,
                   const uint8_t *in_message,
