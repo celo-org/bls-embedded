@@ -396,26 +396,8 @@ impl Fp {
         }
     }
 
-/*    /// Computes the multiplicative inverse of this field
-    /// element, returning None in the case that this element
-    /// is zero.
     #[inline(always)]
-    pub fn invert(&self) -> CtOption<Self> {
-        // Exponentiate by p - 2 
-        let t = self.pow_vartime(&[
-            0x8508bfffffffffff,
-            0x170b5d4430000000,
-            0x1ef3622fba094800,
-            0x1a22d9f300f5138f,
-            0xc63b05c06ca1493b,
-            0x1ae3a4617c510ea,
-        ]);
-
-        CtOption::new(t, !self.is_zero())
-    }*/
-
-    #[inline(always)]
-    pub fn pow_acc(&self, acc: Fp, by: u64) -> Self {
+    fn pow_acc(&self, acc: Fp, by: u64) -> Self {
         let mut acc = acc.clone();
         for i in (0..64).rev() {
             acc = acc.square();
@@ -427,6 +409,9 @@ impl Fp {
         acc
     }
 
+    /// Computes the multiplicative inverse of this field
+    /// element, returning None in the case that this element
+    /// is zero.
     #[inline(always)]
     pub fn invert(&self) -> CtOption<Self> {
         let mut acc = Self::one();

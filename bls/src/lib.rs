@@ -3,17 +3,14 @@
 extern crate libc;
 
 pub mod bls;
-//pub mod hash;
 pub mod error;
 
-use bls12_377::{G1Projective, G2Projective, Scalar};
-use crate::bls::keys::{PublicKey, PrivateKey, Signature};
-//use crate::error::ErrorCode;
+use bls12_377::Scalar;
+use crate::bls::keys::PrivateKey;
 use subtle::CtOption;
 use core::ptr::copy;
 
 use core::slice;
-use core::convert::TryInto;
 
 #[cfg(not(gen_header))]
 #[panic_handler]
