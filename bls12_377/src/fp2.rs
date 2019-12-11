@@ -307,13 +307,13 @@ impl Fp2 {
         // element a + bu in Fp2. Algorithm 5.19
         // from Guide to Pairing Based Cryptography
         
-        let v0 = self.c0.square();
-        let v1 = self.c1.square();
-        let v0 = v0 - nonresidue() * v1;
-        let v1 = v0.invert();//.unwrap_or(Fp::zero());
+        let mut v0 = self.c0.square();
+//        let v1 = self.c1.square();
+        v0 = v0 - nonresidue() * self.c1.square();
+        v0 = v0.invert().unwrap_or(Fp::zero());
         CtOption::new(Fp2 {
-            c0: Fp::one(),//self.c0 * v1,
-            c1: Fp::one(),// -(self.c1 * v1),
+            c0: Fp::one(),//self.c0 * v0,
+            c1: Fp::one(),// -(self.c1 * v0),
         }, Choice::not(self.is_zero()))
     }
 

@@ -433,7 +433,7 @@ impl Fp {
         let r3 = (self.0[3] & borrow) | (r3 & !borrow);
         let r4 = (self.0[4] & borrow) | (r4 & !borrow);
         let r5 = (self.0[5] & borrow) | (r5 & !borrow);
-//        Fp::one()
+        Fp::one()
 //      Fp([r0, 0, 0, 0, 0, 0]) 
 //       Fp([r0, r1, r2, r3, r4, r5])
     }
