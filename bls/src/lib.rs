@@ -54,8 +54,8 @@ pub extern "C" fn sign_hash(
     let mut hash_arr: [u8; 96] = [0; 96];
     hash_arr.copy_from_slice(&hash[0..96]);
     let sig = private_key.sign_hash(&hash_arr).unwrap();
-//    let sig_arr = sig.serialize();
-//    unsafe { copy(sig_arr.as_ptr(), out_signature, 96); };
+    let sig_arr = sig.serialize();
+    unsafe { copy(sig_arr.as_ptr(), out_signature, 96); };
     true
 }
 
