@@ -131,7 +131,6 @@ pub extern "C" fn sign_hash(
     out_signature: *mut u8,
 ) -> bool {
     let pk_array = in_private_key as *mut [u64; 4];
-    let pk = unsafe { &Scalar::from_raw(*pk_array) };
     let private_key = unsafe { PrivateKey::from_scalar(&Scalar::from_raw(*pk_array)) };
     let hash = unsafe { slice::from_raw_parts(in_hash, 96) };
     let mut hash_arr: [u8; 96] = [0; 96];
@@ -149,7 +148,7 @@ pub extern "C" fn get_pubkey(
 ) -> bool {
     let private_key = unsafe { PrivateKey::from_scalar(&Scalar::from_raw(*(in_private_key as *mut [u64; 4]))) }; 
     let pub_arr = private_key.to_public().serialize();
- //   unsafe { copy(pub_arr.as_ptr(), out_public_key, 192) };
+    unsafe { copy(pub_arr.as_ptr(), out_public_key, 192) };
     true
 }
 

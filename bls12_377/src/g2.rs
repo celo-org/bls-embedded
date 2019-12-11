@@ -30,19 +30,19 @@ impl Default for G2Affine {
 impl<'a> From<&'a G2Projective> for G2Affine {
     #[inline(always)]
     fn from(p: &'a G2Projective) -> G2Affine {
-       let zinv = p.z.invert();//.unwrap_or(Fp2::zero());
-//       let zinv2 = zinv.square();
-//       let x = p.x * zinv2;
-//       let zinv3 = zinv2 * zinv;
-//       let y = p.y * zinv3;
+       let zinv = p.z.invert().unwrap_or(Fp2::zero());
+       let zinv2 = zinv.square();
+       let x = p.x * zinv2;
+       let zinv3 = zinv2 * zinv;
+       let y = p.y * zinv3;
 
         let tmp = G2Affine {
-          x: Fp2::zero(),//  x,
-           y: Fp2::zero(),// y,
+            x,
+            y,
             infinity: Choice::from(0u8),
         };
 
-        G2Affine::conditional_select(&tmp, &G2Affine::identity(), Fp2::zero().is_zero()/*zinv.is_zero()*/)
+        G2Affine::conditional_select(&tmp, &G2Affine::identity(), zinv.is_zero())
     }
 }
 

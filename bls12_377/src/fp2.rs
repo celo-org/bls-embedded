@@ -308,12 +308,11 @@ impl Fp2 {
         // from Guide to Pairing Based Cryptography
         
         let mut v0 = self.c0.square();
-//        let v1 = self.c1.square();
         v0 = v0 - nonresidue() * self.c1.square();
         v0 = v0.invert().unwrap_or(Fp::zero());
         CtOption::new(Fp2 {
-            c0: Fp::one(),//self.c0 * v0,
-            c1: Fp::one(),// -(self.c1 * v0),
+            c0: self.c0 * v0,
+            c1: -(self.c1 * v0),
         }, Choice::not(self.is_zero()))
     }
 

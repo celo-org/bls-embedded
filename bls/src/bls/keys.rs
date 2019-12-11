@@ -50,8 +50,8 @@ impl PublicKey {
     }
 
     #[inline(always)]
-    pub fn serialize(&self) -> G2Affine/*[u8; 192]*/ {
-        G2Affine::from(&self.pk)//.to_uncompressed()
+    pub fn serialize(&self) -> [u8; 192] {
+        G2Affine::from(&self.pk).to_uncompressed()
     }
 }
 
