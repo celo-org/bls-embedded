@@ -434,8 +434,8 @@ impl Fp {
         let r5 = (self.0[5] & borrow) | (r5 & !borrow);
         let x1 = Fp::one();
         let x2 = Fp::one();
-        Fp::one()
-//       Fp([r0, r1, r2, r3, r4, r5])
+//        Fp::one()
+       Fp([r0, r1, r2, r3, r4, r5])
     }
 
     #[inline(always)]
