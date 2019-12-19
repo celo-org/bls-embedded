@@ -145,8 +145,7 @@ impl Fp2 {
 
     /// Raises this element to p.
     pub fn frobenius_map(&self) -> Self {
-        // This is always just a conjugation. If you're curious why, here's
-        // an article about it: https://alicebob.cryptoland.net/the-frobenius-endomorphism-with-finite-fields/
+        // This is always just a conjugation
         self.conjugate()
     }
 
@@ -210,15 +209,6 @@ impl Fp2 {
         // v1  = a1 * b1
         // c0 = v0 + \beta * v1
         // c1 = (a0 + a1) * (b0 + b1) - v0 - v1
-        //
-        // In BLS12-381's F_{p^2}, our \beta is -1 so we
-        // can modify this formula. (Also, since we always
-        // subtract v1, we can compute v1 = -a1 * b1.)
-        //
-        // v0  = a0 * b0
-        // v1  = (-a1) * b1
-        // c0 = v0 + v1
-        // c1 = (a0 + a1) * (b0 + b1) - v0 + v1
 
         let v0 = (&self.c0).mul(&rhs.c0);
         let v1 = (&self.c1).mul(&rhs.c1);
@@ -268,7 +258,7 @@ impl Fp2 {
 
 
     /// Algorithm 8, https://eprint.iacr.org/2012/685.pdf
-    /// TODO: Investigate switching to algo 10
+    // TODO: Investigate switching to algo 10
     // TODO: Add sqrt test coverage
     pub fn sqrt_vartime(&self) -> Option<Self> {
         if self.c1 == Fp::zero() {

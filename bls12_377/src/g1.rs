@@ -216,7 +216,6 @@ impl G1Affine {
     }
 
     /// Serializes this element into uncompressed form.
-    //  TODO: Test coverage for compression
     #[inline(always)]
     pub fn to_uncompressed(&self) -> [u8; 96] {
         let mut res = [0; 96];
@@ -296,6 +295,7 @@ impl G1Affine {
     }
 
     /// Attempts to deserialize a compressed element. 
+    //  TODO: Test coverage
     pub fn from_compressed_vartime(bytes: &[u8; 48]) -> Option<Self> {
         // We already know the point is on the curve because this is established
         // by the y-coordinate recovery procedure in from_compressed_unchecked().
@@ -312,6 +312,7 @@ impl G1Affine {
     /// element is in the correct subgroup.
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_compressed()` instead.
+    //  TODO: Test coverage
     pub fn from_compressed_unchecked_vartime(bytes: &[u8; 48]) -> Option<Self> {
         // Obtain the three flags from the start of the byte sequence
         let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
@@ -536,8 +537,6 @@ impl G1Projective {
     /// Computes the doubling of this point.
     pub fn double(&self) -> G1Projective {
         // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
-        //
-        // There are no points of order 2.
 
         let a = self.x.square();
         let b = self.y.square();

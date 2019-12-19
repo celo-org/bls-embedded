@@ -9,7 +9,7 @@ use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 use crate::util::{adc, mac, sbb};
 
-/// Represents an element of the scalar field $\mathbb{F}_q$ of the BLS12-381 elliptic
+/// Represents an element of the scalar field $\mathbb{F}_q$ of the BLS12-377 elliptic
 /// curve construction.
 // The internal representation of this type is four 64-bit unsigned
 // integers in little-endian order. `Scalar` values are always in
@@ -277,12 +277,6 @@ impl Scalar {
     /// into its (congruent) `Scalar` representation.
     #[inline]
     pub fn from_raw(val: [u64; 4]) -> Self {
-        let r0 = 0x25D577BAB861857B;
-        let r1 = 0xCC2C27B58860591F;
-        let r2 = 0xA7CC008FE5DC8593;
-        let r3 = 0x11FDAE7EFF1C939;
-        let (r4, r5) = mac(r0, r1, r3, 0);
-        let (r6, r7) = mac(r2, r3, r5, 0);
         (&Scalar(val)).mul(&r_squared())
     }
 
@@ -476,7 +470,6 @@ impl Scalar {
         let (r5, carry) = mac(r5, self.0[3], rhs.0[2], carry);
         let (r6, r7) = mac(r6, self.0[3], rhs.0[3], carry);
 
-//        Scalar([r0, r1, r2, r3])
         Scalar::montgomery_reduce(r0, r1, r2, r3, r4, r5, r6, r7)
     }
 

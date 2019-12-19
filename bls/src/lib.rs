@@ -27,11 +27,6 @@ fn convert_result_to_bool<T, E, F: Fn() -> Result<T, E>>(f: F) -> bool {
     }
 }
 
-pub const fn mac(a: u64, b: u64, c: u64, carry: u64) -> (u64, u64) {
-    let ret = (a as u128) + ((b as u128) * (c as u128)) + (carry as u128);
-    (ret as u64, (ret >> 64) as u64)
-}
-
 #[no_mangle]
 pub extern "C" fn is_valid_key(in_private_key: *const u8) -> bool {
    let pk_array = in_private_key as *const [u8; 32];
