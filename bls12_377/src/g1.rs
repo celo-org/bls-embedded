@@ -789,6 +789,13 @@ fn test_to_uncompressed() {
 }
 
 #[test]
+fn test_from_uncompressed() {
+    let elem = G1Affine::from_uncompressed(&[0, 23, 5, 45, 78, 62, 182, 66, 211, 46, 244, 152, 154, 242, 83, 204, 42, 48, 173, 55, 108, 232, 240, 178, 60, 146, 185, 135, 233, 92, 199, 24, 208, 32, 114, 187, 120, 211, 124, 9, 253, 118, 247, 1, 78, 236, 247, 151, 1, 108, 32, 107, 231, 56, 191, 70, 68, 250, 255, 16, 187, 130, 177, 159, 111, 7, 119, 153, 3, 166, 173, 37, 36, 128, 156, 226, 159, 148, 104, 59, 227, 43, 189, 208, 114, 236, 11, 230, 106, 224, 237, 13, 135, 129, 242, 119]).unwrap();
+    let elem_result = G1Affine::from(G1Projective::generator() * &Scalar::from(5));
+    assert_eq!(elem, elem_result); 
+}
+
+#[test]
 fn test_is_on_curve() {
     assert!(bool::from(G1Affine::identity().is_on_curve()));
     assert!(bool::from(G1Affine::generator().is_on_curve()));
