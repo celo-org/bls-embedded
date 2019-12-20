@@ -12,11 +12,11 @@ use core::ptr::copy;
 
 use core::slice;
 
-#[cfg(not(gen_header))]
+/*#[cfg(not(gen_header))]
 #[panic_handler]
 fn my_panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
-}
+}*/
 
 fn convert_result_to_bool<T, E, F: Fn() -> Result<T, E>>(f: F) -> bool {
     match f() {
