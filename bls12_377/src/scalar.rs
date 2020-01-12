@@ -528,365 +528,368 @@ impl<'a> From<&'a Scalar> for [u8; 32] {
     }
 }
 
-#[test]
-fn test_inv() {
-    // Compute -(q^{-1} mod 2^64) mod 2^64 by exponentiating
-    // by totient(2**64) - 1
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_inv() {
+        // Compute -(q^{-1} mod 2^64) mod 2^64 by exponentiating
+        // by totient(2**64) - 1
 
-    let true_inv = inv();
-    let mut inv = 1u64;
-    for _ in 0..63 {
-        inv = inv.wrapping_mul(inv);
-        inv = inv.wrapping_mul(modulus().0[0]);
+        let true_inv = inv();
+        let mut inv = 1u64;
+        for _ in 0..63 {
+            inv = inv.wrapping_mul(inv);
+            inv = inv.wrapping_mul(modulus().0[0]);
+        }
+        inv = inv.wrapping_neg();
+
+        assert_eq!(inv, true_inv);
     }
-    inv = inv.wrapping_neg();
 
-    assert_eq!(inv, true_inv);
-}
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_debug() {
+        assert_eq!(
+            format!("{:?}", Scalar::zero()),
+            "0x0000000000000000000000000000000000000000000000000000000000000000"
+        );
+        assert_eq!(
+            format!("{:?}", Scalar::one()),
+            "0x0000000000000000000000000000000000000000000000000000000000000001"
+        );
+        assert_eq!(
+            format!("{:?}", r_squared()),
+            "0x1824b159acc5056f998c4fefecbc4ff55884b7fa0003480200000001fffffffe"
+        );
+    }
 
-#[cfg(feature = "std")]
-#[test]
-fn test_debug() {
-    assert_eq!(
-        format!("{:?}", Scalar::zero()),
-        "0x0000000000000000000000000000000000000000000000000000000000000000"
-    );
-    assert_eq!(
-        format!("{:?}", Scalar::one()),
-        "0x0000000000000000000000000000000000000000000000000000000000000001"
-    );
-    assert_eq!(
-        format!("{:?}", r_squared()),
-        "0x1824b159acc5056f998c4fefecbc4ff55884b7fa0003480200000001fffffffe"
-    );
-}
+    #[test]
+    fn test_equality() {
+        assert_eq!(Scalar::zero(), Scalar::zero());
+        assert_eq!(Scalar::one(), Scalar::one());
+        assert_eq!(r_squared(), r_squared());
 
-#[test]
-fn test_equality() {
-    assert_eq!(Scalar::zero(), Scalar::zero());
-    assert_eq!(Scalar::one(), Scalar::one());
-    assert_eq!(r_squared(), r_squared());
+        assert!(Scalar::zero() != Scalar::one());
+        assert!(Scalar::one() != r_squared());
+    }
 
-    assert!(Scalar::zero() != Scalar::one());
-    assert!(Scalar::one() != r_squared());
-}
+    #[test]
+    fn test_to_bytes() {
+        assert_eq!(
+            Scalar::zero().to_bytes(),
+            [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0
+            ]
+        );
 
-#[test]
-fn test_to_bytes() {
-    assert_eq!(
-        Scalar::zero().to_bytes(),
-        [
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0
-        ]
-    );
+        assert_eq!(
+            Scalar::one().to_bytes(),
+            [
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0
+            ]
+        );
 
-    assert_eq!(
-        Scalar::one().to_bytes(),
-        [
-            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0
-        ]
-    );
+        assert_eq!(
+            r_squared().to_bytes(),
+            [
+                243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
+                44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13
+            ]
+        );
 
-    assert_eq!(
-        r_squared().to_bytes(),
-        [
-            243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
-            44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13
-        ]
-    );
-
-    assert_eq!(
-        (-&Scalar::one()).to_bytes(),
-        [
-        0, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
-        96, 86, 165, 44, 154, 94, 101, 171, 18
-        ]
-    );
-}
-
-#[test]
-fn test_from_bytes() {
-    assert_eq!(
-        Scalar::from_bytes(&[
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0
-        ])
-        .unwrap(),
-        Scalar::zero()
-    );
-
-    assert_eq!(
-        Scalar::from_bytes(&[
-            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0
-        ])
-        .unwrap(),
-        Scalar::one()
-    );
-
-    assert_eq!(
-        Scalar::from_bytes(&[
-            243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
-            44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13
-        ])
-        .unwrap(),
-        r_squared()
-    );
-
-    // -1 should work
-    assert!(
-        Scalar::from_bytes(&[
+        assert_eq!(
+            (-&Scalar::one()).to_bytes(),
+            [
             0, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
             96, 86, 165, 44, 154, 94, 101, 171, 18
-        ])
-        .is_some()
-        .unwrap_u8()
-            == 1
-    );
-
-    // modulus is invalid
-    assert!(
-        Scalar::from_bytes(&[
-            1, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
-            96, 86, 165, 44, 154, 94, 101, 171, 18
-        ])
-        .is_none()
-        .unwrap_u8()
-            == 1
-    );
-
-    // Anything larger than the modulus is invalid
-    assert!(
-        Scalar::from_bytes(&[
-            2, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
-            96, 86, 165, 44, 154, 94, 101, 171, 18
-        ])
-        .is_none()
-        .unwrap_u8()
-            == 1
-    );
-    assert!(
-        Scalar::from_bytes(&[
-            1, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 177, 55, 92, 30, 77, 180, 
-            96, 86, 165, 44, 154, 94, 101, 171, 18
-        ])
-        .is_none()
-        .unwrap_u8()
-            == 1
-    );
-    assert!(
-        Scalar::from_bytes(&[
-            1, 0, 0, 0, 255, 255, 255, 255, 254, 91, 254, 255, 2, 164, 189, 83, 5, 216, 161, 9, 8,
-            216, 57, 51, 72, 125, 157, 41, 83, 167, 237, 117
-        ])
-        .is_none()
-        .unwrap_u8()
-            == 1
-    );
-}
-
-#[test]
-fn test_from_u512_zero() {
-    let modulus = modulus();
-    assert_eq!(
-        Scalar::zero(),
-        Scalar::from_u512([
-            modulus.0[0],
-            modulus.0[1],
-            modulus.0[2],
-            modulus.0[3],
-            0,
-            0,
-            0,
-            0
-        ])
-    );
-}
-
-#[test]
-fn test_from_u512_r() {
-    assert_eq!(r(), Scalar::from_u512([1, 0, 0, 0, 0, 0, 0, 0]));
-}
-
-#[test]
-fn test_from_u512_r_squared() {
-    assert_eq!(r_squared(), Scalar::from_u512([0, 0, 0, 0, 1, 0, 0, 0]));
-}
-
-#[test]
-fn test_from_u512_max() {
-    let max_u64 = 0xffffffffffffffff;
-    assert_eq!(
-        r_cubed() - r(),
-        Scalar::from_u512([max_u64, max_u64, max_u64, max_u64, max_u64, max_u64, max_u64, max_u64])
-    );
-}
-
-#[test]
-fn test_from_bytes_wide_r_squared() {
-    assert_eq!(
-        r_squared(),
-        Scalar::from_bytes_wide(&[
-            243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
-            44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        ])
-    );
-}
-
-#[test]
-fn test_from_bytes_wide_negative_one() {
-    assert_eq!(
-        -&Scalar::one(),
-        Scalar::from_bytes_wide(&[
-            0, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 96, 86, 
-            165, 44, 154, 94, 101, 171, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        ])
-    );
-}
-
-#[test]
-fn test_zero() {
-    assert_eq!(Scalar::zero(), -&Scalar::zero());
-    assert_eq!(Scalar::zero(), Scalar::zero() + Scalar::zero());
-    assert_eq!(Scalar::zero(), Scalar::zero() - Scalar::zero());
-    assert_eq!(Scalar::zero(), Scalar::zero() * Scalar::zero());
-}
-
-#[cfg(test)]
-const LARGEST: Scalar = Scalar([
-    725501752471715840u64,
-    6461107452199829505u64,
-    6968279316240510977u64,
-    1345280370688173398u64,
-]);
-
-#[test]
-fn test_addition() {
-    let mut tmp = LARGEST;
-    tmp += &LARGEST;
-    println!("{:x?}", tmp);
-
-    assert_eq!(
-        tmp,
-        Scalar([
-            0xa117fffffffffff, 
-            0x59aa76fed0000001, 
-            0x60b44d1e5c37b001, 
-            0x12ab655e9a2ca556,
-        ])
-    );
-
-    let mut tmp = LARGEST;
-    tmp += &Scalar([1, 0, 0, 0]);
-
-    assert_eq!(tmp, Scalar::zero());
-}
-
-#[test]
-fn test_negation() {
-    let tmp = -&LARGEST;
-
-    assert_eq!(tmp, Scalar([1, 0, 0, 0]));
-
-    let tmp = -&Scalar::zero();
-    assert_eq!(tmp, Scalar::zero());
-    let tmp = -&Scalar([1, 0, 0, 0]);
-    assert_eq!(tmp, LARGEST);
-}
-
-#[test]
-fn test_subtraction() {
-    let mut tmp = LARGEST;
-    tmp -= &LARGEST;
-
-    assert_eq!(tmp, Scalar::zero());
-
-    let mut tmp = Scalar::zero();
-    tmp -= &LARGEST;
-
-    let mut tmp2 = modulus();
-    tmp2 -= &LARGEST;
-
-    assert_eq!(tmp, tmp2);
-}
-
-#[test]
-fn test_multiplication() {
-    let mut cur = LARGEST;
-
-    for _ in 0..100 {
-        let mut tmp = cur;
-        tmp *= &cur;
-
-        let mut tmp2 = Scalar::zero();
-        for b in cur
-            .to_bytes()
-            .iter()
-            .rev()
-            .flat_map(|byte| (0..8).rev().map(move |i| ((byte >> i) & 1u8) == 1u8))
-        {
-            let tmp3 = tmp2;
-            tmp2.add_assign(&tmp3);
-
-            if b {
-                tmp2.add_assign(&cur);
-            }
-        }
-
-        assert_eq!(tmp, tmp2);
-
-        cur.add_assign(&LARGEST);
+            ]
+        );
     }
-}
 
-#[test]
-fn test_squaring() {
-    let mut cur = LARGEST;
+    #[test]
+    fn test_from_bytes() {
+        assert_eq!(
+            Scalar::from_bytes(&[
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0
+            ])
+            .unwrap(),
+            Scalar::zero()
+        );
 
-    for _ in 0..100 {
-        let mut tmp = cur;
-        tmp = tmp.square();
+        assert_eq!(
+            Scalar::from_bytes(&[
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0
+            ])
+            .unwrap(),
+            Scalar::one()
+        );
 
-        let mut tmp2 = Scalar::zero();
-        for b in cur
-            .to_bytes()
-            .iter()
-            .rev()
-            .flat_map(|byte| (0..8).rev().map(move |i| ((byte >> i) & 1u8) == 1u8))
-        {
-            let tmp3 = tmp2;
-            tmp2.add_assign(&tmp3);
+        assert_eq!(
+            Scalar::from_bytes(&[
+                243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
+                44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13
+            ])
+            .unwrap(),
+            r_squared()
+        );
 
-            if b {
-                tmp2.add_assign(&cur);
-            }
-        }
+        // -1 should work
+        assert!(
+            Scalar::from_bytes(&[
+                0, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
+                96, 86, 165, 44, 154, 94, 101, 171, 18
+            ])
+            .is_some()
+            .unwrap_u8()
+                == 1
+        );
 
-        assert_eq!(tmp, tmp2);
+        // modulus is invalid
+        assert!(
+            Scalar::from_bytes(&[
+                1, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
+                96, 86, 165, 44, 154, 94, 101, 171, 18
+            ])
+            .is_none()
+            .unwrap_u8()
+                == 1
+        );
 
-        cur.add_assign(&LARGEST);
+        // Anything larger than the modulus is invalid
+        assert!(
+            Scalar::from_bytes(&[
+                2, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 
+                96, 86, 165, 44, 154, 94, 101, 171, 18
+            ])
+            .is_none()
+            .unwrap_u8()
+                == 1
+        );
+        assert!(
+            Scalar::from_bytes(&[
+                1, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 177, 55, 92, 30, 77, 180, 
+                96, 86, 165, 44, 154, 94, 101, 171, 18
+            ])
+            .is_none()
+            .unwrap_u8()
+                == 1
+        );
+        assert!(
+            Scalar::from_bytes(&[
+                1, 0, 0, 0, 255, 255, 255, 255, 254, 91, 254, 255, 2, 164, 189, 83, 5, 216, 161, 9, 8,
+                216, 57, 51, 72, 125, 157, 41, 83, 167, 237, 117
+            ])
+            .is_none()
+            .unwrap_u8()
+                == 1
+        );
     }
-}
 
-#[test]
-fn test_from_raw() {
-    assert_eq!(Scalar::from_raw(modulus().0), Scalar::zero());
+    #[test]
+    fn test_from_u512_zero() {
+        let modulus = modulus();
+        assert_eq!(
+            Scalar::zero(),
+            Scalar::from_u512([
+                modulus.0[0],
+                modulus.0[1],
+                modulus.0[2],
+                modulus.0[3],
+                0,
+                0,
+                0,
+                0
+            ])
+        );
+    }
 
-    assert_eq!(Scalar::from_raw([1, 0, 0, 0]), r());
-}
+    #[test]
+    fn test_from_u512_r() {
+        assert_eq!(r(), Scalar::from_u512([1, 0, 0, 0, 0, 0, 0, 0]));
+    }
 
-#[test]
-fn test_double() {
-    let a = Scalar::from_raw([
-        0x1fff3231233ffffd,
-        0x4884b7fa00034802,
-        0x998c4fefecbc4ff3,
-        0x1824b159acc50562,
+    #[test]
+    fn test_from_u512_r_squared() {
+        assert_eq!(r_squared(), Scalar::from_u512([0, 0, 0, 0, 1, 0, 0, 0]));
+    }
+
+    #[test]
+    fn test_from_u512_max() {
+        let max_u64 = 0xffffffffffffffff;
+        assert_eq!(
+            r_cubed() - r(),
+            Scalar::from_u512([max_u64, max_u64, max_u64, max_u64, max_u64, max_u64, max_u64, max_u64])
+        );
+    }
+
+    #[test]
+    fn test_from_bytes_wide_r_squared() {
+        assert_eq!(
+            r_squared(),
+            Scalar::from_bytes_wide(&[
+                243, 255, 255, 255, 255, 127, 28, 125, 242, 255, 255, 111, 15, 245, 87, 114, 238, 15, 
+                44, 81, 117, 21, 216, 22, 157, 154, 187, 43, 50, 218, 75, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ])
+        );
+    }
+
+    #[test]
+    fn test_from_bytes_wide_negative_one() {
+        assert_eq!(
+            -&Scalar::one(),
+            Scalar::from_bytes_wide(&[
+                0, 0, 0, 0, 0, 128, 17, 10, 1, 0, 0, 208, 254, 118, 170, 89, 1, 176, 55, 92, 30, 77, 180, 96, 86, 
+                165, 44, 154, 94, 101, 171, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ])
+        );
+    }
+
+    #[test]
+    fn test_zero() {
+        assert_eq!(Scalar::zero(), -&Scalar::zero());
+        assert_eq!(Scalar::zero(), Scalar::zero() + Scalar::zero());
+        assert_eq!(Scalar::zero(), Scalar::zero() - Scalar::zero());
+        assert_eq!(Scalar::zero(), Scalar::zero() * Scalar::zero());
+    }
+
+    #[cfg(test)]
+    const LARGEST: Scalar = Scalar([
+        725501752471715840u64,
+        6461107452199829505u64,
+        6968279316240510977u64,
+        1345280370688173398u64,
     ]);
 
-    assert_eq!(a.double(), a + a);
+    #[test]
+    fn test_addition() {
+        let mut tmp = LARGEST;
+        tmp += &LARGEST;
+        println!("{:x?}", tmp);
+
+        assert_eq!(
+            tmp,
+            Scalar([
+                0xa117fffffffffff, 
+                0x59aa76fed0000001, 
+                0x60b44d1e5c37b001, 
+                0x12ab655e9a2ca556,
+            ])
+        );
+
+        let mut tmp = LARGEST;
+        tmp += &Scalar([1, 0, 0, 0]);
+
+        assert_eq!(tmp, Scalar::zero());
+    }
+
+    #[test]
+    fn test_negation() {
+        let tmp = -&LARGEST;
+
+        assert_eq!(tmp, Scalar([1, 0, 0, 0]));
+
+        let tmp = -&Scalar::zero();
+        assert_eq!(tmp, Scalar::zero());
+        let tmp = -&Scalar([1, 0, 0, 0]);
+        assert_eq!(tmp, LARGEST);
+    }
+
+    #[test]
+    fn test_subtraction() {
+        let mut tmp = LARGEST;
+        tmp -= &LARGEST;
+
+        assert_eq!(tmp, Scalar::zero());
+
+        let mut tmp = Scalar::zero();
+        tmp -= &LARGEST;
+
+        let mut tmp2 = modulus();
+        tmp2 -= &LARGEST;
+
+        assert_eq!(tmp, tmp2);
+    }
+
+    #[test]
+    fn test_multiplication() {
+        let mut cur = LARGEST;
+
+        for _ in 0..100 {
+            let mut tmp = cur;
+            tmp *= &cur;
+
+            let mut tmp2 = Scalar::zero();
+            for b in cur
+                .to_bytes()
+                .iter()
+                .rev()
+                .flat_map(|byte| (0..8).rev().map(move |i| ((byte >> i) & 1u8) == 1u8))
+            {
+                let tmp3 = tmp2;
+                tmp2.add_assign(&tmp3);
+
+                if b {
+                    tmp2.add_assign(&cur);
+                }
+            }
+
+            assert_eq!(tmp, tmp2);
+
+            cur.add_assign(&LARGEST);
+        }
+    }
+
+    #[test]
+    fn test_squaring() {
+        let mut cur = LARGEST;
+
+        for _ in 0..100 {
+            let mut tmp = cur;
+            tmp = tmp.square();
+
+            let mut tmp2 = Scalar::zero();
+            for b in cur
+                .to_bytes()
+                .iter()
+                .rev()
+                .flat_map(|byte| (0..8).rev().map(move |i| ((byte >> i) & 1u8) == 1u8))
+            {
+                let tmp3 = tmp2;
+                tmp2.add_assign(&tmp3);
+
+                if b {
+                    tmp2.add_assign(&cur);
+                }
+            }
+
+            assert_eq!(tmp, tmp2);
+
+            cur.add_assign(&LARGEST);
+        }
+    }
+
+    #[test]
+    fn test_from_raw() {
+        assert_eq!(Scalar::from_raw(modulus().0), Scalar::zero());
+
+        assert_eq!(Scalar::from_raw([1, 0, 0, 0]), r());
+    }
+
+    #[test]
+    fn test_double() {
+        let a = Scalar::from_raw([
+            0x1fff3231233ffffd,
+            0x4884b7fa00034802,
+            0x998c4fefecbc4ff3,
+            0x1824b159acc50562,
+        ]);
+
+        assert_eq!(a.double(), a + a);
+    }
 }

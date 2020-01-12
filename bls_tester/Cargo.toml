@@ -1,0 +1,28 @@
+[package]
+name = "bls_tester"
+version = "0.1.0"
+authors = ["Kobi Gurkan <kobi@celo.org>"]
+edition = "2018"
+
+[dependencies]
+bls12_377 = { path = "../bls12_377" }
+bls_embedded = { path = "../bls" }
+libc = "0.2"
+
+[dependencies.subtle]
+version = "2.1"
+default-features = false
+
+[features]
+gen_header = []
+
+[profile.dev]
+panic= "abort"
+
+[profile.release]
+opt-level = 3
+panic= "abort"
+
+[[bin]]
+name = "check"
+path = "src/bin/check.rs"

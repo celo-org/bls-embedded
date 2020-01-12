@@ -7,7 +7,7 @@ build = "src/build.rs"
 
 [dependencies]
 bls12_377 = { path = "../bls12_377" }
-libc = "0.2"
+libc = {version = "0.2",  default-features = false}
 
 [dependencies.subtle]
 version = "2.1"
@@ -16,15 +16,15 @@ default-features = false
 [lib]
 name = "bls_embedded"
 path = "src/lib.rs"
-crate-type = ["staticlib"]
+crate-type = ["staticlib", "rlib"]
 opt-level = "s"
 
 [features]
 gen_header = []
 
 [profile.dev]
-panic= "abort"
+panic = "abort"
 
 [profile.release]
 opt-level = 3
-panic= "abort"
+panic = "abort"

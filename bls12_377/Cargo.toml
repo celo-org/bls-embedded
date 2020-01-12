@@ -31,3 +31,10 @@ default = ["groups", "pairings"]
 groups = []
 pairings = ["groups"]
 nightly = ["subtle/nightly"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+opt-level = 3
+panic = "abort"
