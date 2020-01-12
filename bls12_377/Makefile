@@ -6,7 +6,13 @@ libfpc.a: src/fpc.cpp
 	gcc -march=armv7-m -mcpu=cortex-m3 -mthumb -O2 \
 	 -funroll-all-loops \
 	 -c src/fpc.cpp
-#	gcc -march=native -O2 \
+	ar -rsc libfpc.a fpc.o
+	rm -f fpc.o
+	touch src/fp.rs
+
+libfpc_native: src/fpc.cpp
+	rm -f libfpc.a fpc.o
+	gcc -march=native -O2 \
 		-funroll-all-loops \
 		-c src/fpc.cpp
 	ar -rsc libfpc.a fpc.o
