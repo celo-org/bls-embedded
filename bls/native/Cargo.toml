@@ -3,11 +3,14 @@ name = "bls_embedded"
 version = "0.1.0"
 authors = ["Michael Straka <mstraka@celo.org>"]
 edition = "2018"
-build = "src/build.rs"
+build = "../src/build.rs"
 
 [dependencies]
-bls12_377 = { path = "../bls12_377" }
+bls12_377 = { path = "../../bls12_377" }
 libc = {version = "0.2",  default-features = false}
+
+[build-dependencies]
+cbindgen = "0.12.2"
 
 [dependencies.subtle]
 version = "2.1"
@@ -15,7 +18,7 @@ default-features = false
 
 [lib]
 name = "bls_embedded"
-path = "src/lib.rs"
+path = "../src/lib.rs"
 crate-type = ["staticlib", "rlib"]
 opt-level = "s"
 
