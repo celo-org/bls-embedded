@@ -243,6 +243,7 @@ impl G1Affine {
     /// element is on the curve and not checking if it is in the correct subgroup.
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_uncompressed()` instead.
+    #[inline(always)]
     pub fn from_uncompressed_unchecked(bytes: &[u8; 96]) -> CtOption<Self> {
         // Obtain the three flags from the start of the byte sequence
         let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
@@ -268,10 +269,10 @@ impl G1Affine {
             Fp::from_bytes(&tmp)
         };
 
-        x.and_then(|x| {
-            y.and_then(|y| {
+      x.and_then(|x| {
+        y.and_then(|y| {
                 // Create a point representing this value
-                let p = G1Affine::conditional_select(
+               let p = G1Affine::conditional_select(
                     &G1Affine {
                         x,
                         y,
@@ -281,7 +282,7 @@ impl G1Affine {
                     infinity_flag_set,
                 );
 
-                CtOption::new(
+               CtOption::new(
                     p,
                     // If the infinity flag is set, the x and y coordinates should have been zero.
                     ((!infinity_flag_set) | (infinity_flag_set & x.is_zero() & y.is_zero())) &
@@ -292,6 +293,62 @@ impl G1Affine {
                 )
             })
         })
+    }
+
+    /// Attempts to deserialize an uncompressed element, not checking if the
+    /// element is on the curve and not checking if it is in the correct subgroup.
+    /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
+    /// API invariants may be broken.** Please consider using `from_uncompressed()` instead.
+    /// This is a memory-optimized version of `from_uncompressed_unchecked()`, and is not
+    /// constant-time. 
+    #[inline(always)]
+    pub fn from_uncompressed_unchecked_vartime(bytes: &[u8; 96]) -> Option<Self> {
+        // Obtain the three flags from the start of the byte sequence
+        let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
+        let infinity_flag_set = Choice::from((bytes[0] >> 6) & 1);
+        let sort_flag_set = Choice::from((bytes[0] >> 5) & 1);
+
+        // Attempt to obtain the x-coordinate
+        let x = {
+            let mut tmp = [0; 48];
+            tmp.copy_from_slice(&bytes[0..48]);
+
+            // Mask away the flag bits
+            tmp[0] &= 0b0001_1111;
+
+            Fp::from_bytes_vartime(&tmp)
+        }?;
+
+        // Attempt to obtain the y-coordinate
+        let y = {
+            let mut tmp = [0; 48];
+            tmp.copy_from_slice(&bytes[48..96]);
+
+            Fp::from_bytes_vartime(&tmp)
+        }?;
+
+        // Create a point representing this value
+        let p = match bool::from(infinity_flag_set) {
+            false => G1Affine {
+                x,
+                y,
+                infinity: infinity_flag_set,
+            }, 
+            _ => G1Affine::identity(),
+        };
+
+        let is_some =                    
+            // If the infinity flag is set, the x and y coordinates should have been zero.
+            ((!infinity_flag_set) | (infinity_flag_set & x.is_zero() & y.is_zero())) &
+            // The compression flag should not have been set, as this is an uncompressed element
+            (!compression_flag_set) &
+            // The sort flag should not have been set, as this is an uncompressed element
+            (!sort_flag_set);
+
+        if bool::from(is_some) {
+            return None
+        };
+        Some(p)
     }
 
     /// Attempts to deserialize a compressed element. 

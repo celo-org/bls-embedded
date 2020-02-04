@@ -17,7 +17,7 @@ impl PrivateKey {
 
     #[inline(always)]
     pub fn sign_hash(&self, hash: &[u8; 96]) -> Result<Signature, ErrorCode> {
-       let hash_elem = G1Affine::from_uncompressed_unchecked(hash).unwrap(); 
+       let hash_elem = G1Affine::from_uncompressed_unchecked_vartime(hash).unwrap(); 
        Ok(Signature::from_sig(&hash_elem.mul(&self.sk)))
     }
 }

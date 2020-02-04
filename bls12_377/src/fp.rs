@@ -232,6 +232,7 @@ impl Fp {
 
     /// Attempts to convert a little-endian byte representation of
     /// a scalar into an `Fp`, failing if the input is not canonical.
+    #[inline(always)]
     pub fn from_bytes(bytes: &[u8; 48]) -> CtOption<Fp> {
         let mut tmp = Fp([0, 0, 0, 0, 0, 0]);
         let modulus = modulus();
@@ -261,6 +262,45 @@ impl Fp {
         tmp *= &r_squared();
 
         CtOption::new(tmp, Choice::from(is_some))
+    }
+
+    /// Attempts to convert a little-endian byte representation of
+    /// a scalar into an `Fp`, failing if the input is not canonical.
+    /// This is a memory-optimized version of `from_bytes()`, and
+    /// is not constant-time. 
+    #[inline(always)]
+    pub fn from_bytes_vartime(bytes: &[u8; 48]) -> Option<Fp> {
+        let mut tmp = Fp([0, 0, 0, 0, 0, 0]);
+        let modulus = modulus();
+
+        tmp.0[5] = BigEndian::read_u64(&bytes[0..8]);
+        tmp.0[4] = BigEndian::read_u64(&bytes[8..16]);
+        tmp.0[3] = BigEndian::read_u64(&bytes[16..24]);
+        tmp.0[2] = BigEndian::read_u64(&bytes[24..32]);
+        tmp.0[1] = BigEndian::read_u64(&bytes[32..40]);
+        tmp.0[0] = BigEndian::read_u64(&bytes[40..48]);
+
+        // Try to subtract the modulus
+        let (_, borrow) = sbb(tmp.0[0], modulus[0], 0);
+        let (_, borrow) = sbb(tmp.0[1], modulus[1], borrow);
+        let (_, borrow) = sbb(tmp.0[2], modulus[2], borrow);
+        let (_, borrow) = sbb(tmp.0[3], modulus[3], borrow);
+        let (_, borrow) = sbb(tmp.0[4], modulus[4], borrow);
+        let (_, borrow) = sbb(tmp.0[5], modulus[5], borrow);
+
+        // If the element is smaller than MODULUS then the
+        // subtraction will underflow, producing a borrow value
+        // of 0xffff...ffff. Otherwise, it'll be zero.
+        let is_some = (borrow as u8) & 1;
+
+        // Convert to Montgomery form by computing
+        // (a.R^0 * R^2) / R = a.R
+        tmp *= &r_squared();
+
+        if is_some != 0 {
+            return None;
+        }
+        Some(tmp)
     }
 
     /// Converts an element of `Fp` into a byte representation in
