@@ -316,7 +316,7 @@ impl G1Affine {
             // Mask away the flag bits
             tmp[0] &= 0b0001_1111;
 
-            Fp::from_bytes_vartime(&tmp)
+            Fp::from_bytes_little_endian_vartime(&tmp)
         }?;
 
         // Attempt to obtain the y-coordinate
@@ -324,17 +324,17 @@ impl G1Affine {
             let mut tmp = [0; 48];
             tmp.copy_from_slice(&bytes[48..96]);
 
-            Fp::from_bytes_vartime(&tmp)
+            Fp::from_bytes_little_endian_vartime(&tmp)
         }?;
 
         // Create a point representing this value
         let p = match bool::from(infinity_flag_set) {
-            false => G1Affine {
+            true => G1Affine {
                 x,
                 y,
                 infinity: infinity_flag_set,
             }, 
-            _ => G1Affine::identity(),
+            _ => G1Affine::generator(),
         };
 
         let is_some =                    
