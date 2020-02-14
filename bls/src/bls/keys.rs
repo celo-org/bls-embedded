@@ -34,7 +34,7 @@ impl PublicKey {
 
     #[inline(always)]
     pub fn serialize(&self) -> [u8; 192] {
-        G2Affine::from(&self.pk).to_uncompressed()
+        G2Affine::from(&self.pk).to_uncompressed_littleendian()
     }
 }
 impl Eq for PublicKey {}
@@ -57,7 +57,7 @@ impl Signature {
 
     #[inline(always)]
     pub fn serialize(&self) -> [u8; 96] {
-        G1Affine::from(self.sig).to_uncompressed()
+        G1Affine::from(self.sig).to_uncompressed_littleendian()
     }
 }
 impl Eq for Signature {} impl PartialEq for Signature {

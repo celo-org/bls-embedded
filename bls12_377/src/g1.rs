@@ -215,7 +215,8 @@ impl G1Affine {
         res
     }
 
-    /// Serializes this element into uncompressed form.
+    /// Serializes this element into uncompressed form in
+    /// big-endian byte order.
     #[inline(always)]
     pub fn to_uncompressed(&self) -> [u8; 96] {
         let mut res = [0; 96];
@@ -229,6 +230,22 @@ impl G1Affine {
 
         // Is this point at infinity? If so, set the second-most significant bit.
         res[0] |= u8::conditional_select(&0u8, &(1u8 << 6), self.infinity);
+
+        res
+    }
+
+    /// Serializes this element into uncompressed form in
+    /// big-endian byte order. Assumes the point given is not infinity.
+    #[inline(always)]
+    pub fn to_uncompressed_littleendian(&self) -> [u8; 96] {
+        let mut res = [0; 96];
+
+        res[0..48].copy_from_slice(
+            &Fp::conditional_select(&self.x, &Fp::zero(), self.infinity).to_bytes_littleendian()[..],
+        );
+        res[48..96].copy_from_slice(
+            &Fp::conditional_select(&self.y, &Fp::zero(), self.infinity).to_bytes_littleendian()[..],
+        );
 
         res
     }
@@ -300,21 +317,17 @@ impl G1Affine {
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_uncompressed()` instead.
     /// This is a memory-optimized version of `from_uncompressed_unchecked()`, and is not
-    /// constant-time. 
+    /// constant-time. In addition, it expects elements in little endian order, and does not
+    /// check infinity or compression flags. 
     #[inline(always)]
     pub fn from_uncompressed_unchecked_vartime(bytes: &[u8; 96]) -> Option<Self> {
-        // Obtain the three flags from the start of the byte sequence
-        let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
-        let infinity_flag_set = Choice::from((bytes[0] >> 6) & 1);
-        let sort_flag_set = Choice::from((bytes[0] >> 5) & 1);
-
         // Attempt to obtain the x-coordinate
         let x = {
             let mut tmp = [0; 48];
             tmp.copy_from_slice(&bytes[0..48]);
 
             // Mask away the flag bits
-            tmp[0] &= 0b0001_1111;
+            tmp[47] &= 0b0001_1111;
 
             Fp::from_bytes_little_endian_vartime(&tmp)
         }?;
@@ -328,26 +341,12 @@ impl G1Affine {
         }?;
 
         // Create a point representing this value
-        let p = match bool::from(infinity_flag_set) {
-            true => G1Affine {
+        let p = G1Affine {
                 x,
                 y,
-                infinity: infinity_flag_set,
-            }, 
-            _ => G1Affine::generator(),
-        };
+                infinity: Choice::from(0),
+            }; 
 
-        let is_some =                    
-            // If the infinity flag is set, the x and y coordinates should have been zero.
-            ((!infinity_flag_set) | (infinity_flag_set & x.is_zero() & y.is_zero())) &
-            // The compression flag should not have been set, as this is an uncompressed element
-            (!compression_flag_set) &
-            // The sort flag should not have been set, as this is an uncompressed element
-            (!sort_flag_set);
-
-        if bool::from(is_some) {
-            return None
-        };
         Some(p)
     }
 
