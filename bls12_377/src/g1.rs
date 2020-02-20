@@ -215,7 +215,8 @@ impl G1Affine {
         res
     }
 
-    /// Serializes this element into uncompressed form.
+    /// Serializes this element into uncompressed form in
+    /// big-endian byte order.
     #[inline(always)]
     pub fn to_uncompressed(&self) -> [u8; 96] {
         let mut res = [0; 96];
@@ -233,6 +234,22 @@ impl G1Affine {
         res
     }
 
+    /// Serializes this element into uncompressed form in
+    /// big-endian byte order. Assumes the point given is not infinity.
+    #[inline(always)]
+    pub fn to_uncompressed_littleendian(&self) -> [u8; 96] {
+        let mut res = [0; 96];
+
+        res[0..48].copy_from_slice(
+            &Fp::conditional_select(&self.x, &Fp::zero(), self.infinity).to_bytes_littleendian()[..],
+        );
+        res[48..96].copy_from_slice(
+            &Fp::conditional_select(&self.y, &Fp::zero(), self.infinity).to_bytes_littleendian()[..],
+        );
+
+        res
+    }
+
     /// Attempts to deserialize an uncompressed element. 
     pub fn from_uncompressed(bytes: &[u8; 96]) -> CtOption<Self> {
         Self::from_uncompressed_unchecked(bytes)
@@ -243,6 +260,7 @@ impl G1Affine {
     /// element is on the curve and not checking if it is in the correct subgroup.
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_uncompressed()` instead.
+    #[inline(always)]
     pub fn from_uncompressed_unchecked(bytes: &[u8; 96]) -> CtOption<Self> {
         // Obtain the three flags from the start of the byte sequence
         let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
@@ -268,10 +286,10 @@ impl G1Affine {
             Fp::from_bytes(&tmp)
         };
 
-        x.and_then(|x| {
-            y.and_then(|y| {
+      x.and_then(|x| {
+        y.and_then(|y| {
                 // Create a point representing this value
-                let p = G1Affine::conditional_select(
+               let p = G1Affine::conditional_select(
                     &G1Affine {
                         x,
                         y,
@@ -281,7 +299,7 @@ impl G1Affine {
                     infinity_flag_set,
                 );
 
-                CtOption::new(
+               CtOption::new(
                     p,
                     // If the infinity flag is set, the x and y coordinates should have been zero.
                     ((!infinity_flag_set) | (infinity_flag_set & x.is_zero() & y.is_zero())) &
@@ -292,6 +310,44 @@ impl G1Affine {
                 )
             })
         })
+    }
+
+    /// Attempts to deserialize an uncompressed element, not checking if the
+    /// element is on the curve and not checking if it is in the correct subgroup.
+    /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
+    /// API invariants may be broken.** Please consider using `from_uncompressed()` instead.
+    /// This is a memory-optimized version of `from_uncompressed_unchecked()`, and is not
+    /// constant-time. In addition, it expects elements in little endian order, and does not
+    /// check infinity or compression flags. 
+    #[inline(always)]
+    pub fn from_uncompressed_unchecked_vartime(bytes: &[u8; 96]) -> Option<Self> {
+        // Attempt to obtain the x-coordinate
+        let x = {
+            let mut tmp = [0; 48];
+            tmp.copy_from_slice(&bytes[0..48]);
+
+            // Mask away the flag bits
+            tmp[47] &= 0b0001_1111;
+
+            Fp::from_bytes_little_endian_vartime(&tmp)
+        }?;
+
+        // Attempt to obtain the y-coordinate
+        let y = {
+            let mut tmp = [0; 48];
+            tmp.copy_from_slice(&bytes[48..96]);
+
+            Fp::from_bytes_little_endian_vartime(&tmp)
+        }?;
+
+        // Create a point representing this value
+        let p = G1Affine {
+                x,
+                y,
+                infinity: Choice::from(0),
+            }; 
+
+        Some(p)
     }
 
     /// Attempts to deserialize a compressed element. 

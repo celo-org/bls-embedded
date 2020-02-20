@@ -4,7 +4,7 @@ use core::mem;
 use core::fmt;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-use byteorder::{BigEndian, ByteOrder};
+use byteorder::{BigEndian, ByteOrder, LittleEndian};
 use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 use crate::util::{adc, mac, sbb, LegendreSymbol};
@@ -232,6 +232,7 @@ impl Fp {
 
     /// Attempts to convert a little-endian byte representation of
     /// a scalar into an `Fp`, failing if the input is not canonical.
+    #[inline(always)]
     pub fn from_bytes(bytes: &[u8; 48]) -> CtOption<Fp> {
         let mut tmp = Fp([0, 0, 0, 0, 0, 0]);
         let modulus = modulus();
@@ -263,6 +264,44 @@ impl Fp {
         CtOption::new(tmp, Choice::from(is_some))
     }
 
+    /// Attempts to convert a little-endian byte representation of
+    /// a scalar into an `Fp`, failing if the input is not canonical.
+    /// This is not constant time
+    #[inline(always)]
+    pub fn from_bytes_little_endian_vartime(bytes: &[u8; 48]) -> Option<Fp> {
+        let mut tmp = Fp([0, 0, 0, 0, 0, 0]);
+        let modulus = modulus();
+
+        tmp.0[0] = LittleEndian::read_u64(&bytes[0..8]);
+        tmp.0[1] = LittleEndian::read_u64(&bytes[8..16]);
+        tmp.0[2] = LittleEndian::read_u64(&bytes[16..24]);
+        tmp.0[3] = LittleEndian::read_u64(&bytes[24..32]);
+        tmp.0[4] = LittleEndian::read_u64(&bytes[32..40]);
+        tmp.0[5] = LittleEndian::read_u64(&bytes[40..48]);
+
+        // Try to subtract the modulus
+        let (_, borrow) = sbb(tmp.0[0], modulus[0], 0);
+        let (_, borrow) = sbb(tmp.0[1], modulus[1], borrow);
+        let (_, borrow) = sbb(tmp.0[2], modulus[2], borrow);
+        let (_, borrow) = sbb(tmp.0[3], modulus[3], borrow);
+        let (_, borrow) = sbb(tmp.0[4], modulus[4], borrow);
+        let (_, borrow) = sbb(tmp.0[5], modulus[5], borrow);
+
+        // If the element is smaller than MODULUS then the
+        // subtraction will underflow, producing a borrow value
+        // of 0xffff...ffff. Otherwise, it'll be zero.
+        let is_some = (borrow as u8) & 1;
+
+        // Convert to Montgomery form by computing
+        // (a.R^0 * R^2) / R = a.R
+        tmp *= &r_squared();
+
+        if is_some == 0 {
+            return None;
+        }
+        Some(tmp)
+    }
+
     /// Converts an element of `Fp` into a byte representation in
     /// big-endian byte order.
     pub fn to_bytes(&self) -> [u8; 48] {
@@ -279,6 +318,26 @@ impl Fp {
         BigEndian::write_u64(&mut res[24..32], tmp.0[2]);
         BigEndian::write_u64(&mut res[32..40], tmp.0[1]);
         BigEndian::write_u64(&mut res[40..48], tmp.0[0]);
+
+        res
+    }
+
+    /// Converts an element of `Fp` into a byte representation in
+    /// little-endian byte order.
+    pub fn to_bytes_littleendian(&self) -> [u8; 48] {
+        // Turn into canonical form by computing
+        // (a.R) / R = a
+        let tmp = Fp::montgomery_reduce(
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5], 0, 0, 0, 0, 0, 0,
+        );
+
+        let mut res = [0; 48];
+        LittleEndian::write_u64(&mut res[0..8], tmp.0[0]);
+        LittleEndian::write_u64(&mut res[8..16], tmp.0[1]);
+        LittleEndian::write_u64(&mut res[16..24], tmp.0[2]);
+        LittleEndian::write_u64(&mut res[24..32], tmp.0[3]);
+        LittleEndian::write_u64(&mut res[32..40], tmp.0[4]);
+        LittleEndian::write_u64(&mut res[40..48], tmp.0[5]);
 
         res
     }
