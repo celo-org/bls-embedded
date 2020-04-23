@@ -149,7 +149,7 @@ fp_eq:
 .type fp_neg,	%function
 
 fp_neg:
-	push	{ r4-r12, lr }
+	push	{ r4-r11, lr }
 	ldm	r1, { r1-r12 }
 
 	@ lr = (y == 0)
@@ -251,7 +251,7 @@ fp_neg:
 	mov	lr, #0x3A46;	movt	lr, #0x01AE;	adcs	r12, lr
 
 	stm	r0, { r1-r12 }
-	pop	    { r4-r12, pc }
+	pop	    { r4-r11, pc }
 
 .size fp_neg, . - fp_neg
 
@@ -276,7 +276,7 @@ fp_neg:
 .type fp_diff,	%function
 
 fp_diff:
-	push	{ r4-r12, lr }
+	push	{ r4-r11, lr }
 
 	@ x = y - z
 
@@ -380,7 +380,7 @@ fp_diff:
 	strcs	 r3, [r0, #40]
 	strcs	 r2, [r0, #44]
 
-	pop	{ r4-r12, pc }
+	pop	{ r4-r11, pc }
 
 .size fp_diff, . - fp_diff
 
@@ -405,7 +405,7 @@ fp_diff:
 .type fp_sum,	%function
 
 fp_sum:
-	push	    { r4-r12, lr }
+	push	    { r4-r11, lr }
 
 	@ x = y + z
 
@@ -509,7 +509,7 @@ fp_sum:
 	strcs	 r3, [r0, #40]
 	strcs	 r2, [r0, #44]
 
-	pop	    { r4-r12, pc }
+	pop	    { r4-r11, pc }
 
 .size fp_sum, . - fp_sum
 

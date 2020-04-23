@@ -235,7 +235,7 @@ fq_neg:
 .type fq_diff,	%function
 
 fq_diff:
-	push	{ r4-r12, lr }
+	push	{ r4-r11, lr }
 
 	@ x = y - z
 
@@ -302,7 +302,7 @@ fq_diff:
 	strcs	 r7, [r0, #24]
 	strcs	 r6, [r0, #28]
 
-	pop	{ r4-r12, pc }
+	pop	{ r4-r11, pc }
 
 .size fq_diff, . - fq_diff
 
@@ -327,7 +327,7 @@ fq_diff:
 .type fq_sum,	%function
 
 fq_sum:
-	push	    { r4-r12, lr }
+	push	    { r4-r11, lr }
 
 	@ x = y + z
 
@@ -394,7 +394,7 @@ fq_sum:
 	strcs	 r7, [r0, #24]
 	strcs	 r6, [r0, #28]
 
-	pop	    { r4-r12, pc }
+	pop	    { r4-r11, pc }
 
 .size fq_sum, . - fq_sum
 
