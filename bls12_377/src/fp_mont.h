@@ -7,12 +7,9 @@
 extern "C" {
 #endif
 
-// Separate multiplication and reduction functions
-void fp_prod(uint32_t *, const uint32_t *, const uint32_t *);
-void fp_redc(uint32_t *, uint32_t *);
+// Montgomery reduction function
 
-// Combined multiply-reduce function
-void fp_mulred(uint32_t *, const uint32_t *, const uint32_t *);
+void fp_redc(uint32_t *, uint32_t *);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

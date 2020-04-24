@@ -18,6 +18,9 @@ libfpc.a: libfpc.a(fpc.o fp_mont.o fp_asm.o fq_asm.o)
 %.o: src/%.s
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
+%.o: src/%.S
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
 test: libfpc.a
 	RUSTFLAGS="-L `pwd`" cargo test
 
