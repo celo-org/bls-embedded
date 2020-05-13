@@ -3,3 +3,4 @@
 go/cmd/example/example
 Cargo.lock
 target
+testproj

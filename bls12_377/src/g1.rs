@@ -215,7 +215,8 @@ impl G1Affine {
         res
     }
 
-    /// Serializes this element into uncompressed form.
+    /// Serializes this element into uncompressed form in
+    /// big-endian byte order.
     #[inline(always)]
     pub fn to_uncompressed(&self) -> [u8; 96] {
         let mut res = [0; 96];
@@ -233,6 +234,22 @@ impl G1Affine {
         res
     }
 
+    /// Serializes this element into uncompressed form in
+    /// big-endian byte order. Assumes the point given is not infinity.
+    #[inline(always)]
+    pub fn to_uncompressed_littleendian(&self) -> [u8; 96] {
+        let mut res = [0; 96];
+
+        res[0..48].copy_from_slice(
+            &Fp::conditional_select(&self.x, &Fp::zero(), self.infinity).to_bytes_littleendian()[..],
+        );
+        res[48..96].copy_from_slice(
+            &Fp::conditional_select(&self.y, &Fp::zero(), self.infinity).to_bytes_littleendian()[..],
+        );
+
+        res
+    }
+
     /// Attempts to deserialize an uncompressed element. 
     pub fn from_uncompressed(bytes: &[u8; 96]) -> CtOption<Self> {
         Self::from_uncompressed_unchecked(bytes)
@@ -243,6 +260,7 @@ impl G1Affine {
     /// element is on the curve and not checking if it is in the correct subgroup.
     /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
     /// API invariants may be broken.** Please consider using `from_uncompressed()` instead.
+    #[inline(always)]
     pub fn from_uncompressed_unchecked(bytes: &[u8; 96]) -> CtOption<Self> {
         // Obtain the three flags from the start of the byte sequence
         let compression_flag_set = Choice::from((bytes[0] >> 7) & 1);
@@ -268,10 +286,10 @@ impl G1Affine {
             Fp::from_bytes(&tmp)
         };
 
-        x.and_then(|x| {
-            y.and_then(|y| {
+      x.and_then(|x| {
+        y.and_then(|y| {
                 // Create a point representing this value
-                let p = G1Affine::conditional_select(
+               let p = G1Affine::conditional_select(
                     &G1Affine {
                         x,
                         y,
@@ -281,7 +299,7 @@ impl G1Affine {
                     infinity_flag_set,
                 );
 
-                CtOption::new(
+               CtOption::new(
                     p,
                     // If the infinity flag is set, the x and y coordinates should have been zero.
                     ((!infinity_flag_set) | (infinity_flag_set & x.is_zero() & y.is_zero())) &
@@ -292,6 +310,44 @@ impl G1Affine {
                 )
             })
         })
+    }
+
+    /// Attempts to deserialize an uncompressed element, not checking if the
+    /// element is on the curve and not checking if it is in the correct subgroup.
+    /// **This is dangerous to call unless you trust the bytes you are reading; otherwise,
+    /// API invariants may be broken.** Please consider using `from_uncompressed()` instead.
+    /// This is a memory-optimized version of `from_uncompressed_unchecked()`, and is not
+    /// constant-time. In addition, it expects elements in little endian order, and does not
+    /// check infinity or compression flags. 
+    #[inline(always)]
+    pub fn from_uncompressed_unchecked_vartime(bytes: &[u8; 96]) -> Option<Self> {
+        // Attempt to obtain the x-coordinate
+        let x = {
+            let mut tmp = [0; 48];
+            tmp.copy_from_slice(&bytes[0..48]);
+
+            // Mask away the flag bits
+            tmp[47] &= 0b0001_1111;
+
+            Fp::from_bytes_little_endian_vartime(&tmp)
+        }?;
+
+        // Attempt to obtain the y-coordinate
+        let y = {
+            let mut tmp = [0; 48];
+            tmp.copy_from_slice(&bytes[48..96]);
+
+            Fp::from_bytes_little_endian_vartime(&tmp)
+        }?;
+
+        // Create a point representing this value
+        let p = G1Affine {
+                x,
+                y,
+                infinity: Choice::from(0),
+            }; 
+
+        Some(p)
     }
 
     /// Attempts to deserialize a compressed element. 
@@ -423,7 +479,6 @@ impl From<G1Affine> for G1Projective {
 
 impl ConstantTimeEq for G1Projective {
     fn ct_eq(&self, other: &Self) -> Choice {
-        // Is (xz^2, yz^3, z) equal to (x'z'^2, yz'^3, z') when converted to affine?
 
         let z = other.z.square();
         let x1 = self.x * z;
@@ -1053,6 +1108,14 @@ fn test_projective_addition() {
         assert!(bool::from(d.is_on_curve()));
         assert_eq!(c, d);
     }
+    {
+        // Degenerate curve points:
+        // x1 = 174528025113613402703049291361435190697143492326801202718659723457335055357592615893798866832779533235241502826555 
+        // y1 = 118481200461259667185971530923261397938593507640653768711687587174860502700203209977912480486903663335364255416173
+        // x2 = 132017182595501417751983088021097037599456204382451175675523681323239938701504939898045215452482582109882186355419
+        // y2 = 140183225551709426824681202771632135597800005114260891828196675491859965648137612797056407652669696789076066042004
+        // TODO: Add addition test for these points
+    }
 }
 
 #[test]
@@ -1126,6 +1189,14 @@ fn test_mixed_addition() {
         assert!(!bool::from(d.is_identity()));
         assert!(bool::from(d.is_on_curve()));
         assert_eq!(c, d);
+    }
+    {
+        // Degenerate curve points:
+        // x1 = 174528025113613402703049291361435190697143492326801202718659723457335055357592615893798866832779533235241502826555
+        // y1 = 118481200461259667185971530923261397938593507640653768711687587174860502700203209977912480486903663335364255416173
+        // x2 = 132017182595501417751983088021097037599456204382451175675523681323239938701504939898045215452482582109882186355419
+        // y2 = 140183225551709426824681202771632135597800005114260891828196675491859965648137612797056407652669696789076066042004
+        // TODO: Add addition test for these points
     }
 }
 

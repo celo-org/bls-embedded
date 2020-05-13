@@ -254,7 +254,8 @@ impl G2Affine {
         res
     }
 
-    /// Serializes this element into uncompressed form.
+    /// Serializes this element into uncompressed form in
+    /// big-endian representation.
     #[inline(always)]     
     pub fn to_uncompressed(&self) -> [u8; 192] {
         let mut res = [0; 192];
@@ -269,6 +270,24 @@ impl G2Affine {
 
         // Is this point at infinity? If so, set the second-most significant bit.
         res[0] |= u8::conditional_select(&0u8, &(1u8 << 6), self.infinity);
+
+        res
+    }
+
+    /// Serializes this element into uncompressed form in
+    /// little-endian representation. Assumes the received point
+    /// is not infinity.
+    #[inline(always)]     
+    pub fn to_uncompressed_littleendian(&self) -> [u8; 192] {
+        let mut res = [0; 192];
+
+        let x = Fp2::conditional_select(&self.x, &Fp2::zero(), self.infinity);
+        let y = Fp2::conditional_select(&self.y, &Fp2::zero(), self.infinity);
+
+        res[0..48].copy_from_slice(&x.c0.to_bytes_littleendian()[..]);
+        res[48..96].copy_from_slice(&x.c1.to_bytes_littleendian()[..]);
+        res[96..144].copy_from_slice(&y.c0.to_bytes_littleendian()[..]);
+        res[144..192].copy_from_slice(&y.c1.to_bytes_littleendian()[..]);
 
         res
     }
